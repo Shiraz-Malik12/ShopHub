@@ -1,4 +1,5 @@
 import express from 'express'
+import helmet from 'helmet'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import morgan from 'morgan'
@@ -6,6 +7,11 @@ import authRoutes from './routes/authRoutes.js'
 import { notFound, errorHandler } from './middleware/errorHandler.js'
 
 const app = express()
+
+// Sets HSTS, X-Content-Type-Options, disables X-Powered-By, blocks
+// clickjacking, etc. — the baseline security headers a client would
+// expect any real production API to send.
+app.use(helmet())
 
 // credentials: true is required for the browser to send/receive the
 // httpOnly refresh-token cookie (matches axios's withCredentials: true).

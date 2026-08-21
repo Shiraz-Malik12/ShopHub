@@ -1,39 +1,37 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import * as authApi from '../api/authApi'
+import { setAccessToken } from '../api/tokenStore'
 
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
-  const [accessToken, setAccessToken] = useState(() => localStorage.getItem('accessToken'))
   // Distinguishes "we haven't checked yet" from "checked, not logged in" so
   // ProtectedRoute doesn't flash-redirect to /login on every page refresh.
   const [initializing, setInitializing] = useState(true)
 
   useEffect(() => {
+    // The access token lives in memory only (see tokenStore.js), so it's
+    // always gone after a hard reload — there's nothing to read back out
+    // of storage. Instead, unconditionally try to trade the httpOnly
+    // refresh cookie for a new one; if there's no valid cookie this just
+    // 401s and we fall through to logged-out, same as before.
     async function restoreSession() {
-      if (!accessToken) {
-        setInitializing(false)
-        return
-      }
       try {
-        const { data } = await authApi.fetchCurrentUser()
-        setUser(data.user)
+        const { data } = await authApi.refreshSession()
+        setAccessToken(data.accessToken)
+        const me = await authApi.fetchCurrentUser()
+        setUser(me.data.user)
       } catch {
-        // Token is missing/expired/invalid — clear it and treat as logged out.
-        localStorage.removeItem('accessToken')
         setAccessToken(null)
       } finally {
         setInitializing(false)
       }
     }
     restoreSession()
-    // Intentionally only on mount: this is a one-time "who am I" check.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   function persistSession(token, userData) {
-    localStorage.setItem('accessToken', token)
     setAccessToken(token)
     setUser(userData)
   }
@@ -78,7 +76,6 @@ export function AuthProvider({ children }) {
     } finally {
       // Clear local state even if the network call fails — the user
       // clicked "sign out" and expects the UI to reflect that immediately.
-      localStorage.removeItem('accessToken')
       setAccessToken(null)
       setUser(null)
     }
@@ -86,7 +83,6 @@ export function AuthProvider({ children }) {
 
   const value = {
     user,
-    accessToken,
     initializing,
     register,
     verifyOtp,

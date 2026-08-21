@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { getAccessToken, setAccessToken } from './tokenStore'
 
 // baseURL '/api' works via the Vite dev proxy (see vite.config.js) during
 // development, and can be overridden with VITE_API_URL once deployed.
@@ -11,7 +12,7 @@ const api = axios.create({
 
 // Attaches the short-lived access token to every request, if we have one.
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('accessToken')
+  const token = getAccessToken()
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
@@ -41,11 +42,11 @@ api.interceptors.response.use(
         refreshPromise = null
       })
       const { data } = await refreshPromise
-      localStorage.setItem('accessToken', data.accessToken)
+      setAccessToken(data.accessToken)
       config.headers.Authorization = `Bearer ${data.accessToken}`
       return api(config)
     } catch (refreshError) {
-      localStorage.removeItem('accessToken')
+      setAccessToken(null)
       throw refreshError
     }
   },
