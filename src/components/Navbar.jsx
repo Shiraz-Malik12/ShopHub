@@ -26,6 +26,12 @@ export default function Navbar() {
           menu={{
             items: [
               { key: 'account', label: <Link to="/account">My account</Link> },
+              // Admin-only entry — hidden for customers. The real
+              // enforcement is AdminRoute + the backend's requireAdmin,
+              // not this: hiding the link is a UX nicety, not a boundary.
+              ...(user.role === 'admin'
+                ? [{ key: 'categories', label: <Link to="/admin/categories">Manage categories</Link> }]
+                : []),
               { key: 'logout', label: 'Sign out', onClick: handleLogout },
             ],
           }}

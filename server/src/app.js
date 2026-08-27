@@ -4,6 +4,7 @@ import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import morgan from 'morgan'
 import authRoutes from './routes/authRoutes.js'
+import categoryRoutes from './routes/categoryRoutes.js'
 import { notFound, errorHandler } from './middleware/errorHandler.js'
 
 const app = express()
@@ -24,6 +25,7 @@ if (process.env.NODE_ENV !== 'test') {
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }))
 app.use('/api/auth', authRoutes)
+app.use('/api/categories', categoryRoutes)
 
 app.use(notFound)
 app.use(errorHandler)

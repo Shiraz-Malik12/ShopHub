@@ -1,15 +1,10 @@
-import { body, validationResult } from 'express-validator'
+import { body } from 'express-validator'
+import { handleValidation } from './handleValidation.js'
 
-// Every route below runs its *Rules array, then this, before the
-// controller ever sees the request — the controller can assume valid
-// shape and never has to re-check "is this actually an email?" itself.
-export function handleValidation(req, res, next) {
-  const errors = validationResult(req)
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ message: errors.array()[0].msg, errors: errors.array() })
-  }
-  next()
-}
+// Re-exported so existing imports (authRoutes.js) keep working unchanged —
+// the actual function now lives in handleValidation.js so other features
+// (e.g. categoryValidators.js) can reuse it without importing from "auth".
+export { handleValidation }
 
 export const registerRules = [
   body('name').trim().notEmpty().withMessage('Name is required'),

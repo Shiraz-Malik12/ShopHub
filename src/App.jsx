@@ -6,8 +6,10 @@ import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
 import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import DashboardPage from './pages/DashboardPage'
 import NotFoundPage from './pages/NotFoundPage'
+import CategoriesPage from './pages/admin/CategoriesPage'
 import ProtectedRoute from './routes/ProtectedRoute'
 import PublicRoute from './routes/PublicRoute'
+import AdminRoute from './routes/AdminRoute'
 
 function App() {
   return (
@@ -31,6 +33,10 @@ function App() {
 
       <Route element={<ProtectedRoute />}>
         <Route path="/account" element={<DashboardPage />} />
+      </Route>
+
+      <Route element={<AdminRoute />}>
+        <Route path="/admin/categories" element={<CategoriesPage />} />
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />
