@@ -15,6 +15,22 @@ export default function Navbar() {
     navigate('/login')
   }
 
+  const menuItems = [
+    { key: 'products', label: <Link to="/products">Products</Link> },
+    ...(user
+      ? [
+          { key: 'account', label: <Link to="/account">My account</Link> },
+          ...(user.role === 'admin'
+            ? [
+                { key: 'categories', label: <Link to="/admin/categories">Manage categories</Link> },
+                { key: 'admin-products', label: <Link to="/admin/products">Manage products</Link> },
+              ]
+            : []),
+          { key: 'logout', label: 'Sign out', onClick: handleLogout },
+        ]
+      : [{ key: 'login', label: <Link to="/login">Sign in</Link> }]),
+  ]
+
   return (
     <header className="border-b border-slate-800 bg-slate-900">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
@@ -22,23 +38,11 @@ export default function Navbar() {
           ShopHub
         </Link>
 
-        <Dropdown
-          menu={{
-            items: [
-              { key: 'account', label: <Link to="/account">My account</Link> },
-              // Admin-only entry — hidden for customers. The real
-              // enforcement is AdminRoute + the backend's requireAdmin,
-              // not this: hiding the link is a UX nicety, not a boundary.
-              ...(user.role === 'admin'
-                ? [{ key: 'categories', label: <Link to="/admin/categories">Manage categories</Link> }]
-                : []),
-              { key: 'logout', label: 'Sign out', onClick: handleLogout },
-            ],
-          }}
+        <Dropdown menu={{ items: menuItems }}
         >
           <button className="flex items-center gap-2 text-sm font-medium text-slate-200">
-            <Avatar size="small" icon={<UserOutlined />} />
-            {user.name}
+            {user ? <Avatar size="small" icon={<UserOutlined />} /> : null}
+            {user?.name || 'Menu'}
           </button>
         </Dropdown>
       </div>

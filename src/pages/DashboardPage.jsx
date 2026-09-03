@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Tag, Spin, Empty } from 'antd'
+import { Button, Tag, Spin, Empty } from 'antd'
+import { Link } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { useAuth } from '../context/AuthContext'
 import { fetchCategories } from '../api/categoryApi'
@@ -26,6 +27,7 @@ export default function DashboardPage() {
       <Navbar />
       <main className="mx-auto max-w-6xl px-6 py-16">
         <h1 className="text-2xl font-semibold text-slate-100">My account</h1>
+        <Button type="primary" className="mt-6"><Link to="/products">Browse products</Link></Button>
         <div className="mt-6 rounded-xl border border-slate-800 bg-slate-900 p-6">
           <p className="text-sm text-slate-400">Name</p>
           <p className="text-slate-100">{user?.name}</p>

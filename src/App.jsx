@@ -7,6 +7,9 @@ import ResetPasswordPage from './pages/auth/ResetPasswordPage'
 import DashboardPage from './pages/DashboardPage'
 import NotFoundPage from './pages/NotFoundPage'
 import CategoriesPage from './pages/admin/CategoriesPage'
+import ProductsPage from './pages/admin/ProductsPage'
+import StorefrontProductsPage from './pages/ProductsPage'
+import ProductDetailPage from './pages/ProductDetailPage'
 import ProtectedRoute from './routes/ProtectedRoute'
 import PublicRoute from './routes/PublicRoute'
 import AdminRoute from './routes/AdminRoute'
@@ -31,12 +34,16 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       </Route>
 
+      <Route path="/products" element={<StorefrontProductsPage />} />
+      <Route path="/products/:id" element={<ProductDetailPage />} />
+
       <Route element={<ProtectedRoute />}>
         <Route path="/account" element={<DashboardPage />} />
       </Route>
 
       <Route element={<AdminRoute />}>
         <Route path="/admin/categories" element={<CategoriesPage />} />
+        <Route path="/admin/products" element={<ProductsPage />} />
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />
