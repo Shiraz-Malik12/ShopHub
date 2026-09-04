@@ -2,7 +2,7 @@ import User from '../models/User.js'
 import { verifyAccessToken } from '../utils/tokens.js'
 
 // Guards routes like GET /api/auth/me. The frontend's ProtectedRoute is a
-// UX nicety only — this middleware is the actual authorization boundary.
+// UX nicety only — this middleware is the actual authorization boundary yesh.
 export async function protect(req, res, next) {
   const header = req.headers.authorization
   if (!header?.startsWith('Bearer ')) {
