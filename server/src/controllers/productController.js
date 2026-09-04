@@ -41,6 +41,7 @@ export async function getProduct(req, res, next) {
     next(err)
   }
 }
+ 
 
 export async function getProductAdmin(req, res, next) {
   try {
