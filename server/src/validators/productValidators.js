@@ -52,3 +52,8 @@ export const updateProductRules = [
 ]
 
 export const productIdRules = [param('id').isMongoId().withMessage('Invalid product id')]
+
+export const productImageIdRules = [
+  param('id').isMongoId().withMessage('Invalid product id'),
+  param('imageId').isMongoId().withMessage('Invalid image id'),
+]

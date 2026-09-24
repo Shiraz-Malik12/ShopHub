@@ -6,6 +6,7 @@ import morgan from 'morgan'
 import authRoutes from './routes/authRoutes.js'
 import categoryRoutes from './routes/categoryRoutes.js'
 import productRoutes from './routes/productRoutes.js'
+import { LOCAL_UPLOADS_DIR } from './utils/cloudinaryUpload.js'
 import { notFound, errorHandler } from './middleware/errorHandler.js'
 
 const app = express()
@@ -28,6 +29,11 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok' }))
 app.use('/api/auth', authRoutes)
 app.use('/api/categories', categoryRoutes)
 app.use('/api/products', productRoutes)
+
+// Serves images saved by the dev fallback in utils/cloudinaryUpload.js (only
+// used while Cloudinary keys are missing). Under /api so the Vite dev proxy
+// forwards these requests to Express as well.
+app.use('/api/uploads', express.static(LOCAL_UPLOADS_DIR))
 
 app.use(notFound)
 app.use(errorHandler)

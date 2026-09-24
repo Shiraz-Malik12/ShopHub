@@ -27,3 +27,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Dev-fallback product images (used only while Cloudinary keys are missing)
+server/uploads

@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Alert, App as AntdApp, Button, Empty, Form, Input, InputNumber, Modal, Popconfirm, Select, Space, Table, Tag } from 'antd'
+import { Alert, App as AntdApp, Button, Empty, Form, Input, InputNumber, Modal, Popconfirm, Select, Space, Table, Tag, Upload } from 'antd'
+import { PlusOutlined } from '@ant-design/icons'
 import Navbar from '../../components/Navbar'
+import ProductImagesManager from '../../components/admin/ProductImagesManager'
+import { ALLOWED_TYPES, MAX_FILE_SIZE_MB, MAX_IMAGES, validateImageFiles } from '../../components/admin/productImageRules'
 import * as categoryApi from '../../api/categoryApi'
 import * as productApi from '../../api/productApi'
 
@@ -10,8 +13,12 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
   const [modalOpen, setModalOpen] = useState(false)
-  const [editingProduct, setEditingProduct] = useState(null)
+  const [editingProductId, setEditingProductId] = useState(null)
   const [submitting, setSubmitting] = useState(false)
+  // Images picked in the "New product" form. They can't be uploaded yet —
+  // the product has no id until it's created — so they wait here and are
+  // uploaded right after createProduct succeeds.
+  const [pendingImages, setPendingImages] = useState([])
   const [form] = Form.useForm()
   const { message } = AntdApp.useApp()
 
@@ -36,14 +43,19 @@ export default function ProductsPage() {
     loadData()
   }, [])
 
+  // Looked up from `products` (not stored as a copy) so the edit form always
+  // shows the latest images after every upload/remove/replace.
+  const editingProduct = products.find((product) => product._id === editingProductId) || null
+
   function openCreateModal() {
-    setEditingProduct(null)
+    setEditingProductId(null)
+    setPendingImages([])
     form.resetFields()
     setModalOpen(true)
   }
 
   function openEditModal(product) {
-    setEditingProduct(product)
+    setEditingProductId(product._id)
     form.setFieldsValue({
       name: product.name,
       description: product.description,
@@ -60,12 +72,31 @@ export default function ProductsPage() {
       const { data } = editingProduct
         ? await productApi.updateProduct(editingProduct._id, values)
         : await productApi.createProduct(values)
+      let savedProduct = data.product
+      let imageError = null
+
+      if (!editingProduct && pendingImages.length > 0) {
+        try {
+          const files = pendingImages.map((item) => item.originFileObj)
+          const { data: imageData } = await productApi.uploadProductImages(savedProduct._id, files)
+          savedProduct = imageData.product
+        } catch (err) {
+          // The product itself was created fine — only the images failed.
+          // Don't lose the product; tell the admin to retry from Edit.
+          imageError = err?.response?.data?.message || 'Image upload failed.'
+        }
+      }
+
       setProducts((previous) => {
-        const remaining = previous.filter((product) => product._id !== data.product._id)
-        return [...remaining, data.product].sort((a, b) => a.name.localeCompare(b.name))
+        const remaining = previous.filter((product) => product._id !== savedProduct._id)
+        return [...remaining, savedProduct].sort((a, b) => a.name.localeCompare(b.name))
       })
       setModalOpen(false)
-      message.success(editingProduct ? 'Product updated' : 'Product created')
+      if (imageError) {
+        message.warning(`Product created, but images were not uploaded: ${imageError} Open Edit to add them.`)
+      } else {
+        message.success(editingProduct ? 'Product updated' : 'Product created')
+      }
     } catch (err) {
       message.error(err?.response?.data?.message || 'Something went wrong. Please try again.')
     } finally {
@@ -85,7 +116,34 @@ export default function ProductsPage() {
     }
   }
 
+  function handleProductUpdated(updatedProduct) {
+    setProducts((previous) => previous.map((item) => (item._id === updatedProduct._id ? updatedProduct : item)))
+  }
+
+  // Runs for each picked file. Returning false stops antd from uploading on
+  // its own (we upload after the product is created); LIST_IGNORE drops an
+  // invalid file from the list entirely.
+  function handleBeforeImagePick(file) {
+    const error = validateImageFiles([file])
+    if (error) {
+      message.error(error)
+      return Upload.LIST_IGNORE
+    }
+    return false
+  }
+
   const columns = [
+    {
+      title: 'Image',
+      key: 'image',
+      width: 88,
+      render: (_, product) =>
+        product.images?.[0] ? (
+          <img src={product.images[0].url} alt={product.name} className="h-16 w-16 rounded object-cover" />
+        ) : (
+          <div className="flex h-16 w-16 items-center justify-center rounded bg-slate-200 text-xs text-slate-500">None</div>
+        ),
+    },
     { title: 'Name', dataIndex: 'name', key: 'name' },
     { title: 'Category', key: 'category', render: (_, product) => product.category?.name || 'Unknown' },
     { title: 'Price', dataIndex: 'price', key: 'price', render: (price) => `$${price.toFixed(2)}` },
@@ -147,6 +205,7 @@ export default function ProductsPage() {
           onOk={() => form.submit()}
           okText={editingProduct ? 'Save' : 'Create'}
           confirmLoading={submitting}
+          width={680}
           destroyOnHidden
         >
           <Form layout="vertical" form={form} onFinish={handleSubmit} requiredMark={false}>
@@ -167,6 +226,34 @@ export default function ProductsPage() {
             <Form.Item name="category" label="Category" rules={[{ required: true, message: 'Category is required' }]}>
               <Select placeholder="Select a category" options={categories.filter((category) => category.isActive).map((category) => ({ value: category._id, label: category.name }))} />
             </Form.Item>
+
+            {editingProduct ? (
+              <Form.Item label="Images">
+                <ProductImagesManager product={editingProduct} onProductUpdated={handleProductUpdated} />
+              </Form.Item>
+            ) : (
+              <Form.Item
+                label="Images"
+                extra={`Optional · up to ${MAX_IMAGES} · JPG, PNG or WebP · max ${MAX_FILE_SIZE_MB} MB each · first image is the main image`}
+              >
+                <Upload
+                  listType="picture-card"
+                  accept={ALLOWED_TYPES.join(',')}
+                  multiple
+                  maxCount={MAX_IMAGES}
+                  fileList={pendingImages}
+                  beforeUpload={handleBeforeImagePick}
+                  onChange={({ fileList }) => setPendingImages(fileList)}
+                >
+                  {pendingImages.length < MAX_IMAGES && (
+                    <button type="button" className="flex flex-col items-center gap-1 border-0 bg-transparent">
+                      <PlusOutlined />
+                      <span className="text-xs">Add image</span>
+                    </button>
+                  )}
+                </Upload>
+              </Form.Item>
+            )}
           </Form>
         </Modal>
       </main>

@@ -1,11 +1,14 @@
 import { Router } from 'express'
 import * as productController from '../controllers/productController.js'
+import * as productImageController from '../controllers/productImageController.js'
 import { protect } from '../middleware/protect.js'
 import { requireAdmin } from '../middleware/authorize.js'
+import { uploadProductImages, uploadSingleProductImage } from '../middleware/uploadImages.js'
 import {
   createProductRules,
   updateProductRules,
   productIdRules,
+  productImageIdRules,
   handleValidation,
 } from '../validators/productValidators.js'
 
@@ -32,6 +35,35 @@ router.delete(
   productIdRules,
   handleValidation,
   productController.deactivateProduct,
+)
+
+// Image routes: protect + requireAdmin run *before* Multer, so a file sent
+// by a guest or customer is rejected without ever being read into memory.
+router.post(
+  '/:id/images',
+  protect,
+  requireAdmin,
+  productIdRules,
+  handleValidation,
+  uploadProductImages,
+  productImageController.addProductImages,
+)
+router.put(
+  '/:id/images/:imageId',
+  protect,
+  requireAdmin,
+  productImageIdRules,
+  handleValidation,
+  uploadSingleProductImage,
+  productImageController.replaceProductImage,
+)
+router.delete(
+  '/:id/images/:imageId',
+  protect,
+  requireAdmin,
+  productImageIdRules,
+  handleValidation,
+  productImageController.removeProductImage,
 )
 
 export default router

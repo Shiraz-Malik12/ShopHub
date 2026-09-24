@@ -55,6 +55,17 @@ export default function ProductsPage() {
                 title={product.name}
                 extra={<span className="text-slate-400">${product.price.toFixed(2)}</span>}
                 className="border-slate-800 bg-slate-900"
+                cover={
+                  product.images?.[0] ? (
+                    <img src={product.images[0].url} alt={product.name} className="h-64 w-full object-cover" />
+                  ) : (
+                    // Inner div: antd forces `display: block` on the cover's
+                    // direct child, which would cancel `flex` centering.
+                    <div className="h-64 bg-slate-800">
+                      <div className="flex h-full items-center justify-center text-slate-500">No image</div>
+                    </div>
+                  )
+                }
               >
                 <p className="mb-4 min-h-12 text-slate-400">
                   {product.description || 'No description available.'}

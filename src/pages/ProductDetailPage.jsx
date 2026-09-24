@@ -9,12 +9,14 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
 
   useEffect(() => {
     async function loadProduct() {
       try {
         const { data } = await productApi.fetchProduct(id)
         setProduct(data.product)
+        setSelectedImageIndex(0)
       } catch (err) {
         setLoadError(err?.response?.data?.message || 'Could not load this product.')
       } finally {
@@ -35,6 +37,29 @@ export default function ProductDetailPage() {
           <Alert type="error" showIcon message="Product unavailable" description={loadError} />
         ) : (
           <Card title={product.name} className="border-slate-800 bg-slate-900">
+            {product.images?.length > 0 && (
+              <div className="mb-6">
+                <img
+                  src={product.images[selectedImageIndex]?.url}
+                  alt={product.name}
+                  className="h-[28rem] w-full rounded-lg bg-slate-800 object-contain"
+                />
+                {product.images.length > 1 && (
+                  <div className="mt-3 flex gap-2">
+                    {product.images.map((image, index) => (
+                      <button
+                        key={image._id}
+                        type="button"
+                        onClick={() => setSelectedImageIndex(index)}
+                        className={`h-20 w-20 overflow-hidden rounded border-2 ${index === selectedImageIndex ? 'border-indigo-500' : 'border-transparent'}`}
+                      >
+                        <img src={image.url} alt={`${product.name} ${index + 1}`} className="h-full w-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             <p className="mb-6 whitespace-pre-wrap text-slate-300">
               {product.description || 'No description available.'}
             </p>
