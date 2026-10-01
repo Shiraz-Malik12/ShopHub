@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Table, Button, Modal, Form, Input, Tag, Space, Popconfirm, Alert, Empty, App as AntdApp } from 'antd'
-import Navbar from '../../components/Navbar'
+import { PlusOutlined } from '@ant-design/icons'
+import AdminLayout from '../../components/layout/AdminLayout'
+import PageHeader from '../../components/layout/PageHeader'
 import * as categoryApi from '../../api/categoryApi'
 
 // Admin-only category management: list, create, edit, deactivate/reactivate.
@@ -83,18 +85,18 @@ export default function CategoriesPage() {
   }
 
   const columns = [
-    { title: 'Name', dataIndex: 'name', key: 'name' },
+    { title: 'Name', dataIndex: 'name', key: 'name', render: (name) => <span className="font-medium text-slate-100">{name}</span> },
     {
       title: 'Slug',
       dataIndex: 'slug',
       key: 'slug',
-      render: (slug) => <code className="text-xs text-slate-400">{slug}</code>,
+      render: (slug) => <code className="rounded bg-slate-800 px-1.5 py-0.5 text-xs text-slate-400">{slug}</code>,
     },
     {
       title: 'Status',
       dataIndex: 'isActive',
       key: 'isActive',
-      render: (isActive) => <Tag color={isActive ? 'green' : 'default'}>{isActive ? 'Active' : 'Inactive'}</Tag>,
+      render: (isActive) => <Tag color={isActive ? 'success' : 'default'}>{isActive ? 'Active' : 'Inactive'}</Tag>,
     },
     {
       title: 'Created',
@@ -128,21 +130,22 @@ export default function CategoriesPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-slate-950">
-      <Navbar />
-      <main className="mx-auto max-w-6xl px-6 py-16">
-        <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-slate-100">Categories</h1>
-          <Button type="primary" onClick={openCreateModal}>
-            New category
-          </Button>
-        </div>
+    <AdminLayout>
+        <PageHeader
+          title="Categories"
+          description="Group your products so customers can find them. Deactivated categories hide their products from the store."
+          actions={
+            <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
+              New category
+            </Button>
+          }
+        />
 
         {loadError ? (
           <Alert
             type="error"
             showIcon
-            message="Could not load categories"
+            title="Could not load categories"
             description={loadError}
             action={
               <Button size="small" onClick={loadCategories}>
@@ -151,13 +154,14 @@ export default function CategoriesPage() {
             }
           />
         ) : (
-          <div className="rounded-xl border border-slate-800 bg-slate-900 p-2">
+          <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
             <Table
               rowKey="_id"
               columns={columns}
               dataSource={categories}
               loading={loading}
               pagination={false}
+              scroll={{ x: 640 }}
               locale={{
                 emptyText: (
                   <Empty
@@ -191,7 +195,6 @@ export default function CategoriesPage() {
             </Form.Item>
           </Form>
         </Modal>
-      </main>
-    </div>
+    </AdminLayout>
   )
 }

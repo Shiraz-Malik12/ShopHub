@@ -1,9 +1,14 @@
 import { useEffect, useState } from 'react'
-import { Alert, Button, Card, Empty, Spin } from 'antd'
-import { Link } from 'react-router-dom'
-import Navbar from '../components/Navbar'
+import { Button, Empty, Skeleton } from 'antd'
+import { ReloadOutlined, WarningOutlined } from '@ant-design/icons'
+import StoreLayout from '../components/layout/StoreLayout'
+import ProductCard from '../components/ProductCard'
 import * as productApi from '../api/productApi'
 
+const SKELETON_CARDS = 8
+
+// Customer storefront listing. The backend (GET /api/products) already
+// returns only products customers may see, so nothing is filtered here.
 export default function ProductsPage() {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -16,7 +21,7 @@ export default function ProductsPage() {
       const { data } = await productApi.fetchProducts()
       setProducts(data.products)
     } catch (err) {
-      setLoadError(err?.response?.data?.message || 'Could not load products.')
+      setLoadError(err?.response?.data?.message || 'Could not load products. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -27,60 +32,51 @@ export default function ProductsPage() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-slate-950">
-      <Navbar />
-      <main className="mx-auto max-w-6xl px-6 py-16">
-        <div className="mb-8">
-          <h1 className="text-2xl font-semibold text-slate-100">Products</h1>
-          <p className="mt-2 text-slate-400">Browse our available products.</p>
+    <StoreLayout>
+      <section className="border-b border-slate-800 bg-slate-900">
+        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-100">All products</h1>
+          <p className="mt-2 text-slate-400">
+            {loading || loadError
+              ? 'Browse our full catalog.'
+              : `${products.length} ${products.length === 1 ? 'product' : 'products'} available`}
+          </p>
         </div>
+      </section>
 
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         {loading ? (
-          <div className="flex justify-center py-16"><Spin size="large" /></div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-label="Loading products...">
+            {Array.from({ length: SKELETON_CARDS }, (_, index) => (
+              <div key={index} className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
+                <div className="aspect-square animate-pulse bg-slate-800" />
+                <div className="p-4">
+                  <Skeleton active title={false} paragraph={{ rows: 3 }} />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : loadError ? (
-          <Alert
-            type="error"
-            showIcon
-            message="Could not load products"
-            description={loadError}
-            action={<Button size="small" onClick={loadProducts}>Retry</Button>}
-          />
+          <div className="mx-auto max-w-md rounded-xl border border-slate-800 bg-slate-900 p-10 text-center">
+            <WarningOutlined className="text-3xl text-rose-500" />
+            <h2 className="mt-4 text-lg font-semibold text-slate-100">Could not load products</h2>
+            <p className="mt-1 text-sm text-slate-400">{loadError}</p>
+            <Button type="primary" icon={<ReloadOutlined />} className="mt-6" onClick={loadProducts}>
+              Try again
+            </Button>
+          </div>
         ) : products.length === 0 ? (
-          <Empty description="No products available yet" />
+          <div className="rounded-xl border border-slate-800 bg-slate-900 py-16">
+            <Empty description="No products available." />
+          </div>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {products.map((product) => (
-              <Card
-                key={product._id}
-                title={product.name}
-                extra={<span className="text-slate-400">${product.price.toFixed(2)}</span>}
-                className="border-slate-800 bg-slate-900"
-                cover={
-                  product.images?.[0] ? (
-                    <img src={product.images[0].url} alt={product.name} className="h-64 w-full object-cover" />
-                  ) : (
-                    // Inner div: antd forces `display: block` on the cover's
-                    // direct child, which would cancel `flex` centering.
-                    <div className="h-64 bg-slate-800">
-                      <div className="flex h-full items-center justify-center text-slate-500">No image</div>
-                    </div>
-                  )
-                }
-              >
-                <p className="mb-4 min-h-12 text-slate-400">
-                  {product.description || 'No description available.'}
-                </p>
-                <p className="mb-4 text-sm text-slate-400">
-                  Category: {product.category?.name || 'Uncategorized'}
-                </p>
-                <Button type="primary" block>
-                  <Link to={`/products/${product._id}`}>View details</Link>
-                </Button>
-              </Card>
+              <ProductCard key={product._id} product={product} />
             ))}
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </StoreLayout>
   )
 }

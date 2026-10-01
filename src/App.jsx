@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Navigate, Routes, Route } from 'react-router-dom'
 import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
 import VerifyOtpPage from './pages/auth/VerifyOtpPage'
@@ -25,15 +25,15 @@ function App() {
       <Route path="/reset-password" element={<ResetPasswordPage />} />
 
       <Route element={<PublicRoute />}>
-        {/* No public storefront yet — "/" is the login screen by default.
-            An already-logged-in user hitting any of these is bounced to
-            /account by PublicRoute. */}
-        <Route path="/" element={<LoginPage />} />
+        {/* An already-logged-in user hitting any of these is bounced to
+            their home page (shop or admin) by PublicRoute. */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       </Route>
 
+      {/* The storefront is the home page — anyone can browse. */}
+      <Route path="/" element={<Navigate to="/products" replace />} />
       <Route path="/products" element={<StorefrontProductsPage />} />
       <Route path="/products/:id" element={<ProductDetailPage />} />
 

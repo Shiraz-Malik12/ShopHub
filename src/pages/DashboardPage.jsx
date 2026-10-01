@@ -1,57 +1,97 @@
-import { useEffect, useState } from 'react'
-import { Button, Tag, Spin, Empty } from 'antd'
+import { Avatar, Button, Tag } from 'antd'
+import { CheckCircleFilled, RightOutlined, SettingOutlined, ShopOutlined } from '@ant-design/icons'
 import { Link } from 'react-router-dom'
-import Navbar from '../components/Navbar'
+import StoreLayout from '../components/layout/StoreLayout'
 import { useAuth } from '../context/AuthContext'
-import { fetchCategories } from '../api/categoryApi'
 
-// Placeholder protected page — proves ProtectedRoute + AuthContext work
-// end-to-end. Future account/order features will grow from here.
+// The signed-in user's account page. Future account features (orders,
+// addresses, profile editing) will be added here.
 export default function DashboardPage() {
   const { user } = useAuth()
-  const [categories, setCategories] = useState([])
-  const [loading, setLoading] = useState(true)
+  const isAdmin = user?.role === 'admin'
 
-  useEffect(() => {
-    // GET /api/categories is public (no admin check) — this just proves
-    // the customer-facing read path end-to-end. There's no storefront yet
-    // to click through to, so it's shown here rather than on its own page.
-    fetchCategories()
-      .then(({ data }) => setCategories(data.categories))
-      .catch(() => setCategories([]))
-      .finally(() => setLoading(false))
-  }, [])
+  const quickLinks = [
+    { to: '/products', icon: <ShopOutlined />, title: 'Continue shopping', text: 'Browse the full product catalog' },
+    ...(isAdmin
+      ? [{ to: '/admin/products', icon: <SettingOutlined />, title: 'Admin dashboard', text: 'Manage products and categories' }]
+      : []),
+  ]
 
   return (
-    <div className="min-h-screen bg-slate-950">
-      <Navbar />
-      <main className="mx-auto max-w-6xl px-6 py-16">
-        <h1 className="text-2xl font-semibold text-slate-100">My account</h1>
-        <Button type="primary" className="mt-6"><Link to="/products">Browse products</Link></Button>
-        <div className="mt-6 rounded-xl border border-slate-800 bg-slate-900 p-6">
-          <p className="text-sm text-slate-400">Name</p>
-          <p className="text-slate-100">{user?.name}</p>
-          <p className="mt-4 text-sm text-slate-400">Email</p>
-          <p className="text-slate-100">{user?.email}</p>
+    <StoreLayout>
+      <section className="border-b border-slate-800 bg-slate-900">
+        <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-100">My account</h1>
+          <p className="mt-2 text-slate-400">Welcome back, {user?.name}.</p>
+        </div>
+      </section>
+
+      <div className="mx-auto grid max-w-5xl gap-6 px-4 py-10 sm:px-6 lg:grid-cols-3 lg:px-8">
+        <div className="rounded-xl border border-slate-800 bg-slate-900 p-6 lg:col-span-1">
+          <div className="flex flex-col items-center text-center">
+            <Avatar size={72} style={{ backgroundColor: '#4f46e5', fontSize: 28 }}>
+              {user?.name?.[0]?.toUpperCase()}
+            </Avatar>
+            <h2 className="mt-4 text-lg font-semibold text-slate-100">{user?.name}</h2>
+            <p className="text-sm text-slate-400">{user?.email}</p>
+            <div className="mt-3 flex gap-2">
+              <Tag color={isAdmin ? 'purple' : 'blue'}>{isAdmin ? 'Admin' : 'Customer'}</Tag>
+              {user?.isVerified && (
+                <Tag icon={<CheckCircleFilled />} color="success">
+                  Verified
+                </Tag>
+              )}
+            </div>
+          </div>
         </div>
 
-        <h2 className="mt-10 text-lg font-semibold text-slate-100">Shop by category</h2>
-        <div className="mt-4 rounded-xl border border-slate-800 bg-slate-900 p-6">
-          {loading ? (
-            <Spin />
-          ) : categories.length === 0 ? (
-            <Empty description="No categories available yet" />
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              {categories.map((category) => (
-                <Tag key={category._id} color="indigo" className="px-3 py-1 text-sm">
-                  {category.name}
-                </Tag>
-              ))}
+        <div className="rounded-xl border border-slate-800 bg-slate-900 lg:col-span-2">
+          <div className="border-b border-slate-800 px-6 py-4">
+            <h2 className="font-semibold text-slate-100">Profile details</h2>
+          </div>
+          <dl className="divide-y divide-slate-800 px-6">
+            <div className="grid grid-cols-3 gap-4 py-4 text-sm">
+              <dt className="text-slate-400">Full name</dt>
+              <dd className="col-span-2 font-medium text-slate-100">{user?.name}</dd>
             </div>
-          )}
+            <div className="grid grid-cols-3 gap-4 py-4 text-sm">
+              <dt className="text-slate-400">Email</dt>
+              <dd className="col-span-2 font-medium text-slate-100 break-all">{user?.email}</dd>
+            </div>
+            <div className="grid grid-cols-3 gap-4 py-4 text-sm">
+              <dt className="text-slate-400">Account type</dt>
+              <dd className="col-span-2 font-medium text-slate-100">{isAdmin ? 'Administrator' : 'Customer'}</dd>
+            </div>
+          </dl>
         </div>
-      </main>
-    </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:col-span-3">
+          {quickLinks.map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              className="group flex items-center gap-4 rounded-xl border border-slate-800 bg-slate-900 p-5 transition hover:border-indigo-500/40 hover:shadow-md"
+            >
+              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-500/10 text-lg text-indigo-400">
+                {link.icon}
+              </span>
+              <span className="flex-1">
+                <span className="block font-semibold text-slate-100">{link.title}</span>
+                <span className="block text-sm text-slate-400">{link.text}</span>
+              </span>
+              <RightOutlined className="text-slate-500 transition group-hover:translate-x-0.5 group-hover:text-indigo-400" />
+            </Link>
+          ))}
+        </div>
+
+        {!isAdmin && (
+          <div className="lg:col-span-3">
+            <Link to="/products">
+              <Button type="primary" size="large">Start shopping</Button>
+            </Link>
+          </div>
+        )}
+      </div>
+    </StoreLayout>
   )
 }

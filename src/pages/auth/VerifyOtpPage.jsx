@@ -3,6 +3,7 @@ import { Button, Input, App as AntdApp } from 'antd'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import AuthLayout from '../../components/auth/AuthLayout'
 import { useAuth } from '../../context/AuthContext'
+import { homePathFor } from '../../utils/homePathFor'
 
 const RESEND_COOLDOWN_SECONDS = 60
 
@@ -39,9 +40,9 @@ export default function VerifyOtpPage() {
     }
     setLoading(true)
     try {
-      await verifyOtp({ email, code })
+      const data = await verifyOtp({ email, code })
       message.success('Email verified! Welcome to ShopHub.')
-      navigate('/account', { replace: true })
+      navigate(homePathFor(data.user), { replace: true })
     } catch (err) {
       message.error(err?.response?.data?.message || 'Invalid or expired code')
     } finally {

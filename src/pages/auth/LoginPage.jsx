@@ -3,6 +3,7 @@ import { Form, Input, Button, App as AntdApp } from 'antd'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import AuthLayout from '../../components/auth/AuthLayout'
 import { useAuth } from '../../context/AuthContext'
+import { homePathFor } from '../../utils/homePathFor'
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false)
@@ -12,14 +13,15 @@ export default function LoginPage() {
   const { message } = AntdApp.useApp()
 
   // If ProtectedRoute redirected here, send the user back where they were
-  // headed once they successfully log in. Otherwise default to /account.
-  const from = location.state?.from?.pathname || '/account'
+  // headed once they successfully log in. Otherwise go to their home page:
+  // the shop for customers, the admin dashboard for admins.
+  const from = location.state?.from?.pathname
 
   async function onFinish(values) {
     setLoading(true)
     try {
-      await login(values)
-      navigate(from, { replace: true })
+      const data = await login(values)
+      navigate(from || homePathFor(data.user), { replace: true })
     } catch (err) {
       if (err?.response?.status === 403) {
         // Backend's signal for "credentials are correct, but email isn't

@@ -24,7 +24,7 @@ export default function AdminRoute() {
   }
 
   if (user.role !== 'admin') {
-    return <Navigate to="/account" replace />
+    return <Navigate to="/products" replace />
   }
 
   return <Outlet />

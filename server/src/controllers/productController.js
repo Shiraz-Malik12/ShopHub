@@ -5,9 +5,17 @@ async function findActiveCategory(categoryId) {
   return Category.findOne({ _id: categoryId, isActive: true })
 }
 
+// What a customer is allowed to see: the product must be active AND sit in
+// an active category. Hiding a category should hide its products too — the
+// backend enforces this, not the storefront, so no client can bypass it.
+async function customerVisibleFilter() {
+  const activeCategoryIds = await Category.find({ isActive: true }).distinct('_id')
+  return { isActive: true, category: { $in: activeCategoryIds } }
+}
+
 export async function listActiveProducts(req, res, next) {
   try {
-    const products = await Product.find({ isActive: true })
+    const products = await Product.find(await customerVisibleFilter())
       .populate('category', 'name slug')
       .sort({ createdAt: -1 })
     res.status(200).json({ products })
@@ -29,7 +37,7 @@ export async function listAllProducts(req, res, next) {
 
 export async function getProduct(req, res, next) {
   try {
-    const product = await Product.findOne({ _id: req.params.id, isActive: true }).populate(
+    const product = await Product.findOne({ _id: req.params.id, ...(await customerVisibleFilter()) }).populate(
       'category',
       'name slug',
     )

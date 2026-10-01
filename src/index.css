@@ -1,14 +1,17 @@
+/* Layer order (later wins): Tailwind's reset, then antd's component styles,
+   then Tailwind utilities — so a class like text-slate-900 can override antd. */
+@layer theme, base, antd, components, utilities;
+
 @import "tailwindcss";
 
-/* Tells the browser to use dark-themed native UI (scrollbars, form
-   controls) instead of assuming a light page. */
 :root {
-  color-scheme: dark;
+  color-scheme: dark; /* dark native scrollbars and form controls */
 }
 
 body {
   margin: 0;
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
-  background-color: #020617; /* slate-950 — avoids a white flash before React mounts */
+  color: #f1f5f9; /* slate-100 */
+  background-color: #020617; /* slate-950 — matches the app background, no flash before React mounts */
 }

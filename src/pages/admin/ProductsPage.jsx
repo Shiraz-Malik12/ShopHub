@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Alert, App as AntdApp, Button, Empty, Form, Input, InputNumber, Modal, Popconfirm, Select, Space, Table, Tag, Upload } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
-import Navbar from '../../components/Navbar'
+import AdminLayout from '../../components/layout/AdminLayout'
+import PageHeader from '../../components/layout/PageHeader'
+import ProductImage from '../../components/ProductImage'
+import { formatPrice } from '../../utils/formatPrice'
 import ProductImagesManager from '../../components/admin/ProductImagesManager'
 import { ALLOWED_TYPES, MAX_FILE_SIZE_MB, MAX_IMAGES, validateImageFiles } from '../../components/admin/productImageRules'
 import * as categoryApi from '../../api/categoryApi'
@@ -134,25 +137,32 @@ export default function ProductsPage() {
 
   const columns = [
     {
-      title: 'Image',
-      key: 'image',
-      width: 88,
-      render: (_, product) =>
-        product.images?.[0] ? (
-          <img src={product.images[0].url} alt={product.name} className="h-16 w-16 rounded object-cover" />
-        ) : (
-          <div className="flex h-16 w-16 items-center justify-center rounded bg-slate-200 text-xs text-slate-500">None</div>
-        ),
+      title: 'Product',
+      key: 'product',
+      render: (_, product) => (
+        <div className="flex items-center gap-3">
+          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-slate-800">
+            <ProductImage src={product.images?.[0]?.url} alt={product.name} className="h-full w-full" compact />
+          </div>
+          <div className="min-w-0">
+            <div className="truncate font-medium text-slate-100">{product.name}</div>
+            <div className="text-xs text-slate-400">{product.category?.name || 'Unknown category'}</div>
+          </div>
+        </div>
+      ),
     },
-    { title: 'Name', dataIndex: 'name', key: 'name' },
-    { title: 'Category', key: 'category', render: (_, product) => product.category?.name || 'Unknown' },
-    { title: 'Price', dataIndex: 'price', key: 'price', render: (price) => `$${price.toFixed(2)}` },
-    { title: 'Stock', dataIndex: 'stock', key: 'stock' },
+    { title: 'Price', dataIndex: 'price', key: 'price', render: (price) => <span className="font-medium">{formatPrice(price)}</span> },
+    {
+      title: 'Stock',
+      dataIndex: 'stock',
+      key: 'stock',
+      render: (stock) => <span className={stock === 0 ? 'whitespace-nowrap font-medium text-rose-400' : ''}>{stock === 0 ? 'Out of stock' : stock}</span>,
+    },
     {
       title: 'Status',
       dataIndex: 'isActive',
       key: 'isActive',
-      render: (isActive) => <Tag color={isActive ? 'green' : 'default'}>{isActive ? 'Active' : 'Inactive'}</Tag>,
+      render: (isActive) => <Tag color={isActive ? 'success' : 'default'}>{isActive ? 'Active' : 'Inactive'}</Tag>,
     },
     {
       title: 'Actions',
@@ -175,24 +185,28 @@ export default function ProductsPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-slate-950">
-      <Navbar />
-      <main className="mx-auto max-w-6xl px-6 py-16">
-        <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-slate-100">Products</h1>
-          <Button type="primary" onClick={openCreateModal}>New product</Button>
-        </div>
+    <AdminLayout>
+        <PageHeader
+          title="Products"
+          description="Add, edit and manage the products in your store."
+          actions={
+            <Button type="primary" icon={<PlusOutlined />} onClick={openCreateModal}>
+              New product
+            </Button>
+          }
+        />
 
         {loadError ? (
-          <Alert type="error" showIcon message="Could not load products" description={loadError} action={<Button size="small" onClick={loadData}>Retry</Button>} />
+          <Alert type="error" showIcon title="Could not load products" description={loadError} action={<Button size="small" onClick={loadData}>Retry</Button>} />
         ) : (
-          <div className="rounded-xl border border-slate-800 bg-slate-900 p-2">
+          <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
             <Table
               rowKey="_id"
               columns={columns}
               dataSource={products}
               loading={loading}
               pagination={false}
+              scroll={{ x: 720 }}
               locale={{ emptyText: <Empty description={loading ? 'Loading products...' : 'No products yet'} /> }}
             />
           </div>
@@ -215,14 +229,14 @@ export default function ProductsPage() {
             <Form.Item name="description" label="Description" rules={[{ max: 2000 }]}>
               <Input.TextArea rows={3} placeholder="Describe the product" />
             </Form.Item>
-            <Space size="middle" style={{ display: 'flex' }}>
-              <Form.Item name="price" label="Price" rules={[{ required: true, message: 'Price is required' }, { type: 'number', min: 0, message: 'Price cannot be negative' }]} style={{ flex: 1 }}>
-                <InputNumber min={0} precision={2} style={{ width: '100%' }} />
+            <div className="grid grid-cols-2 gap-4">
+              <Form.Item name="price" label="Price" rules={[{ required: true, message: 'Price is required' }, { type: 'number', min: 0, message: 'Price cannot be negative' }]}>
+                <InputNumber min={0} precision={2} prefix="$" style={{ width: '100%' }} />
               </Form.Item>
-              <Form.Item name="stock" label="Stock" rules={[{ required: true, message: 'Stock is required' }, { type: 'number', min: 0, message: 'Stock cannot be negative' }]} style={{ flex: 1 }}>
+              <Form.Item name="stock" label="Stock" rules={[{ required: true, message: 'Stock is required' }, { type: 'number', min: 0, message: 'Stock cannot be negative' }]}>
                 <InputNumber min={0} precision={0} style={{ width: '100%' }} />
               </Form.Item>
-            </Space>
+            </div>
             <Form.Item name="category" label="Category" rules={[{ required: true, message: 'Category is required' }]}>
               <Select placeholder="Select a category" options={categories.filter((category) => category.isActive).map((category) => ({ value: category._id, label: category.name }))} />
             </Form.Item>
@@ -256,7 +270,6 @@ export default function ProductsPage() {
             )}
           </Form>
         </Modal>
-      </main>
-    </div>
+    </AdminLayout>
   )
 }

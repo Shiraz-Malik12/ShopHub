@@ -67,7 +67,7 @@ export default function ProductImagesManager({ product, onProductUpdated }) {
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {images.map((image, index) => (
-            <div key={image._id} className="rounded-lg border border-slate-200 p-2">
+            <div key={image._id} className="rounded-lg border border-slate-800 p-2">
               <img src={image.url} alt={`${product.name} ${index + 1}`} className="h-36 w-full rounded object-cover" />
               <div className="mt-2 flex flex-wrap items-center gap-1">
                 {index === 0 && <Tag color="blue">Main</Tag>}
@@ -86,7 +86,7 @@ export default function ProductImagesManager({ product, onProductUpdated }) {
       )}
 
       <div className="mt-3 flex items-center justify-between gap-2">
-        <span className="text-xs text-slate-500">
+        <span className="text-xs text-slate-400">
           {images.length}/{MAX_IMAGES} · JPG, PNG or WebP · max {MAX_FILE_SIZE_MB} MB each · changes save immediately
         </span>
         <Button loading={busy} disabled={remaining <= 0} onClick={() => addInputRef.current.click()}>
