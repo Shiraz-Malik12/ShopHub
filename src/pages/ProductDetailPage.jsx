@@ -3,7 +3,9 @@ import { Breadcrumb, Button, Skeleton } from 'antd'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import { Link, useParams } from 'react-router-dom'
 import StoreLayout from '../components/layout/StoreLayout'
+import AddToCartButton from '../components/AddToCartButton'
 import ProductImage from '../components/ProductImage'
+import QuantityStepper from '../components/QuantityStepper'
 import StockBadge from '../components/StockBadge'
 import * as productApi from '../api/productApi'
 import { formatPrice } from '../utils/formatPrice'
@@ -14,6 +16,7 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+  const [quantity, setQuantity] = useState(1)
 
   useEffect(() => {
     async function loadProduct() {
@@ -23,6 +26,7 @@ export default function ProductDetailPage() {
         const { data } = await productApi.fetchProduct(id)
         setProduct(data.product)
         setSelectedImageIndex(0)
+        setQuantity(1)
       } catch (err) {
         setLoadError(err?.response?.data?.message || 'Could not load this product.')
       } finally {
@@ -103,6 +107,13 @@ export default function ProductDetailPage() {
                 <div className="mt-4 flex items-center gap-4">
                   <span className="text-3xl font-bold text-slate-100">{formatPrice(product.price)}</span>
                   <StockBadge stock={product.stock} />
+                </div>
+
+                <div className="mt-6 flex flex-wrap items-center gap-3">
+                  {product.stock > 0 && (
+                    <QuantityStepper value={quantity} max={Math.min(product.stock, 99)} onChange={setQuantity} />
+                  )}
+                  <AddToCartButton product={product} quantity={quantity} size="large" />
                 </div>
 
                 <div className="mt-8 border-t border-slate-800 pt-8">

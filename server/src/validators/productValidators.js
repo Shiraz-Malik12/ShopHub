@@ -1,4 +1,4 @@
-import { body, param } from 'express-validator'
+import { body, param, query } from 'express-validator'
 import { handleValidation } from './handleValidation.js'
 
 export { handleValidation }
@@ -56,4 +56,14 @@ export const productIdRules = [param('id').isMongoId().withMessage('Invalid prod
 export const productImageIdRules = [
   param('id').isMongoId().withMessage('Invalid product id'),
   param('imageId').isMongoId().withMessage('Invalid image id'),
+]
+
+// Storefront listing filters (all optional): ?search=&category=&sort=
+export const listProductsRules = [
+  query('search').optional().trim().isLength({ max: 100 }).withMessage('Search text is too long'),
+  query('category').optional().isMongoId().withMessage('Invalid category'),
+  query('sort')
+    .optional()
+    .isIn(['newest', 'price-asc', 'price-desc', 'name'])
+    .withMessage('Invalid sort option'),
 ]

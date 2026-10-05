@@ -9,6 +9,7 @@ import {
   updateProductRules,
   productIdRules,
   productImageIdRules,
+  listProductsRules,
   handleValidation,
 } from '../validators/productValidators.js'
 
@@ -16,7 +17,7 @@ const router = Router()
 
 router.get('/admin', protect, requireAdmin, productController.listAllProducts)
 router.get('/admin/:id', protect, requireAdmin, productIdRules, handleValidation, productController.getProductAdmin)
-router.get('/', productController.listActiveProducts)
+router.get('/', listProductsRules, handleValidation, productController.listActiveProducts)
 router.get('/:id', productIdRules, handleValidation, productController.getProduct)
 
 router.post('/', protect, requireAdmin, createProductRules, handleValidation, productController.createProduct)

@@ -6,6 +6,7 @@ import { StyleProvider } from '@ant-design/cssinjs'
 import './index.css'
 import App from './App.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
+import { CartProvider } from './context/CartContext.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -46,7 +47,10 @@ createRoot(document.getElementById('root')).render(
         <AntdApp>
           <BrowserRouter>
             <AuthProvider>
-              <App />
+              {/* Inside AuthProvider: the cart needs to know who is signed in. */}
+              <CartProvider>
+                <App />
+              </CartProvider>
             </AuthProvider>
           </BrowserRouter>
         </AntdApp>

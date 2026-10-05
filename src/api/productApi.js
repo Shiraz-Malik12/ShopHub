@@ -1,6 +1,7 @@
 import api from './axiosInstance'
 
-export const fetchProducts = () => api.get('/products')
+// params (all optional): { search, category, sort } → /products?search=...&category=...&sort=...
+export const fetchProducts = (params) => api.get('/products', { params })
 export const fetchAllProductsAdmin = () => api.get('/products/admin')
 export const fetchProduct = (id) => api.get(`/products/${id}`)
 export const createProduct = (payload) => api.post('/products', payload)

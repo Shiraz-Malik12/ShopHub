@@ -1,5 +1,6 @@
 import { Button } from 'antd'
 import { Link, useNavigate } from 'react-router-dom'
+import AddToCartButton from './AddToCartButton'
 import ProductImage from './ProductImage'
 import StockBadge from './StockBadge'
 import { formatPrice } from '../utils/formatPrice'
@@ -33,9 +34,10 @@ export default function ProductCard({ product }) {
           <StockBadge stock={product.stock} />
         </div>
 
-        {/* mt-auto pushes the button to the card's bottom, so buttons line up
+        {/* mt-auto pushes the buttons to the card's bottom, so they line up
             across a row even when names wrap onto two lines. */}
-        <div className="mt-auto pt-4">
+        <div className="mt-auto flex flex-col gap-2 pt-4">
+          <AddToCartButton product={product} block />
           <Button block onClick={() => navigate(productUrl)}>
             View Product
           </Button>

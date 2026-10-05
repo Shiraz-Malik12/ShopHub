@@ -1,12 +1,15 @@
-import { Button } from 'antd'
+import { Badge, Button } from 'antd'
+import { ShoppingCartOutlined } from '@ant-design/icons'
 import { Link, NavLink } from 'react-router-dom'
 import Logo from '../Logo'
 import UserMenu from './UserMenu'
 import { useAuth } from '../../context/AuthContext'
+import { useCart } from '../../context/CartContext'
 
 // Shell for every customer-facing page: sticky header, page content, footer.
 export default function StoreLayout({ children }) {
   const { user, initializing } = useAuth()
+  const { cart } = useCart()
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-950">
@@ -24,20 +27,33 @@ export default function StoreLayout({ children }) {
             </nav>
           </div>
 
-          {/* Render nothing until we know who the user is, so the header
-              does not flicker from "Sign in" to the avatar on page load. */}
-          {initializing ? null : user ? (
-            <UserMenu />
-          ) : (
-            <div className="flex items-center gap-2">
-              <Link to="/login" className="px-2 text-sm font-medium text-slate-400 hover:text-white">
-                Sign in
-              </Link>
-              <Link to="/register">
-                <Button type="primary">Create account</Button>
-              </Link>
-            </div>
-          )}
+          <div className="flex items-center gap-3 sm:gap-4">
+            {/* Guests can click it too — /cart sends them to sign in first. */}
+            <Link
+              to="/cart"
+              aria-label={`Cart, ${cart.itemCount} items`}
+              className="flex h-9 w-9 items-center justify-center rounded-full text-slate-300 hover:bg-slate-800 hover:text-white"
+            >
+              <Badge count={cart.itemCount} size="small" color="#6366f1">
+                <ShoppingCartOutlined className="text-xl text-slate-300" />
+              </Badge>
+            </Link>
+
+            {/* Render nothing until we know who the user is, so the header
+                does not flicker from "Sign in" to the avatar on page load. */}
+            {initializing ? null : user ? (
+              <UserMenu />
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link to="/login" className="px-2 text-sm font-medium text-slate-400 hover:text-white">
+                  Sign in
+                </Link>
+                <Link to="/register">
+                  <Button type="primary">Create account</Button>
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 

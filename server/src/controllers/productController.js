@@ -1,23 +1,43 @@
 import Product from '../models/Product.js'
 import Category from '../models/Category.js'
+import { customerVisibleFilter } from '../utils/customerVisibleFilter.js'
 
 async function findActiveCategory(categoryId) {
   return Category.findOne({ _id: categoryId, isActive: true })
 }
 
-// What a customer is allowed to see: the product must be active AND sit in
-// an active category. Hiding a category should hide its products too — the
-// backend enforces this, not the storefront, so no client can bypass it.
-async function customerVisibleFilter() {
-  const activeCategoryIds = await Category.find({ isActive: true }).distinct('_id')
-  return { isActive: true, category: { $in: activeCategoryIds } }
+// The sort options the storefront may ask for (?sort=...). Anything else is
+// rejected by listProductsRules, so a client can't sort by arbitrary fields.
+export const PRODUCT_SORTS = {
+  newest: { createdAt: -1 },
+  'price-asc': { price: 1 },
+  'price-desc': { price: -1 },
+  name: { name: 1 },
 }
 
+// Typed text goes into a regular expression, so characters that mean
+// something special there (like . * + ? ( ) are escaped to be matched
+// literally — searching "c++" must not crash or match everything.
+function escapeRegex(text) {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+// GET /api/products?search=iphone&category=<id>&sort=price-asc
+// All three are optional; with none, this returns every visible product.
 export async function listActiveProducts(req, res, next) {
   try {
-    const products = await Product.find(await customerVisibleFilter())
+    const { search, category, sort } = req.query
+    const filter = await customerVisibleFilter(category)
+
+    if (search) {
+      // 'i' = case-insensitive, so "iphone" finds "iPhone 16".
+      const pattern = new RegExp(escapeRegex(search), 'i')
+      filter.$or = [{ name: pattern }, { description: pattern }]
+    }
+
+    const products = await Product.find(filter)
       .populate('category', 'name slug')
-      .sort({ createdAt: -1 })
+      .sort(PRODUCT_SORTS[sort] || PRODUCT_SORTS.newest)
     res.status(200).json({ products })
   } catch (err) {
     next(err)

@@ -10,6 +10,7 @@ import CategoriesPage from './pages/admin/CategoriesPage'
 import ProductsPage from './pages/admin/ProductsPage'
 import StorefrontProductsPage from './pages/ProductsPage'
 import ProductDetailPage from './pages/ProductDetailPage'
+import CartPage from './pages/CartPage'
 import ProtectedRoute from './routes/ProtectedRoute'
 import PublicRoute from './routes/PublicRoute'
 import AdminRoute from './routes/AdminRoute'
@@ -39,6 +40,7 @@ function App() {
 
       <Route element={<ProtectedRoute />}>
         <Route path="/account" element={<DashboardPage />} />
+        <Route path="/cart" element={<CartPage />} />
       </Route>
 
       <Route element={<AdminRoute />}>
