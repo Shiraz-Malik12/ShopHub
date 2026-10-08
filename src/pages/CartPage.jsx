@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { App as AntdApp, Button, Empty, Popconfirm, Skeleton, Tag, Tooltip } from 'antd'
 import { ArrowLeftOutlined, DeleteOutlined } from '@ant-design/icons'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import StoreLayout from '../components/layout/StoreLayout'
 import ProductImage from '../components/ProductImage'
 import QuantityStepper from '../components/QuantityStepper'
@@ -13,6 +13,7 @@ import { formatPrice } from '../utils/formatPrice'
 export default function CartPage() {
   const { cart, loading, updateQuantity, removeItem, clear } = useCart()
   const { message } = AntdApp.useApp()
+  const navigate = useNavigate()
   // Id of the product whose row is waiting on the server, so only that
   // row's controls are disabled while it updates.
   const [busyProductId, setBusyProductId] = useState(null)
@@ -41,6 +42,7 @@ export default function CartPage() {
   }
 
   const isEmpty = cart.items.length === 0
+  const hasUnavailableItems = cart.items.some((item) => !item.available)
 
   return (
     <StoreLayout>
@@ -144,11 +146,20 @@ export default function CartPage() {
               </dl>
               <p className="mt-2 text-xs text-slate-500">Shipping and taxes are calculated at checkout.</p>
 
-              <Tooltip title="Checkout is coming soon">
-                <Button type="primary" size="large" block disabled className="mt-6">
-                  Checkout
-                </Button>
-              </Tooltip>
+              {/* Unavailable items must be removed first — an order can't include them. */}
+              {hasUnavailableItems && (
+                <p className="mt-4 text-sm text-rose-400">Remove the unavailable items to continue to checkout.</p>
+              )}
+              <Button
+                type="primary"
+                size="large"
+                block
+                disabled={cart.itemCount === 0 || hasUnavailableItems}
+                className="mt-6"
+                onClick={() => navigate('/checkout')}
+              >
+                Checkout
+              </Button>
 
               <div className="mt-4 flex items-center justify-between text-sm">
                 <Link to="/products" className="inline-flex items-center gap-2 font-medium text-indigo-400 hover:text-indigo-300">

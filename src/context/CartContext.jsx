@@ -13,21 +13,25 @@ const EMPTY_CART = { items: [], itemCount: 0, subtotal: 0 }
 export function CartProvider({ children }) {
   const { user } = useAuth()
   const [cart, setCart] = useState(EMPTY_CART)
-  const [loading, setLoading] = useState(false)
+  // Whose cart has finished loading. Comparing it with the current user
+  // makes `loading` true from the very first render after sign-in — so a
+  // page like Checkout never mistakes "not loaded yet" for "empty cart".
+  const [loadedUserId, setLoadedUserId] = useState(null)
 
   const userId = user?.id
+  const loading = Boolean(userId) && loadedUserId !== userId
 
   useEffect(() => {
     // Signed out (or just logged out): there is no cart to show.
     if (!userId) {
       setCart(EMPTY_CART)
+      setLoadedUserId(null)
       return
     }
 
     // `ignore` stops an old, slow response from overwriting newer state
     // (e.g. the user logged out while the request was still in flight).
     let ignore = false
-    setLoading(true)
     cartApi
       .fetchCart()
       .then(({ data }) => {
@@ -37,12 +41,19 @@ export function CartProvider({ children }) {
         if (!ignore) setCart(EMPTY_CART)
       })
       .finally(() => {
-        if (!ignore) setLoading(false)
+        if (!ignore) setLoadedUserId(userId)
       })
     return () => {
       ignore = true
     }
   }, [userId])
+
+  // Reloads the cart from the server — used after something outside the
+  // cart changed it (e.g. placing an order empties it).
+  async function refresh() {
+    const { data } = await cartApi.fetchCart()
+    setCart(data.cart)
+  }
 
   async function addItem(productId, quantity = 1) {
     const { data } = await cartApi.addCartItem(productId, quantity)
@@ -64,7 +75,7 @@ export function CartProvider({ children }) {
     setCart(data.cart)
   }
 
-  const value = { cart, loading, addItem, updateQuantity, removeItem, clear }
+  const value = { cart, loading, refresh, addItem, updateQuantity, removeItem, clear }
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>
 }

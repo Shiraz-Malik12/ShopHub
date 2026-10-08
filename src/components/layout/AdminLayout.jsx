@@ -1,9 +1,10 @@
-import { AppstoreOutlined, ExportOutlined, TagsOutlined } from '@ant-design/icons'
+import { AppstoreOutlined, ExportOutlined, ShoppingOutlined, TagsOutlined } from '@ant-design/icons'
 import { Link, NavLink } from 'react-router-dom'
 import Logo from '../Logo'
 import UserMenu from './UserMenu'
 
 const NAV_ITEMS = [
+  { to: '/admin/orders', label: 'Orders', icon: <ShoppingOutlined /> },
   { to: '/admin/products', label: 'Products', icon: <AppstoreOutlined /> },
   { to: '/admin/categories', label: 'Categories', icon: <TagsOutlined /> },
 ]
@@ -21,13 +22,13 @@ export default function AdminLayout({ children }) {
     <div className="min-h-screen bg-slate-950 lg:pl-64">
       <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col border-r border-slate-800 bg-slate-900 lg:flex">
         <div className="flex h-16 items-center gap-2 border-b border-slate-800 px-6">
-          <Logo to="/admin/products" />
+          <Logo to="/admin/orders" />
           <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
             Admin
           </span>
         </div>
         <nav className="flex flex-1 flex-col gap-1 p-4">
-          <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Catalog</p>
+          <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Store</p>
           {NAV_ITEMS.map((item) => (
             <NavLink key={item.to} to={item.to} className={navClass}>
               {item.icon}
@@ -49,7 +50,7 @@ export default function AdminLayout({ children }) {
       <header className="sticky top-0 z-20 border-b border-slate-800 bg-slate-950/80 backdrop-blur">
         <div className="flex h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           <div className="lg:hidden">
-            <Logo to="/admin/products" />
+            <Logo to="/admin/orders" />
           </div>
           <span className="hidden text-sm text-slate-400 lg:inline">Store management</span>
           <UserMenu />

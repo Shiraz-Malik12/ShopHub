@@ -1,5 +1,5 @@
 import { Avatar, Button, Tag } from 'antd'
-import { CheckCircleFilled, RightOutlined, SettingOutlined, ShopOutlined } from '@ant-design/icons'
+import { CheckCircleFilled, FileTextOutlined, RightOutlined, SettingOutlined, ShopOutlined } from '@ant-design/icons'
 import { Link } from 'react-router-dom'
 import StoreLayout from '../components/layout/StoreLayout'
 import { useAuth } from '../context/AuthContext'
@@ -12,8 +12,9 @@ export default function DashboardPage() {
 
   const quickLinks = [
     { to: '/products', icon: <ShopOutlined />, title: 'Continue shopping', text: 'Browse the full product catalog' },
+    { to: '/orders', icon: <FileTextOutlined />, title: 'My orders', text: 'Track and review your orders' },
     ...(isAdmin
-      ? [{ to: '/admin/products', icon: <SettingOutlined />, title: 'Admin dashboard', text: 'Manage products and categories' }]
+      ? [{ to: '/admin/orders', icon: <SettingOutlined />, title: 'Admin dashboard', text: 'Manage orders, products and categories' }]
       : []),
   ]
 

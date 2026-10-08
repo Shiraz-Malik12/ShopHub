@@ -1,5 +1,5 @@
 import { Avatar, Dropdown } from 'antd'
-import { DownOutlined, LogoutOutlined, SettingOutlined, ShopOutlined, ShoppingCartOutlined, UserOutlined } from '@ant-design/icons'
+import { DownOutlined, FileTextOutlined, LogoutOutlined, SettingOutlined, ShopOutlined, ShoppingCartOutlined, UserOutlined } from '@ant-design/icons'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
@@ -28,9 +28,10 @@ export default function UserMenu() {
     { type: 'divider' },
     { key: 'shop', icon: <ShopOutlined />, label: <Link to="/products">Shop</Link> },
     { key: 'cart', icon: <ShoppingCartOutlined />, label: <Link to="/cart">My cart</Link> },
+    { key: 'orders', icon: <FileTextOutlined />, label: <Link to="/orders">My orders</Link> },
     { key: 'account', icon: <UserOutlined />, label: <Link to="/account">My account</Link> },
     ...(user.role === 'admin'
-      ? [{ key: 'admin', icon: <SettingOutlined />, label: <Link to="/admin/products">Admin dashboard</Link> }]
+      ? [{ key: 'admin', icon: <SettingOutlined />, label: <Link to="/admin/orders">Admin dashboard</Link> }]
       : []),
     { type: 'divider' },
     { key: 'logout', icon: <LogoutOutlined />, label: 'Sign out', danger: true, onClick: handleLogout },

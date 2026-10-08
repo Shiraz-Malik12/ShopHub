@@ -11,6 +11,10 @@ import ProductsPage from './pages/admin/ProductsPage'
 import StorefrontProductsPage from './pages/ProductsPage'
 import ProductDetailPage from './pages/ProductDetailPage'
 import CartPage from './pages/CartPage'
+import CheckoutPage from './pages/CheckoutPage'
+import OrdersPage from './pages/OrdersPage'
+import OrderDetailPage from './pages/OrderDetailPage'
+import AdminOrdersPage from './pages/admin/OrdersPage'
 import ProtectedRoute from './routes/ProtectedRoute'
 import PublicRoute from './routes/PublicRoute'
 import AdminRoute from './routes/AdminRoute'
@@ -41,11 +45,15 @@ function App() {
       <Route element={<ProtectedRoute />}>
         <Route path="/account" element={<DashboardPage />} />
         <Route path="/cart" element={<CartPage />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/orders" element={<OrdersPage />} />
+        <Route path="/orders/:id" element={<OrderDetailPage />} />
       </Route>
 
       <Route element={<AdminRoute />}>
         <Route path="/admin/categories" element={<CategoriesPage />} />
         <Route path="/admin/products" element={<ProductsPage />} />
+        <Route path="/admin/orders" element={<AdminOrdersPage />} />
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />
