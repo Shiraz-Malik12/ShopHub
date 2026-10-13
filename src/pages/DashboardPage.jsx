@@ -14,7 +14,7 @@ export default function DashboardPage() {
     { to: '/products', icon: <ShopOutlined />, title: 'Continue shopping', text: 'Browse the full product catalog' },
     { to: '/orders', icon: <FileTextOutlined />, title: 'My orders', text: 'Track and review your orders' },
     ...(isAdmin
-      ? [{ to: '/admin/orders', icon: <SettingOutlined />, title: 'Admin dashboard', text: 'Manage orders, products and categories' }]
+      ? [{ to: '/admin/dashboard', icon: <SettingOutlined />, title: 'Admin dashboard', text: 'See sales and manage orders, products and categories' }]
       : []),
   ]
 

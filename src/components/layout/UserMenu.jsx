@@ -31,7 +31,7 @@ export default function UserMenu() {
     { key: 'orders', icon: <FileTextOutlined />, label: <Link to="/orders">My orders</Link> },
     { key: 'account', icon: <UserOutlined />, label: <Link to="/account">My account</Link> },
     ...(user.role === 'admin'
-      ? [{ key: 'admin', icon: <SettingOutlined />, label: <Link to="/admin/orders">Admin dashboard</Link> }]
+      ? [{ key: 'admin', icon: <SettingOutlined />, label: <Link to="/admin/dashboard">Admin dashboard</Link> }]
       : []),
     { type: 'divider' },
     { key: 'logout', icon: <LogoutOutlined />, label: 'Sign out', danger: true, onClick: handleLogout },
