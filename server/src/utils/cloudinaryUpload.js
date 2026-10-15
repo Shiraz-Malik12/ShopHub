@@ -9,6 +9,8 @@ const PRODUCT_IMAGE_FOLDER = 'shophub/products'
 // /api/uploads so the Vite dev proxy forwards image requests too.
 export const LOCAL_UPLOADS_DIR = path.resolve(import.meta.dirname, '../../uploads')
 const LOCAL_PREFIX = 'local:'
+// Images linked from another website rather than uploaded (see deleteImage).
+export const EXTERNAL_PREFIX = 'external:'
 const EXTENSIONS = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }
 
 // Dev convenience, same idea as sendEmail.js's console fallback: until real
@@ -81,6 +83,9 @@ export async function uploadImageBuffer(file) {
 // rather than breaking the request.
 export async function deleteImage(publicId) {
   try {
+    // Pictures hosted somewhere else (e.g. the demo photos from Unsplash in
+    // scripts/seedProducts.js) have no file of ours to delete.
+    if (publicId.startsWith(EXTERNAL_PREFIX)) return
     if (publicId.startsWith(LOCAL_PREFIX)) {
       const relativePath = path.normalize(publicId.slice(LOCAL_PREFIX.length))
       await fs.unlink(path.join(LOCAL_UPLOADS_DIR, relativePath))

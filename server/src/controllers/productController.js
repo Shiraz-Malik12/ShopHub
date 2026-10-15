@@ -22,17 +22,22 @@ function escapeRegex(text) {
   return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-// GET /api/products?search=iphone&category=<id>&sort=price-asc
-// All three are optional; with none, this returns every visible product.
+// GET /api/products?search=iphone&category=<id>&sort=price-asc&inStock=true
+// All four are optional; with none, this returns every visible product.
 export async function listActiveProducts(req, res, next) {
   try {
-    const { search, category, sort } = req.query
+    const { search, category, sort, inStock } = req.query
     const filter = await customerVisibleFilter(category)
 
     if (search) {
       // 'i' = case-insensitive, so "iphone" finds "iPhone 16".
       const pattern = new RegExp(escapeRegex(search), 'i')
       filter.$or = [{ name: pattern }, { description: pattern }]
+    }
+
+    // "In stock only": hide sold-out products ($gt = greater than, so 0 is excluded).
+    if (inStock === 'true') {
+      filter.stock = { $gt: 0 }
     }
 
     const products = await Product.find(filter)

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Button, Empty, Input, Select, Skeleton } from 'antd'
+import { Button, Checkbox, Empty, Input, Select, Skeleton } from 'antd'
 import { ReloadOutlined, SearchOutlined, WarningOutlined } from '@ant-design/icons'
 import { useSearchParams } from 'react-router-dom'
 import StoreLayout from '../components/layout/StoreLayout'
@@ -29,7 +29,8 @@ export default function ProductsPage() {
   const search = searchParams.get('search') || ''
   const category = searchParams.get('category') || ''
   const sort = searchParams.get('sort') || DEFAULT_SORT
-  const hasFilters = Boolean(search || category)
+  const inStock = searchParams.get('inStock') === 'true'
+  const hasFilters = Boolean(search || category || inStock)
 
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
@@ -96,6 +97,7 @@ export default function ProductsPage() {
         const params = {}
         if (search) params.search = search
         if (category) params.category = category
+        if (inStock) params.inStock = 'true'
         if (sort !== DEFAULT_SORT) params.sort = sort
 
         const { data } = await productApi.fetchProducts(params)
@@ -114,7 +116,7 @@ export default function ProductsPage() {
     return () => {
       ignore = true
     }
-  }, [search, category, sort, reloadKey])
+  }, [search, category, sort, inStock, reloadKey])
 
   const countLabel = `${products.length} ${products.length === 1 ? 'product' : 'products'} ${hasFilters ? 'found' : 'available'}`
 
@@ -155,6 +157,13 @@ export default function ProductsPage() {
               options={SORT_OPTIONS}
               className="sm:w-52"
             />
+            <Checkbox
+              checked={inStock}
+              onChange={(event) => setFilter('inStock', event.target.checked ? 'true' : '')}
+              className="self-center whitespace-nowrap"
+            >
+              In stock only
+            </Checkbox>
           </div>
         </div>
       </section>

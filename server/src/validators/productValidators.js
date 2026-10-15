@@ -58,7 +58,7 @@ export const productImageIdRules = [
   param('imageId').isMongoId().withMessage('Invalid image id'),
 ]
 
-// Storefront listing filters (all optional): ?search=&category=&sort=
+// Storefront listing filters (all optional): ?search=&category=&sort=&inStock=
 export const listProductsRules = [
   query('search').optional().trim().isLength({ max: 100 }).withMessage('Search text is too long'),
   query('category').optional().isMongoId().withMessage('Invalid category'),
@@ -66,4 +66,6 @@ export const listProductsRules = [
     .optional()
     .isIn(['newest', 'price-asc', 'price-desc', 'name'])
     .withMessage('Invalid sort option'),
+  // Values in the address bar always arrive as text, so it's the word 'true'.
+  query('inStock').optional().isIn(['true']).withMessage('inStock can only be true'),
 ]
