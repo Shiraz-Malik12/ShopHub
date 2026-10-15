@@ -13,6 +13,19 @@ const otpSchema = new mongoose.Schema(
   { _id: false },
 )
 
+// The customer's own delivery address, saved from the profile page or at
+// checkout, so the checkout form can be filled in for them next time.
+const savedAddressSchema = new mongoose.Schema(
+  {
+    fullName: { type: String, required: true, trim: true, maxlength: 80 },
+    phone: { type: String, required: true, trim: true, maxlength: 20 },
+    addressLine: { type: String, required: true, trim: true, maxlength: 200 },
+    city: { type: String, required: true, trim: true, maxlength: 80 },
+    postalCode: { type: String, trim: true, maxlength: 20, default: '' },
+  },
+  { _id: false },
+)
+
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
@@ -30,6 +43,7 @@ const userSchema = new mongoose.Schema(
     isVerified: { type: Boolean, default: false },
     otp: { type: otpSchema, default: undefined },
     refreshTokenHash: { type: String, select: false },
+    savedAddress: { type: savedAddressSchema, default: undefined },
   },
   { timestamps: true },
 )

@@ -9,5 +9,7 @@ export function sanitizeUser(user) {
     email: user.email,
     role: user.role,
     isVerified: user.isVerified,
+    // Only ever sent to the user it belongs to (via /auth/me or /profile).
+    savedAddress: user.savedAddress || null,
   }
 }

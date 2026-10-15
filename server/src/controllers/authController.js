@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs'
 import User from '../models/User.js'
 import { generateOtpCode, hashOtp, compareOtp } from '../utils/otp.js'
 import { sendOtpEmail } from '../utils/sendEmail.js'
-import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../utils/tokens.js'
+import { signAccessToken, signRefreshToken, verifyRefreshToken, hashToken, tokenMatchesHash } from '../utils/tokens.js'
 import { sanitizeUser } from '../utils/sanitizeUser.js'
 
 const OTP_TTL_MS = 10 * 60 * 1000 // 10 minutes
@@ -25,10 +25,10 @@ function refreshCookieOptions() {
 // Issues a fresh access+refresh pair, stores a hash of the refresh token
 // (so we can detect reuse/invalidate on logout without storing it raw),
 // and sets it as an httpOnly cookie. Shared by login, verify-otp, refresh.
-async function issueSession(res, user) {
+export async function issueSession(res, user) {
   const accessToken = signAccessToken(user._id.toString())
   const refreshToken = signRefreshToken(user._id.toString())
-  user.refreshTokenHash = await bcrypt.hash(refreshToken, 10)
+  user.refreshTokenHash = hashToken(refreshToken)
   await user.save()
   res.cookie(REFRESH_COOKIE_NAME, refreshToken, refreshCookieOptions())
   return accessToken
@@ -175,7 +175,7 @@ export async function refresh(req, res, next) {
 
     const decoded = verifyRefreshToken(token)
     const user = await User.findById(decoded.sub).select('+refreshTokenHash')
-    if (!user?.refreshTokenHash || !(await bcrypt.compare(token, user.refreshTokenHash))) {
+    if (!user?.refreshTokenHash || !tokenMatchesHash(token, user.refreshTokenHash)) {
       // Doesn't match the last token we issued — could be an old, already-
       // rotated token being replayed. Don't honor it.
       return res.status(401).json({ message: 'Session expired, please log in again.' })

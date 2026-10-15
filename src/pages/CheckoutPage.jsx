@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Alert, App as AntdApp, Button, Form, Input, Skeleton } from 'antd'
+import { Alert, App as AntdApp, Button, Checkbox, Form, Input, Skeleton } from 'antd'
 import { ArrowLeftOutlined, DollarOutlined, LockOutlined } from '@ant-design/icons'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import StoreLayout from '../components/layout/StoreLayout'
@@ -13,7 +13,7 @@ import { formatPrice } from '../utils/formatPrice'
 // address and confirms. Only the address is sent — the server builds the
 // order from the cart it already has, with prices from the database.
 export default function CheckoutPage() {
-  const { user } = useAuth()
+  const { user, refreshUser } = useAuth()
   const { cart, loading, refresh } = useCart()
   const navigate = useNavigate()
   const { message } = AntdApp.useApp()
@@ -27,9 +27,12 @@ export default function CheckoutPage() {
   async function handlePlaceOrder(values) {
     setPlacing(true)
     try {
-      const { data } = await orderApi.placeOrder(values)
+      // The checkbox isn't part of the address — split it off before sending.
+      const { saveAddress, ...shippingAddress } = values
+      const { data } = await orderApi.placeOrder(shippingAddress, saveAddress)
       setOrderPlaced(true)
       await refresh().catch(() => {}) // the server emptied the cart — reload it
+      if (saveAddress) await refreshUser().catch(() => {}) // pick up the newly saved address
       navigate(`/orders/${data.order._id}`, { replace: true, state: { justPlaced: true } })
     } catch (err) {
       message.error(err?.response?.data?.message || 'Could not place your order. Please try again.')
@@ -63,12 +66,19 @@ export default function CheckoutPage() {
             <div className="space-y-6 lg:col-span-2">
               <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
                 <h2 className="text-lg font-semibold text-slate-100">Delivery address</h2>
+                {user?.savedAddress && (
+                  <p className="mt-1 text-sm text-slate-400">
+                    Filled in from your saved address. You can change it in{' '}
+                    <Link to="/account" className="text-indigo-400 hover:text-indigo-300">My account</Link>.
+                  </p>
+                )}
                 <Form
                   id="checkout-form"
                   layout="vertical"
                   requiredMark={false}
                   className="mt-4"
-                  initialValues={{ fullName: user?.name }}
+                  // Filled in from the saved address when there is one.
+                  initialValues={{ ...(user?.savedAddress || { fullName: user?.name }), saveAddress: true }}
                   onFinish={handlePlaceOrder}
                 >
                   <div className="grid gap-x-4 sm:grid-cols-2">
@@ -120,6 +130,9 @@ export default function CheckoutPage() {
                   </div>
                   <Form.Item name="notes" label="Delivery notes (optional)" rules={[{ max: 500 }]} className="mb-0">
                     <Input.TextArea rows={2} placeholder="Anything the courier should know" />
+                  </Form.Item>
+                  <Form.Item name="saveAddress" valuePropName="checked" className="mb-0 mt-4">
+                    <Checkbox>Save this address for next time</Checkbox>
                   </Form.Item>
                 </Form>
               </div>

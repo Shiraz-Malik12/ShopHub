@@ -70,6 +70,18 @@ export function AuthProvider({ children }) {
     return data
   }
 
+  // After the profile changes (name, saved address), the server sends back
+  // the updated user — put it here so the header, checkout, etc. update.
+  function updateUser(userData) {
+    setUser(userData)
+  }
+
+  // Reloads the user from the server — e.g. after checkout saved an address.
+  async function refreshUser() {
+    const { data } = await authApi.fetchCurrentUser()
+    setUser(data.user)
+  }
+
   async function logout() {
     try {
       await authApi.logoutUser()
@@ -89,6 +101,8 @@ export function AuthProvider({ children }) {
     resendOtp,
     login,
     logout,
+    updateUser,
+    refreshUser,
     forgotPassword,
     resetPassword,
   }

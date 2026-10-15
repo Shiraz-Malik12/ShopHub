@@ -2,6 +2,7 @@ import crypto from 'node:crypto'
 import Order, { NEXT_STATUSES } from '../models/Order.js'
 import Cart from '../models/Cart.js'
 import Product from '../models/Product.js'
+import User from '../models/User.js'
 
 const ORDER_NUMBER_ATTEMPTS = 3
 
@@ -124,6 +125,13 @@ export async function placeOrder(req, res, next) {
     // 4. The cart has become an order — empty it.
     cart.items = []
     await cart.save()
+
+    // 5. "Save this address for next time" was ticked: remember it on the
+    //    account so checkout is filled in for them next time.
+    if (req.body.saveAddress === true) {
+      const { fullName, phone, addressLine, city, postalCode = '' } = order.shippingAddress
+      await User.updateOne({ _id: req.user._id }, { savedAddress: { fullName, phone, addressLine, city, postalCode } })
+    }
 
     res.status(201).json({ message: 'Order placed', order })
   } catch (err) {

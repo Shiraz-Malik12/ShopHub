@@ -9,6 +9,7 @@ import productRoutes from './routes/productRoutes.js'
 import cartRoutes from './routes/cartRoutes.js'
 import orderRoutes from './routes/orderRoutes.js'
 import dashboardRoutes from './routes/dashboardRoutes.js'
+import profileRoutes from './routes/profileRoutes.js'
 import { LOCAL_UPLOADS_DIR } from './utils/cloudinaryUpload.js'
 import { notFound, errorHandler } from './middleware/errorHandler.js'
 
@@ -35,6 +36,7 @@ app.use('/api/products', productRoutes)
 app.use('/api/cart', cartRoutes)
 app.use('/api/orders', orderRoutes)
 app.use('/api/admin', dashboardRoutes)
+app.use('/api/profile', profileRoutes)
 
 // Serves images saved by the dev fallback in utils/cloudinaryUpload.js (only
 // used while Cloudinary keys are missing). Under /api so the Vite dev proxy
