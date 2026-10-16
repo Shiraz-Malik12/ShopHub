@@ -17,6 +17,17 @@ function getTransporter() {
   return transporter
 }
 
+// General-purpose email (order confirmations, status updates...).
+// Same dev fallback as the OTP email below: without SMTP credentials in
+// server/.env the email is printed to the server console instead of sent.
+export async function sendEmail({ to, subject, text, html }) {
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.warn(`[email:dev-fallback] To: ${to} | Subject: ${subject} (SMTP not configured — not actually sent)\n${text}\n`)
+    return
+  }
+  await getTransporter().sendMail({ from: process.env.EMAIL_FROM, to, subject, text, html })
+}
+
 const COPY = {
   'verify-email': {
     subject: 'Your ShopHub verification code',

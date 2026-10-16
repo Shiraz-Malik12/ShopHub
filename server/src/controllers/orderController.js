@@ -3,6 +3,7 @@ import Order, { NEXT_STATUSES } from '../models/Order.js'
 import Cart from '../models/Cart.js'
 import Product from '../models/Product.js'
 import User from '../models/User.js'
+import { sendInBackground, sendOrderPlacedEmail, sendOrderStatusEmail } from '../utils/orderEmails.js'
 
 const ORDER_NUMBER_ATTEMPTS = 3
 
@@ -133,6 +134,9 @@ export async function placeOrder(req, res, next) {
       await User.updateOne({ _id: req.user._id }, { savedAddress: { fullName, phone, addressLine, city, postalCode } })
     }
 
+    // 6. "Order confirmed" email (in the background — never delays or breaks the order).
+    sendInBackground(sendOrderPlacedEmail(order, req.user))
+
     res.status(201).json({ message: 'Order placed', order })
   } catch (err) {
     next(err)
@@ -198,6 +202,7 @@ export async function cancelMyOrder(req, res, next) {
     }
 
     await restock(order.items)
+    sendInBackground(sendOrderStatusEmail(order, req.user))
     res.status(200).json({ message: 'Order cancelled', order })
   } catch (err) {
     next(err)
@@ -232,6 +237,11 @@ export async function updateOrderStatus(req, res, next) {
 
     if (status === 'cancelled') {
       await restock(order.items)
+    }
+
+    // Tell the customer (skipped if their account no longer exists).
+    if (order.user?.email) {
+      sendInBackground(sendOrderStatusEmail(order, order.user))
     }
 
     res.status(200).json({ message: 'Order updated', order })
