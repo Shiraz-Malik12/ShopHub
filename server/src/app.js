@@ -12,6 +12,7 @@ import reviewRoutes from './routes/reviewRoutes.js'
 import cartRoutes from './routes/cartRoutes.js'
 import orderRoutes from './routes/orderRoutes.js'
 import dashboardRoutes from './routes/dashboardRoutes.js'
+import customerRoutes from './routes/customerRoutes.js'
 import profileRoutes from './routes/profileRoutes.js'
 import { LOCAL_UPLOADS_DIR } from './utils/cloudinaryUpload.js'
 import { notFound, errorHandler } from './middleware/errorHandler.js'
@@ -74,6 +75,7 @@ app.use('/api/products/:productId/reviews', reviewRoutes)
 app.use('/api/products', productRoutes)
 app.use('/api/cart', cartRoutes)
 app.use('/api/orders', orderRoutes)
+app.use('/api/admin/customers', customerRoutes)
 app.use('/api/admin', dashboardRoutes)
 app.use('/api/profile', profileRoutes)
 

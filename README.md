@@ -21,6 +21,8 @@ products, categories and orders from an admin area.
 - Dashboard: total sales, orders by status, low stock, recent orders
 - Orders: move Pending → Processing → Shipped → Delivered, or cancel (stock is returned)
 - Products (with up to 5 images each) and categories; hide instead of delete
+- Customers: search, orders and total spent per customer, saved address, order history
+- Block / unblock a customer (signs them out everywhere; they can't log in or order)
 - Remove inappropriate reviews
 
 **Security**

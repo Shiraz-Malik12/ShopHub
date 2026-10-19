@@ -1,6 +1,8 @@
 import axios from 'axios'
 import { getAccessToken, setAccessToken } from './tokenStore'
 
+export const ACCOUNT_BLOCKED_EVENT = 'shophub:account-blocked'
+
 // baseURL '/api' works via the Vite dev proxy (see vite.config.js) during
 // development, and can be overridden with VITE_API_URL once deployed.
 const api = axios.create({
@@ -29,6 +31,14 @@ api.interceptors.response.use(
   async (error) => {
     const { config, response } = error
     const isAuthRoute = config?.url?.startsWith('/auth/')
+
+    // The admin blocked this account: forget the token and tell AuthContext,
+    // which signs the user out and explains why on the login page.
+    if (response?.status === 403 && response.data?.code === 'ACCOUNT_BLOCKED') {
+      setAccessToken(null)
+      window.dispatchEvent(new CustomEvent(ACCOUNT_BLOCKED_EVENT, { detail: response.data.message }))
+      throw error
+    }
 
     if (response?.status !== 401 || config._retried || isAuthRoute) {
       throw error

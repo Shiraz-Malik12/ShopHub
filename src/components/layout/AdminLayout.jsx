@@ -1,4 +1,4 @@
-import { AppstoreOutlined, DashboardOutlined, ExportOutlined, ShoppingOutlined, TagsOutlined } from '@ant-design/icons'
+import { AppstoreOutlined, DashboardOutlined, ExportOutlined, ShoppingOutlined, TagsOutlined, TeamOutlined } from '@ant-design/icons'
 import { Link, NavLink } from 'react-router-dom'
 import Logo from '../Logo'
 import UserMenu from './UserMenu'
@@ -6,6 +6,7 @@ import UserMenu from './UserMenu'
 const NAV_ITEMS = [
   { to: '/admin/dashboard', label: 'Dashboard', icon: <DashboardOutlined /> },
   { to: '/admin/orders', label: 'Orders', icon: <ShoppingOutlined /> },
+  { to: '/admin/customers', label: 'Customers', icon: <TeamOutlined /> },
   { to: '/admin/products', label: 'Products', icon: <AppstoreOutlined /> },
   { to: '/admin/categories', label: 'Categories', icon: <TagsOutlined /> },
 ]

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Form, Input, Button, App as AntdApp } from 'antd'
+import { Alert, Form, Input, Button, App as AntdApp } from 'antd'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import AuthLayout from '../../components/auth/AuthLayout'
 import { useAuth } from '../../context/AuthContext'
@@ -7,7 +7,7 @@ import { homePathFor } from '../../utils/homePathFor'
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false)
-  const { login } = useAuth()
+  const { login, blockedMessage } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const { message } = AntdApp.useApp()
@@ -23,10 +23,11 @@ export default function LoginPage() {
       const data = await login(values)
       navigate(from || homePathFor(data.user), { replace: true })
     } catch (err) {
-      if (err?.response?.status === 403) {
-        // Backend's signal for "credentials are correct, but email isn't
-        // verified yet" — send them to finish the OTP step instead of
-        // showing a generic error.
+      // Blocked: AuthContext already has the message, shown above the form.
+      if (err?.response?.data?.code === 'ACCOUNT_BLOCKED') return
+      if (err?.response?.data?.code === 'EMAIL_NOT_VERIFIED') {
+        // Credentials are correct, but the email isn't verified yet — send
+        // them to finish the OTP step instead of showing a generic error.
         message.warning('Please verify your email first')
         navigate('/verify-otp', { state: { email: values.email } })
         return
@@ -39,6 +40,7 @@ export default function LoginPage() {
 
   return (
     <AuthLayout title="Welcome back" subtitle="Sign in to continue to ShopHub">
+      {blockedMessage && <Alert type="error" showIcon title="Account blocked" description={blockedMessage} className="mb-6" />}
       <Form layout="vertical" onFinish={onFinish} requiredMark={false}>
         <Form.Item
           name="email"

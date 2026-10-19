@@ -44,6 +44,10 @@ const userSchema = new mongoose.Schema(
     otp: { type: otpSchema, default: undefined },
     refreshTokenHash: { type: String, select: false },
     savedAddress: { type: savedAddressSchema, default: undefined },
+    // Set by the admin on the Customers page. A blocked customer can't log
+    // in, and protect.js turns away any request they still make.
+    isBlocked: { type: Boolean, default: false },
+    blockedAt: { type: Date, default: undefined },
   },
   { timestamps: true },
 )

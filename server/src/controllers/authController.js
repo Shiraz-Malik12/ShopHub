@@ -4,6 +4,7 @@ import { generateOtpCode, hashOtp, compareOtp } from '../utils/otp.js'
 import { sendOtpEmail } from '../utils/sendEmail.js'
 import { signAccessToken, signRefreshToken, verifyRefreshToken, hashToken, tokenMatchesHash } from '../utils/tokens.js'
 import { sanitizeUser } from '../utils/sanitizeUser.js'
+import { ACCOUNT_BLOCKED_RESPONSE } from '../middleware/protect.js'
 
 const OTP_TTL_MS = 10 * 60 * 1000 // 10 minutes
 const OTP_RESEND_COOLDOWN_MS = 60 * 1000 // 60 seconds — backend's own copy of the frontend's timer
@@ -108,6 +109,10 @@ export async function verifyOtpHandler(req, res, next) {
       return res.status(400).json({ message: 'Invalid code.' })
     }
 
+    if (user.isBlocked) {
+      return res.status(403).json(ACCOUNT_BLOCKED_RESPONSE)
+    }
+
     user.isVerified = true
     user.otp = undefined
     const accessToken = await issueSession(res, user)
@@ -152,11 +157,17 @@ export async function login(req, res, next) {
       return res.status(401).json({ message: 'Invalid email or password.' })
     }
 
+    // Only told AFTER the password matched, so this can't be used to find
+    // out which emails are blocked.
+    if (user.isBlocked) {
+      return res.status(403).json(ACCOUNT_BLOCKED_RESPONSE)
+    }
+
     if (!user.isVerified) {
       // 403, not 401: credentials were correct, the account just isn't
-      // usable yet. LoginPage.jsx checks specifically for this status to
-      // redirect into the OTP screen instead of showing a generic error.
-      return res.status(403).json({ message: 'Please verify your email before logging in.' })
+      // usable yet. LoginPage.jsx checks for this code to redirect into
+      // the OTP screen instead of showing a generic error.
+      return res.status(403).json({ code: 'EMAIL_NOT_VERIFIED', message: 'Please verify your email before logging in.' })
     }
 
     const accessToken = await issueSession(res, user)
@@ -179,6 +190,9 @@ export async function refresh(req, res, next) {
       // Doesn't match the last token we issued — could be an old, already-
       // rotated token being replayed. Don't honor it.
       return res.status(401).json({ message: 'Session expired, please log in again.' })
+    }
+    if (user.isBlocked) {
+      return res.status(403).json(ACCOUNT_BLOCKED_RESPONSE)
     }
 
     const accessToken = await issueSession(res, user) // rotates the refresh token too

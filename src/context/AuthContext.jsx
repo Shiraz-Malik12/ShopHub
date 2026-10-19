@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import * as authApi from '../api/authApi'
 import { setAccessToken } from '../api/tokenStore'
+import { ACCOUNT_BLOCKED_EVENT } from '../api/axiosInstance'
 
 const AuthContext = createContext(null)
 
@@ -9,6 +10,7 @@ export function AuthProvider({ children }) {
   // Distinguishes "we haven't checked yet" from "checked, not logged in" so
   // ProtectedRoute doesn't flash-redirect to /login on every page refresh.
   const [initializing, setInitializing] = useState(true)
+  const [blockedMessage, setBlockedMessage] = useState(null)
 
   useEffect(() => {
     // The access token lives in memory only (see tokenStore.js), so it's
@@ -31,9 +33,22 @@ export function AuthProvider({ children }) {
     restoreSession()
   }, [])
 
+  // axiosInstance fires this when the server says the account is blocked
+  // (on any request, even mid-session). Clearing `user` makes the protected
+  // pages send them to /login, where `blockedMessage` is shown.
+  useEffect(() => {
+    function handleBlocked(event) {
+      setUser(null)
+      setBlockedMessage(event.detail)
+    }
+    window.addEventListener(ACCOUNT_BLOCKED_EVENT, handleBlocked)
+    return () => window.removeEventListener(ACCOUNT_BLOCKED_EVENT, handleBlocked)
+  }, [])
+
   function persistSession(token, userData) {
     setAccessToken(token)
     setUser(userData)
+    setBlockedMessage(null)
   }
 
   async function register(payload) {
@@ -96,6 +111,7 @@ export function AuthProvider({ children }) {
   const value = {
     user,
     initializing,
+    blockedMessage,
     register,
     verifyOtp,
     resendOtp,
