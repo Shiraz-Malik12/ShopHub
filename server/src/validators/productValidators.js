@@ -64,8 +64,11 @@ export const listProductsRules = [
   query('category').optional().isMongoId().withMessage('Invalid category'),
   query('sort')
     .optional()
-    .isIn(['newest', 'price-asc', 'price-desc', 'name'])
+    .isIn(['newest', 'price-asc', 'price-desc', 'name', 'rating'])
     .withMessage('Invalid sort option'),
   // Values in the address bar always arrive as text, so it's the word 'true'.
   query('inStock').optional().isIn(['true']).withMessage('inStock can only be true'),
+  query('page').optional().isInt({ min: 1, max: 10000 }).withMessage('Page must be a whole number from 1').toInt(),
+  // Capped so nobody can ask for 1,000,000 products in one request.
+  query('limit').optional().isInt({ min: 1, max: 48 }).withMessage('Limit must be a whole number from 1 to 48').toInt(),
 ]

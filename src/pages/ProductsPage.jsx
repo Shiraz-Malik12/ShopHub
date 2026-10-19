@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Button, Checkbox, Empty, Input, Select, Skeleton } from 'antd'
+import { Button, Checkbox, Empty, Input, Pagination, Select, Skeleton } from 'antd'
 import { ReloadOutlined, SearchOutlined, WarningOutlined } from '@ant-design/icons'
 import { useSearchParams } from 'react-router-dom'
 import StoreLayout from '../components/layout/StoreLayout'
@@ -17,6 +17,7 @@ const SORT_OPTIONS = [
   { value: 'price-asc', label: 'Price: low to high' },
   { value: 'price-desc', label: 'Price: high to low' },
   { value: 'name', label: 'Name: A to Z' },
+  { value: 'rating', label: 'Top rated' },
 ]
 
 // Customer storefront listing. The backend (GET /api/products) decides what
@@ -30,9 +31,13 @@ export default function ProductsPage() {
   const category = searchParams.get('category') || ''
   const sort = searchParams.get('sort') || DEFAULT_SORT
   const inStock = searchParams.get('inStock') === 'true'
+  // ?page=2 → 2. Anything missing or invalid means page 1.
+  const page = Math.max(1, Number(searchParams.get('page')) || 1)
   const hasFilters = Boolean(search || category || inStock)
 
   const [products, setProducts] = useState([])
+  // From the server: { page, limit, total, totalPages }
+  const [pagination, setPagination] = useState(null)
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false)
@@ -43,16 +48,31 @@ export default function ProductsPage() {
   const [searchText, setSearchText] = useState(search)
 
   // Adds, changes or removes one filter in the URL, keeping the others.
+  // Changing any filter goes back to page 1 — page 3 of the old results
+  // usually doesn't exist in the new ones.
   function setFilter(key, value) {
     setSearchParams(
       (previous) => {
         const next = new URLSearchParams(previous)
         if (value) next.set(key, value)
         else next.delete(key)
+        next.delete('page')
         return next
       },
       { replace: true },
     )
+  }
+
+  // Page buttons. Unlike filters, each page is a real step in the browser
+  // history, so the Back button returns to the previous page of results.
+  function goToPage(newPage) {
+    setSearchParams((previous) => {
+      const next = new URLSearchParams(previous)
+      if (newPage > 1) next.set('page', String(newPage))
+      else next.delete('page')
+      return next
+    })
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   function clearFilters() {
@@ -99,10 +119,12 @@ export default function ProductsPage() {
         if (category) params.category = category
         if (inStock) params.inStock = 'true'
         if (sort !== DEFAULT_SORT) params.sort = sort
+        if (page > 1) params.page = page
 
         const { data } = await productApi.fetchProducts(params)
         if (ignore) return
         setProducts(data.products)
+        setPagination(data.pagination)
         setHasLoadedOnce(true)
       } catch (err) {
         if (ignore) return
@@ -116,9 +138,13 @@ export default function ProductsPage() {
     return () => {
       ignore = true
     }
-  }, [search, category, sort, inStock, reloadKey])
+  }, [search, category, sort, inStock, page, reloadKey])
 
-  const countLabel = `${products.length} ${products.length === 1 ? 'product' : 'products'} ${hasFilters ? 'found' : 'available'}`
+  // The count is ALL matching products (from the server), not just this page.
+  const total = pagination?.total ?? products.length
+  const countLabel = `${total} ${total === 1 ? 'product' : 'products'} ${hasFilters ? 'found' : 'available'}`
+  const firstShown = pagination ? (pagination.page - 1) * pagination.limit + 1 : 1
+  const lastShown = pagination ? firstShown + products.length - 1 : products.length
 
   return (
     <StoreLayout>
@@ -194,6 +220,13 @@ export default function ProductsPage() {
               Try again
             </Button>
           </div>
+        ) : products.length === 0 && page > 1 ? (
+          // e.g. an old link to ?page=5 when there are now only 2 pages.
+          <div className="rounded-xl border border-slate-800 bg-slate-900 py-16">
+            <Empty description="There are no products on this page.">
+              <Button onClick={() => goToPage(1)}>Go to the first page</Button>
+            </Empty>
+          </div>
         ) : products.length === 0 ? (
           <div className="rounded-xl border border-slate-800 bg-slate-900 py-16">
             <Empty description={hasFilters ? 'No products match your search.' : 'No products available.'}>
@@ -209,6 +242,21 @@ export default function ProductsPage() {
             {products.map((product) => (
               <ProductCard key={product._id} product={product} />
             ))}
+          </div>
+        )}
+
+        {pagination && pagination.totalPages > 1 && products.length > 0 && (
+          <div className="mt-10 flex flex-col items-center gap-3">
+            <Pagination
+              current={page}
+              pageSize={pagination.limit}
+              total={pagination.total}
+              onChange={goToPage}
+              showSizeChanger={false}
+            />
+            <p className="text-sm text-slate-400">
+              Showing {firstShown}–{lastShown} of {pagination.total}
+            </p>
           </div>
         )}
       </div>

@@ -28,6 +28,12 @@ const productSchema = new mongoose.Schema(
         message: `A product can have at most ${MAX_PRODUCT_IMAGES} images`,
       },
     },
+    // A summary of this product's reviews, kept up to date whenever a review
+    // is added, changed or removed (see reviewController.updateProductRating).
+    // Stored here so the shop can show stars and sort by rating without
+    // reading every review of every product.
+    ratingAverage: { type: Number, default: 0, min: 0, max: 5 },
+    ratingCount: { type: Number, default: 0, min: 0 },
   },
   { timestamps: true },
 )

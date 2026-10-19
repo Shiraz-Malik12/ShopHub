@@ -8,12 +8,18 @@ async function findActiveCategory(categoryId) {
 
 // The sort options the storefront may ask for (?sort=...). Anything else is
 // rejected by listProductsRules, so a client can't sort by arbitrary fields.
+// Every sort ends with _id: when two products tie (same price, same moment),
+// _id puts them in a fixed order, so a product never shows up on two pages
+// or on none when the customer moves between pages.
 export const PRODUCT_SORTS = {
-  newest: { createdAt: -1 },
-  'price-asc': { price: 1 },
-  'price-desc': { price: -1 },
-  name: { name: 1 },
+  newest: { createdAt: -1, _id: -1 },
+  'price-asc': { price: 1, _id: 1 },
+  'price-desc': { price: -1, _id: -1 },
+  name: { name: 1, _id: 1 },
+  rating: { ratingAverage: -1, ratingCount: -1, _id: -1 },
 }
+
+export const DEFAULT_PAGE_SIZE = 8
 
 // Typed text goes into a regular expression, so characters that mean
 // something special there (like . * + ? ( ) are escaped to be matched
@@ -22,11 +28,13 @@ function escapeRegex(text) {
   return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-// GET /api/products?search=iphone&category=<id>&sort=price-asc&inStock=true
-// All four are optional; with none, this returns every visible product.
+// GET /api/products?search=iphone&category=<id>&sort=price-asc&inStock=true&page=2&limit=8
+// All optional; with none, this returns the first page of visible products.
 export async function listActiveProducts(req, res, next) {
   try {
     const { search, category, sort, inStock } = req.query
+    const page = req.query.page || 1
+    const limit = req.query.limit || DEFAULT_PAGE_SIZE
     const filter = await customerVisibleFilter(category)
 
     if (search) {
@@ -40,10 +48,21 @@ export async function listActiveProducts(req, res, next) {
       filter.stock = { $gt: 0 }
     }
 
-    const products = await Product.find(filter)
-      .populate('category', 'name slug')
-      .sort(PRODUCT_SORTS[sort] || PRODUCT_SORTS.newest)
-    res.status(200).json({ products })
+    // Two questions at once: this page's products, and how many match in total
+    // (needed to know how many pages there are).
+    const [products, total] = await Promise.all([
+      Product.find(filter)
+        .populate('category', 'name slug')
+        .sort(PRODUCT_SORTS[sort] || PRODUCT_SORTS.newest)
+        .skip((page - 1) * limit) // page 3 with 8 per page → skip the first 16
+        .limit(limit),
+      Product.countDocuments(filter),
+    ])
+
+    res.status(200).json({
+      products,
+      pagination: { page, limit, total, totalPages: Math.max(1, Math.ceil(total / limit)) },
+    })
   } catch (err) {
     next(err)
   }

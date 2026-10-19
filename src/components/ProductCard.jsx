@@ -2,6 +2,7 @@ import { Button } from 'antd'
 import { Link, useNavigate } from 'react-router-dom'
 import AddToCartButton from './AddToCartButton'
 import ProductImage from './ProductImage'
+import RatingStars from './reviews/RatingStars'
 import StockBadge from './StockBadge'
 import { formatPrice } from '../utils/formatPrice'
 
@@ -28,6 +29,9 @@ export default function ProductCard({ product }) {
         <Link to={productUrl} className="mt-1 line-clamp-2 font-semibold text-slate-100 hover:text-indigo-400">
           {product.name}
         </Link>
+        <div className="mt-1.5">
+          <RatingStars average={product.ratingAverage} count={product.ratingCount} size={12} />
+        </div>
 
         <div className="mt-3 flex items-center justify-between gap-2">
           <span className="text-lg font-bold text-slate-100">{formatPrice(product.price)}</span>

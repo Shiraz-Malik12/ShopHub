@@ -7,6 +7,8 @@ import AddToCartButton from '../components/AddToCartButton'
 import ProductImage from '../components/ProductImage'
 import QuantityStepper from '../components/QuantityStepper'
 import StockBadge from '../components/StockBadge'
+import ProductReviews from '../components/reviews/ProductReviews'
+import RatingStars from '../components/reviews/RatingStars'
 import * as productApi from '../api/productApi'
 import { formatPrice } from '../utils/formatPrice'
 
@@ -104,6 +106,9 @@ export default function ProductDetailPage() {
                   {product.category?.name || 'Uncategorized'}
                 </p>
                 <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-100">{product.name}</h1>
+                <a href="#reviews" className="mt-2 inline-block">
+                  <RatingStars average={product.ratingAverage} count={product.ratingCount} size={16} />
+                </a>
                 <div className="mt-4 flex items-center gap-4">
                   <span className="text-3xl font-bold text-slate-100">{formatPrice(product.price)}</span>
                   <StockBadge stock={product.stock} />
@@ -142,6 +147,13 @@ export default function ProductDetailPage() {
                 </Link>
               </div>
             </div>
+            <ProductReviews
+              productId={product._id}
+              // New review totals → update the stars at the top of the page too.
+              onSummaryChange={(summary) =>
+                setProduct((previous) => ({ ...previous, ratingAverage: summary.average, ratingCount: summary.count }))
+              }
+            />
           </>
         )}
       </div>

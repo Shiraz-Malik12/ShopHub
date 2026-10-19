@@ -48,7 +48,9 @@ export default function StoreLayout({ children }) {
                 <Link to="/login" className="px-2 text-sm font-medium text-slate-400 hover:text-white">
                   Sign in
                 </Link>
-                <Link to="/register">
+                {/* Hidden on phones: it doesn't fit next to the cart and Sign in,
+                    and the sign-in page links to registration anyway. */}
+                <Link to="/register" className="hidden sm:block">
                   <Button type="primary">Create account</Button>
                 </Link>
               </div>
