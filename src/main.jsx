@@ -7,6 +7,7 @@ import './index.css'
 import App from './App.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
 import { CartProvider } from './context/CartContext.jsx'
+import { WishlistProvider } from './context/WishlistContext.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -49,7 +50,9 @@ createRoot(document.getElementById('root')).render(
             <AuthProvider>
               {/* Inside AuthProvider: the cart needs to know who is signed in. */}
               <CartProvider>
-                <App />
+                <WishlistProvider>
+                  <App />
+                </WishlistProvider>
               </CartProvider>
             </AuthProvider>
           </BrowserRouter>

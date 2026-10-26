@@ -4,6 +4,7 @@ import { ArrowLeftOutlined } from '@ant-design/icons'
 import { Link, useParams } from 'react-router-dom'
 import StoreLayout from '../components/layout/StoreLayout'
 import AddToCartButton from '../components/AddToCartButton'
+import WishlistButton from '../components/WishlistButton'
 import ProductImage from '../components/ProductImage'
 import QuantityStepper from '../components/QuantityStepper'
 import StockBadge from '../components/StockBadge'
@@ -119,6 +120,7 @@ export default function ProductDetailPage() {
                     <QuantityStepper value={quantity} max={Math.min(product.stock, 99)} onChange={setQuantity} />
                   )}
                   <AddToCartButton product={product} quantity={quantity} size="large" />
+                  <WishlistButton product={product} size="large" />
                 </div>
 
                 <div className="mt-8 border-t border-slate-800 pt-8">

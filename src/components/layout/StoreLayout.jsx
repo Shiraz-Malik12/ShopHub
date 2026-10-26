@@ -1,15 +1,17 @@
 import { Badge, Button } from 'antd'
-import { ShoppingCartOutlined } from '@ant-design/icons'
+import { HeartOutlined, ShoppingCartOutlined } from '@ant-design/icons'
 import { Link, NavLink } from 'react-router-dom'
 import Logo from '../Logo'
 import UserMenu from './UserMenu'
 import { useAuth } from '../../context/AuthContext'
 import { useCart } from '../../context/CartContext'
+import { useWishlist } from '../../context/WishlistContext'
 
 // Shell for every customer-facing page: sticky header, page content, footer.
 export default function StoreLayout({ children }) {
   const { user, initializing } = useAuth()
   const { cart } = useCart()
+  const { count: wishlistCount } = useWishlist()
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-950">
@@ -27,7 +29,17 @@ export default function StoreLayout({ children }) {
             </nav>
           </div>
 
-          <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Link
+              to="/wishlist"
+              aria-label={`Wishlist, ${wishlistCount} saved`}
+              className="flex h-9 w-9 items-center justify-center rounded-full text-slate-300 hover:bg-slate-800 hover:text-white"
+            >
+              <Badge count={wishlistCount} size="small" color="#f43f5e">
+                <HeartOutlined className="text-xl text-slate-300" />
+              </Badge>
+            </Link>
+
             {/* Guests can click it too — /cart sends them to sign in first. */}
             <Link
               to="/cart"

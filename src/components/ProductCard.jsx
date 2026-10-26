@@ -4,6 +4,7 @@ import AddToCartButton from './AddToCartButton'
 import ProductImage from './ProductImage'
 import RatingStars from './reviews/RatingStars'
 import StockBadge from './StockBadge'
+import WishlistButton from './WishlistButton'
 import { formatPrice } from '../utils/formatPrice'
 
 // One product in the customer listing. Receives a single product (from
@@ -14,13 +15,18 @@ export default function ProductCard({ product }) {
 
   return (
     <article className="group flex flex-col overflow-hidden rounded-xl border border-slate-800 bg-slate-900 transition duration-200 hover:-translate-y-0.5 hover:shadow-lg">
-      <Link to={productUrl} className="block aspect-square overflow-hidden bg-slate-800">
-        <ProductImage
-          src={product.images?.[0]?.url}
-          alt={product.name}
-          className="h-full w-full transition duration-300 group-hover:scale-105"
-        />
-      </Link>
+      <div className="relative">
+        <Link to={productUrl} className="block aspect-square overflow-hidden bg-slate-800">
+          <ProductImage
+            src={product.images?.[0]?.url}
+            alt={product.name}
+            className="h-full w-full transition duration-300 group-hover:scale-105"
+          />
+        </Link>
+        <div className="absolute right-3 top-3">
+          <WishlistButton product={product} overlay />
+        </div>
+      </div>
 
       <div className="flex flex-1 flex-col p-4">
         <p className="text-xs font-medium uppercase tracking-wide text-slate-400">

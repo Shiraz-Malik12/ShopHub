@@ -12,6 +12,7 @@ products, categories and orders from an admin area.
 - Browse the shop: search, filter by category, "in stock only", sort (newest, price, name, top rated), pages of 8
 - Product pages with photos, stock status, star ratings and reviews
 - Cart saved to the account (same cart on every device)
+- Wishlist: tap the heart on any product to save it for later
 - Checkout with cash on delivery, order history, order tracking, cancel while pending
 - Emails for order confirmation and every status change
 - Profile: change name, change password (signs out other devices), saved delivery address

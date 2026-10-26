@@ -10,6 +10,7 @@ import categoryRoutes from './routes/categoryRoutes.js'
 import productRoutes from './routes/productRoutes.js'
 import reviewRoutes from './routes/reviewRoutes.js'
 import cartRoutes from './routes/cartRoutes.js'
+import wishlistRoutes from './routes/wishlistRoutes.js'
 import orderRoutes from './routes/orderRoutes.js'
 import dashboardRoutes from './routes/dashboardRoutes.js'
 import customerRoutes from './routes/customerRoutes.js'
@@ -74,6 +75,7 @@ app.use('/api/categories', categoryRoutes)
 app.use('/api/products/:productId/reviews', reviewRoutes)
 app.use('/api/products', productRoutes)
 app.use('/api/cart', cartRoutes)
+app.use('/api/wishlist', wishlistRoutes)
 app.use('/api/orders', orderRoutes)
 app.use('/api/admin/customers', customerRoutes)
 app.use('/api/admin', dashboardRoutes)
