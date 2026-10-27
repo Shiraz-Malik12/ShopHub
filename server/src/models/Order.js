@@ -42,6 +42,15 @@ const shippingAddressSchema = new mongoose.Schema(
   { _id: false },
 )
 
+const couponSnapshotSchema = new mongoose.Schema(
+  {
+    code: { type: String, required: true },
+    type: { type: String, required: true },
+    value: { type: Number, required: true },
+  },
+  { _id: false },
+)
+
 const orderSchema = new mongoose.Schema(
   {
     // Short, human-friendly reference shown to the customer (e.g. on the
@@ -58,6 +67,11 @@ const orderSchema = new mongoose.Schema(
     status: { type: String, enum: ORDER_STATUSES, default: 'pending', index: true },
     itemCount: { type: Number, required: true, min: 1 },
     subtotal: { type: Number, required: true, min: 0 },
+    // Money taken off by a coupon (0 = no coupon). total = subtotal - discount.
+    discount: { type: Number, default: 0, min: 0 },
+    // A snapshot of the coupon, like the items: if the admin later edits or
+    // deletes the coupon, this order still shows what was applied.
+    coupon: { type: couponSnapshotSchema, default: undefined },
     total: { type: Number, required: true, min: 0 },
   },
   { timestamps: true },

@@ -18,6 +18,7 @@ import OrderDetailPage from './pages/OrderDetailPage'
 import AdminOrdersPage from './pages/admin/OrdersPage'
 import AdminDashboardPage from './pages/admin/DashboardPage'
 import CustomersPage from './pages/admin/CustomersPage'
+import CouponsPage from './pages/admin/CouponsPage'
 import ProtectedRoute from './routes/ProtectedRoute'
 import PublicRoute from './routes/PublicRoute'
 import AdminRoute from './routes/AdminRoute'
@@ -61,6 +62,7 @@ function App() {
         <Route path="/admin/products" element={<ProductsPage />} />
         <Route path="/admin/orders" element={<AdminOrdersPage />} />
         <Route path="/admin/customers" element={<CustomersPage />} />
+        <Route path="/admin/coupons" element={<CouponsPage />} />
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />

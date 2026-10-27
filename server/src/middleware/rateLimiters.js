@@ -21,6 +21,16 @@ export const otpLimiter = rateLimit({
   message: { message: 'Too many attempts. Please try again later.' },
 })
 
+// Coupon "Apply": stops a script from guessing codes one after another
+// (SAVE1, SAVE2, SAVE3...). A real customer only tries a few.
+export const couponLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many coupon attempts. Please try again later.' },
+})
+
 // authLimiter above is keyed by IP, which credential stuffing spread across
 // many IPs/proxies simply routes around. This one is keyed by the account
 // being targeted instead, and only counts *failed* attempts

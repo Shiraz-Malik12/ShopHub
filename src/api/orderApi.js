@@ -3,7 +3,9 @@ import api from './axiosInstance'
 // Thin, one-line-per-endpoint wrappers — mirrors cartApi.js. Every order
 // endpoint needs a signed-in user; the token is attached by axiosInstance.
 // saveAddress: true → the server also remembers this address on the account.
-export const placeOrder = (shippingAddress, saveAddress = false) => api.post('/orders', { shippingAddress, saveAddress })
+// couponCode (optional): only the code is sent — the server works out the discount.
+export const placeOrder = (shippingAddress, saveAddress = false, couponCode) =>
+  api.post('/orders', { shippingAddress, saveAddress, couponCode })
 export const fetchMyOrders = () => api.get('/orders/mine')
 export const fetchOrder = (id) => api.get(`/orders/${id}`)
 export const cancelOrder = (id) => api.patch(`/orders/${id}/cancel`)

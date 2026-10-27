@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Alert, App as AntdApp, Button, Checkbox, Form, Input, Skeleton } from 'antd'
 import { ArrowLeftOutlined, DollarOutlined, LockOutlined } from '@ant-design/icons'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import StoreLayout from '../components/layout/StoreLayout'
 import ProductImage from '../components/ProductImage'
+import CouponBox from '../components/CouponBox'
+import * as couponApi from '../api/couponApi'
 import * as orderApi from '../api/orderApi'
 import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
@@ -22,14 +24,38 @@ export default function CheckoutPage() {
   // "empty cart → back to /cart" redirect below from firing in that moment.
   const [orderPlaced, setOrderPlaced] = useState(false)
 
+  // The server's answer to "Apply coupon" ({ coupon, subtotal, discount, total }), or null.
+  const [appliedCoupon, setAppliedCoupon] = useState(null)
+
   const hasUnavailableItems = cart.items.some((item) => !item.available)
+  const total = appliedCoupon ? appliedCoupon.total : cart.subtotal
+
+  // The cart changed after the coupon was applied (e.g. an item sold out):
+  // ask the server again, so the discount shown is never out of date.
+  useEffect(() => {
+    if (!appliedCoupon || orderPlaced || appliedCoupon.subtotal === cart.subtotal) return
+    let ignore = false
+    couponApi
+      .applyCoupon(appliedCoupon.coupon.code)
+      .then(({ data }) => {
+        if (!ignore) setAppliedCoupon(data)
+      })
+      .catch((err) => {
+        if (ignore) return
+        setAppliedCoupon(null)
+        message.warning(err?.response?.data?.message || 'Your coupon no longer applies and was removed.')
+      })
+    return () => {
+      ignore = true
+    }
+  }, [appliedCoupon, cart.subtotal, orderPlaced, message])
 
   async function handlePlaceOrder(values) {
     setPlacing(true)
     try {
       // The checkbox isn't part of the address — split it off before sending.
       const { saveAddress, ...shippingAddress } = values
-      const { data } = await orderApi.placeOrder(shippingAddress, saveAddress)
+      const { data } = await orderApi.placeOrder(shippingAddress, saveAddress, appliedCoupon?.coupon.code)
       setOrderPlaced(true)
       await refresh().catch(() => {}) // the server emptied the cart — reload it
       if (saveAddress) await refreshUser().catch(() => {}) // pick up the newly saved address
@@ -172,18 +198,28 @@ export default function CheckoutPage() {
                 ))}
               </ul>
 
-              <dl className="mt-6 space-y-3 border-t border-slate-800 pt-4 text-sm">
+              <div className="mt-6 border-t border-slate-800 pt-4">
+                <CouponBox applied={appliedCoupon} onApplied={setAppliedCoupon} onRemoved={() => setAppliedCoupon(null)} />
+              </div>
+
+              <dl className="mt-4 space-y-3 text-sm">
                 <div className="flex justify-between">
                   <dt className="text-slate-400">Subtotal</dt>
                   <dd className="font-medium text-slate-100">{formatPrice(cart.subtotal)}</dd>
                 </div>
+                {appliedCoupon && (
+                  <div className="flex justify-between">
+                    <dt className="text-emerald-400">Discount ({appliedCoupon.coupon.code})</dt>
+                    <dd className="font-medium text-emerald-400">−{formatPrice(appliedCoupon.discount)}</dd>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <dt className="text-slate-400">Shipping</dt>
                   <dd className="font-medium text-emerald-400">Free</dd>
                 </div>
                 <div className="flex justify-between border-t border-slate-800 pt-3 text-base">
                   <dt className="font-semibold text-slate-100">Total</dt>
-                  <dd className="font-bold text-slate-100">{formatPrice(cart.subtotal)}</dd>
+                  <dd className="font-bold text-slate-100">{formatPrice(total)}</dd>
                 </div>
               </dl>
 

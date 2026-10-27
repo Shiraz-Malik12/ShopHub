@@ -4,6 +4,7 @@ import Cart from '../models/Cart.js'
 import Product from '../models/Product.js'
 import User from '../models/User.js'
 import { sendInBackground, sendOrderPlacedEmail, sendOrderStatusEmail } from '../utils/orderEmails.js'
+import { checkCoupon, claimCouponUse, releaseCouponUse } from '../utils/coupons.js'
 
 const ORDER_NUMBER_ATTEMPTS = 3
 
@@ -47,7 +48,7 @@ function fail(status, message) {
   return error
 }
 
-// POST /api/orders  { shippingAddress }
+// POST /api/orders  { shippingAddress, saveAddress?, couponCode? }
 // Turns the signed-in user's cart into an order. The items and prices come
 // from the cart and the database — never from the request — so a client
 // can't choose its own prices.
@@ -80,11 +81,23 @@ export async function placeOrder(req, res, next) {
       }
     }
 
+    // A coupon code was entered: check it now, against the REAL subtotal
+    // from the database. The discount is calculated here, never in the browser.
+    const subtotal = cart.items.reduce((sum, item) => sum + item.product.price * item.quantity, 0)
+    let coupon = null
+    let discount = 0
+    if (req.body.couponCode) {
+      const checked = await checkCoupon(req.body.couponCode, { subtotal, userId: req.user._id })
+      if (checked.error) throw fail(400, checked.error)
+      ;({ coupon, discount } = checked)
+    }
+
     // 2. Take the stock. Each update only succeeds if enough stock is STILL
     //    there at that exact moment ($gte) — so two customers buying the last
     //    item at the same time can't both get it. If any step fails, the
     //    stock already taken for this order is put back.
     const reserved = []
+    let couponClaimed = false
     let order
     try {
       for (const item of cart.items) {
@@ -98,6 +111,12 @@ export async function placeOrder(req, res, next) {
         reserved.push(item)
       }
 
+      // Take one use of the coupon — fails if someone just used the last one.
+      if (coupon) {
+        couponClaimed = await claimCouponUse(coupon)
+        if (!couponClaimed) throw fail(409, 'This coupon was just used up. Please remove it and try again.')
+      }
+
       // 3. Save the order with a snapshot of each product as it is right now.
       const items = cart.items.map((item) => ({
         product: item.product._id,
@@ -107,7 +126,6 @@ export async function placeOrder(req, res, next) {
         image: item.product.images[0]?.url || null,
         lineTotal: item.product.price * item.quantity,
       }))
-      const subtotal = items.reduce((sum, item) => sum + item.lineTotal, 0)
 
       order = await createOrderWithNumber({
         user: req.user._id,
@@ -116,10 +134,14 @@ export async function placeOrder(req, res, next) {
         paymentMethod: 'cod',
         itemCount: items.reduce((sum, item) => sum + item.quantity, 0),
         subtotal,
-        total: subtotal, // shipping is free for now
+        discount,
+        coupon: coupon ? { code: coupon.code, type: coupon.type, value: coupon.value } : undefined,
+        // Shipping is free for now. Rounded to cents (e.g. 10% of $18.99).
+        total: Math.round((subtotal - discount) * 100) / 100,
       })
     } catch (err) {
       await restock(reserved)
+      if (couponClaimed) await releaseCouponUse(coupon.code)
       throw err
     }
 
@@ -202,6 +224,7 @@ export async function cancelMyOrder(req, res, next) {
     }
 
     await restock(order.items)
+    await releaseCouponUse(order.coupon?.code) // the coupon can be used again
     sendInBackground(sendOrderStatusEmail(order, req.user))
     res.status(200).json({ message: 'Order cancelled', order })
   } catch (err) {
@@ -237,6 +260,7 @@ export async function updateOrderStatus(req, res, next) {
 
     if (status === 'cancelled') {
       await restock(order.items)
+      await releaseCouponUse(order.coupon?.code)
     }
 
     // Tell the customer (skipped if their account no longer exists).

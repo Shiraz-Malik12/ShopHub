@@ -14,6 +14,8 @@ export const placeOrderRules = [
     .withMessage('Notes must be at most 500 characters'),
   // "Save this address for next time" checkbox at checkout.
   body('saveAddress').optional().isBoolean().withMessage('saveAddress must be true or false').toBoolean(),
+  // Optional coupon code. Only the code is sent — the server works out the discount.
+  body('couponCode').optional({ values: 'falsy' }).isString().trim().isLength({ max: 30 }).withMessage('Invalid coupon code'),
 ]
 
 export const orderIdRules = [param('id').isMongoId().withMessage('Invalid order id')]

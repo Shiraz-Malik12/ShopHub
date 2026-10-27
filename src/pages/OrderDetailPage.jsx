@@ -171,6 +171,12 @@ export default function OrderDetailPage() {
                       <dt className="text-slate-400">Subtotal</dt>
                       <dd className="font-medium text-slate-100">{formatPrice(order.subtotal)}</dd>
                     </div>
+                    {order.discount > 0 && (
+                      <div className="flex justify-between">
+                        <dt className="text-emerald-400">Discount ({order.coupon?.code || 'coupon'})</dt>
+                        <dd className="font-medium text-emerald-400">−{formatPrice(order.discount)}</dd>
+                      </div>
+                    )}
                     <div className="flex justify-between">
                       <dt className="text-slate-400">Shipping</dt>
                       <dd className="font-medium text-emerald-400">Free</dd>

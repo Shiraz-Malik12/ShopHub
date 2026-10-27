@@ -21,7 +21,8 @@ async function findVisibleProduct(productId) {
 // Turns the stored cart (product ids + quantities) into what the frontend
 // shows: full product info, a line total per item, and overall totals.
 // Prices always come from the product, never from the cart.
-async function buildCartResponse(cart) {
+// Also used by the coupon "Apply" check, which needs the same subtotal.
+export async function buildCartResponse(cart) {
   await cart.populate({
     path: 'items.product',
     select: 'name price stock images isActive category',

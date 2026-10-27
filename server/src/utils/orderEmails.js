@@ -55,6 +55,15 @@ function layout({ headline, intro, order, showItems }) {
     )
     .join('')
   const address = order.shippingAddress
+  // Only for orders that used a coupon.
+  const discountRow =
+    order.discount > 0
+      ? `
+        <tr>
+          <td style="padding:8px 0; color:#059669;">Discount (${escapeHtml(order.coupon?.code || 'coupon')})</td>
+          <td style="padding:8px 0; text-align:right; color:#059669;">-${formatPrice(order.discount)}</td>
+        </tr>`
+      : ''
 
   return `
     <div style="font-family: Inter, Arial, sans-serif; max-width: 520px; margin: 0 auto; color:#374151;">
@@ -64,7 +73,7 @@ function layout({ headline, intro, order, showItems }) {
       <p style="margin: 16px 0 4px;"><strong>Order ${escapeHtml(order.orderNumber)}</strong></p>
       ${
         showItems
-          ? `<table style="width:100%; border-collapse:collapse; border-top:1px solid #e5e7eb;">${rows}
+          ? `<table style="width:100%; border-collapse:collapse; border-top:1px solid #e5e7eb;">${rows}${discountRow}
                <tr><td style="padding:8px 0; border-top:1px solid #e5e7eb;"><strong>Total</strong></td>
                    <td style="padding:8px 0; border-top:1px solid #e5e7eb; text-align:right;"><strong>${formatPrice(order.total)}</strong></td></tr>
              </table>
@@ -83,6 +92,7 @@ function layout({ headline, intro, order, showItems }) {
 // Plain-text version, for email apps that don't show HTML.
 function plainText({ headline, intro, order }) {
   const lines = order.items.map((item) => `- ${item.name} x ${item.quantity}: ${formatPrice(item.lineTotal)}`)
+  if (order.discount > 0) lines.push(`Discount (${order.coupon?.code || 'coupon'}): -${formatPrice(order.discount)}`)
   return [headline, '', intro, '', `Order ${order.orderNumber}`, ...lines, `Total: ${formatPrice(order.total)}`, '', `View your order: ${orderUrl(order)}`].join('\n')
 }
 

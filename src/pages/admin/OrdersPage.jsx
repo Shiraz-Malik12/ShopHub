@@ -180,6 +180,11 @@ export default function OrdersPage() {
           <p className="mt-3 text-sm text-slate-400">
             Payment: <span className="text-slate-100">Cash on delivery</span>
           </p>
+          {order.discount > 0 && (
+            <p className="mt-1 text-sm text-slate-400">
+              Coupon: <span className="text-emerald-400">{order.coupon?.code} (−{formatPrice(order.discount)})</span>
+            </p>
+          )}
         </div>
       </div>
     )

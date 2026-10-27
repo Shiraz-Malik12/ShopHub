@@ -1,4 +1,4 @@
-import { AppstoreOutlined, DashboardOutlined, ExportOutlined, ShoppingOutlined, TagsOutlined, TeamOutlined } from '@ant-design/icons'
+import { AppstoreOutlined, DashboardOutlined, ExportOutlined, PercentageOutlined, ShoppingOutlined, TagsOutlined, TeamOutlined } from '@ant-design/icons'
 import { Link, NavLink } from 'react-router-dom'
 import Logo from '../Logo'
 import UserMenu from './UserMenu'
@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { to: '/admin/customers', label: 'Customers', icon: <TeamOutlined /> },
   { to: '/admin/products', label: 'Products', icon: <AppstoreOutlined /> },
   { to: '/admin/categories', label: 'Categories', icon: <TagsOutlined /> },
+  { to: '/admin/coupons', label: 'Coupons', icon: <PercentageOutlined /> },
 ]
 
 function navClass({ isActive }) {

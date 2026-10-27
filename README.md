@@ -14,6 +14,7 @@ products, categories and orders from an admin area.
 - Cart saved to the account (same cart on every device)
 - Wishlist: tap the heart on any product to save it for later
 - Checkout with cash on delivery, order history, order tracking, cancel while pending
+- Coupon codes at checkout (percent or fixed amount off; the server checks the code and calculates the discount)
 - Emails for order confirmation and every status change
 - Profile: change name, change password (signs out other devices), saved delivery address
 - Reviews: 1–5 stars + comment, only after the order containing the product was delivered
@@ -24,6 +25,7 @@ products, categories and orders from an admin area.
 - Products (with up to 5 images each) and categories; hide instead of delete
 - Customers: search, orders and total spent per customer, saved address, order history
 - Block / unblock a customer (signs them out everywhere; they can't log in or order)
+- Coupons: create codes with a minimum order, usage limit and expiry date; switch on/off; see how often each was used
 - Remove inappropriate reviews
 
 **Security**

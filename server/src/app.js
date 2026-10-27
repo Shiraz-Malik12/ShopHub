@@ -12,6 +12,7 @@ import reviewRoutes from './routes/reviewRoutes.js'
 import cartRoutes from './routes/cartRoutes.js'
 import wishlistRoutes from './routes/wishlistRoutes.js'
 import orderRoutes from './routes/orderRoutes.js'
+import couponRoutes from './routes/couponRoutes.js'
 import dashboardRoutes from './routes/dashboardRoutes.js'
 import customerRoutes from './routes/customerRoutes.js'
 import profileRoutes from './routes/profileRoutes.js'
@@ -77,6 +78,7 @@ app.use('/api/products', productRoutes)
 app.use('/api/cart', cartRoutes)
 app.use('/api/wishlist', wishlistRoutes)
 app.use('/api/orders', orderRoutes)
+app.use('/api/coupons', couponRoutes)
 app.use('/api/admin/customers', customerRoutes)
 app.use('/api/admin', dashboardRoutes)
 app.use('/api/profile', profileRoutes)
