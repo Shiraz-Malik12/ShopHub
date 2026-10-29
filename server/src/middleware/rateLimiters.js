@@ -49,3 +49,10 @@ export const loginAccountLimiter = rateLimit({
   keyGenerator: (req) => req.body?.email?.trim().toLowerCase() || req.ip,
   message: { message: 'Too many login attempts for this account. Please try again later.' },
 })
+export const contactLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many contact attempts. Please try again later.' },
+})
