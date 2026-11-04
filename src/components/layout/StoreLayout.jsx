@@ -26,6 +26,10 @@ export default function StoreLayout({ children }) {
               >
                 Shop
               </NavLink>
+             {/* add the contact link there */}
+              <NavLink to="/contact" className={({ isActive }) => (isActive ? 'text-indigo-400' : 'text-slate-400 hover:text-white')}>
+                Contact
+              </NavLink>
             </nav>
           </div>
 
@@ -77,6 +81,7 @@ export default function StoreLayout({ children }) {
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-sm text-slate-400 sm:flex-row sm:px-6 lg:px-8">
           <span>© {new Date().getFullYear()} ShopHub. All rights reserved.</span>
           <Link to="/products" className="hover:text-white">Shop all products</Link>
+          <Link to="/contact" className="hover:text-white">Contact us</Link>
         </div>
       </footer>
     </div>

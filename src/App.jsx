@@ -19,9 +19,11 @@ import AdminOrdersPage from './pages/admin/OrdersPage'
 import AdminDashboardPage from './pages/admin/DashboardPage'
 import CustomersPage from './pages/admin/CustomersPage'
 import CouponsPage from './pages/admin/CouponsPage'
+import MessagesPage from './pages/admin/MessagesPage'
 import ProtectedRoute from './routes/ProtectedRoute'
 import PublicRoute from './routes/PublicRoute'
 import AdminRoute from './routes/AdminRoute'
+import ContactPage from './pages/ContactPage'
 
 function App() {
   return (
@@ -32,6 +34,7 @@ function App() {
           state (see VerifyOtpPage / ResetPasswordPage). */}
       <Route path="/verify-otp" element={<VerifyOtpPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
+      
 
       <Route element={<PublicRoute />}>
         {/* An already-logged-in user hitting any of these is bounced to
@@ -45,6 +48,8 @@ function App() {
       <Route path="/" element={<Navigate to="/products" replace />} />
       <Route path="/products" element={<StorefrontProductsPage />} />
       <Route path="/products/:id" element={<ProductDetailPage />} />
+      <Route path="/contact" element={<ContactPage />} />
+      
 
       <Route element={<ProtectedRoute />}>
         <Route path="/account" element={<DashboardPage />} />
@@ -63,6 +68,7 @@ function App() {
         <Route path="/admin/orders" element={<AdminOrdersPage />} />
         <Route path="/admin/customers" element={<CustomersPage />} />
         <Route path="/admin/coupons" element={<CouponsPage />} />
+        <Route path="/admin/messages" element={<MessagesPage />} />
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />
