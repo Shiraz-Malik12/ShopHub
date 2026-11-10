@@ -11,16 +11,11 @@ const REQUIRED = ['MONGODB_URI', 'CLIENT_URL', 'ACCESS_TOKEN_SECRET', 'REFRESH_T
 // Only optional while developing: without them the dev fallbacks kick in
 // (images saved to server/uploads, emails printed to the console). A real
 // shop needs both — customers couldn't verify their email otherwise.
-const REQUIRED_IN_PRODUCTION = [
-  'CLOUDINARY_CLOUD_NAME',
-  'CLOUDINARY_API_KEY',
-  'CLOUDINARY_API_SECRET',
-  'SMTP_HOST',
-  'SMTP_PORT',
-  'SMTP_USER',
-  'SMTP_PASS',
-  'EMAIL_FROM',
-]
+const REQUIRED_IN_PRODUCTION = ['CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET', 'EMAIL_FROM']
+
+// Email can go out either way (see utils/sendEmail.js): one full set is enough.
+const BREVO_SETTINGS = ['BREVO_API_KEY']
+const SMTP_SETTINGS = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS']
 
 // Returns { problems, warnings } — problems stop the server, warnings don't.
 export function checkEnv(env = process.env) {
@@ -50,6 +45,10 @@ export function checkEnv(env = process.env) {
   if (isProduction) {
     for (const name of REQUIRED_IN_PRODUCTION) {
       if (!env[name]) problems.push(`${name} is missing (required when NODE_ENV=production).`)
+    }
+    const hasAll = (names) => names.every((name) => env[name])
+    if (!hasAll(BREVO_SETTINGS) && !hasAll(SMTP_SETTINGS)) {
+      problems.push(`Email is not configured: set BREVO_API_KEY, or all of ${SMTP_SETTINGS.join(', ')} (required when NODE_ENV=production).`)
     }
     if (env.CLIENT_URL && !env.CLIENT_URL.startsWith('https://')) {
       warnings.push('CLIENT_URL does not start with https:// — a live shop should always use HTTPS.')
