@@ -10,7 +10,7 @@ export default function ProductImage({ src, alt, className = '', fit = 'cover', 
 
   if (!src || failed) {
     return (
-      <div className={`flex flex-col items-center justify-center gap-1 bg-slate-800 text-slate-500 ${className}`}>
+      <div className={`flex flex-col items-center justify-center gap-1 bg-muted text-faint ${className}`}>
         <PictureOutlined className={compact ? 'text-base' : 'text-2xl'} />
         {!compact && <span className="text-xs">No image</span>}
       </div>

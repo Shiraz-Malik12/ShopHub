@@ -49,8 +49,8 @@ function BlockButton({ customer, busy, onChange }) {
 function InfoRow({ label, children }) {
   return (
     <div className="flex justify-between gap-4 py-1.5 text-sm">
-      <span className="text-slate-400">{label}</span>
-      <span className="flex items-center justify-end gap-1 text-right text-slate-100">{children}</span>
+      <span className="text-subtle">{label}</span>
+      <span className="flex items-center justify-end gap-1 text-right text-ink">{children}</span>
     </div>
   )
 }
@@ -94,32 +94,32 @@ function CustomerDrawer({ customerId, onClose, busyId, onBlockChange, reloadKey 
       ) : (
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-lg border border-slate-800 bg-slate-950 p-4">
-              <p className="text-xs text-slate-400">Orders</p>
-              <p className="mt-1 text-xl font-semibold text-slate-100">{customer.orderCount}</p>
+            <div className="rounded-lg border border-line bg-page p-4">
+              <p className="text-xs text-subtle">Orders</p>
+              <p className="mt-1 text-xl font-semibold text-ink">{customer.orderCount}</p>
             </div>
-            <div className="rounded-lg border border-slate-800 bg-slate-950 p-4">
-              <p className="text-xs text-slate-400">Total spent</p>
-              <p className="mt-1 text-xl font-semibold text-slate-100">{formatPrice(customer.totalSpent)}</p>
+            <div className="rounded-lg border border-line bg-page p-4">
+              <p className="text-xs text-subtle">Total spent</p>
+              <p className="mt-1 text-xl font-semibold text-ink">{formatPrice(customer.totalSpent)}</p>
             </div>
           </div>
 
           <section>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Account</p>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-faint">Account</p>
             <InfoRow label="Email">{customer.email}</InfoRow>
             <InfoRow label="Joined">{formatDate(customer.createdAt)}</InfoRow>
             <InfoRow label="Email verified">{customer.isVerified ? 'Yes' : 'No'}</InfoRow>
             <InfoRow label="Status">
               <CustomerStatusTag customer={customer} />
-              {customer.blockedAt && <span className="text-xs text-slate-400">since {formatDate(customer.blockedAt)}</span>}
+              {customer.blockedAt && <span className="text-xs text-subtle">since {formatDate(customer.blockedAt)}</span>}
             </InfoRow>
           </section>
 
           <section>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Saved address</p>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-faint">Saved address</p>
             {address ? (
-              <address className="space-y-0.5 text-sm not-italic text-slate-400">
-                <p className="font-medium text-slate-100">{address.fullName}</p>
+              <address className="space-y-0.5 text-sm not-italic text-subtle">
+                <p className="font-medium text-ink">{address.fullName}</p>
                 <p>{address.addressLine}</p>
                 <p>
                   {address.city}
@@ -128,30 +128,30 @@ function CustomerDrawer({ customerId, onClose, busyId, onBlockChange, reloadKey 
                 <p>{address.phone}</p>
               </address>
             ) : (
-              <p className="text-sm text-slate-500">No saved address.</p>
+              <p className="text-sm text-faint">No saved address.</p>
             )}
           </section>
 
           <section>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Orders</p>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-faint">Orders</p>
             {current.orders.length === 0 ? (
-              <p className="text-sm text-slate-500">No orders yet.</p>
+              <p className="text-sm text-faint">No orders yet.</p>
             ) : (
-              <ul className="divide-y divide-slate-800 rounded-lg border border-slate-800">
+              <ul className="divide-y divide-line rounded-lg border border-line">
                 {current.orders.map((order) => (
                   <li key={order._id}>
                     <Link
                       to={`/orders/${order._id}`}
-                      className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-slate-800/50"
+                      className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-muted/60"
                     >
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-slate-100">{order.orderNumber}</p>
-                        <p className="text-xs text-slate-400">
+                        <p className="truncate text-sm font-medium text-ink">{order.orderNumber}</p>
+                        <p className="text-xs text-subtle">
                           {formatDate(order.createdAt)} · {order.itemCount} {order.itemCount === 1 ? 'item' : 'items'}
                         </p>
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
-                        <span className="text-sm font-medium text-slate-100">{formatPrice(order.total)}</span>
+                        <span className="text-sm font-medium text-ink">{formatPrice(order.total)}</span>
                         <OrderStatusTag status={order.status} />
                       </div>
                     </Link>
@@ -240,8 +240,8 @@ export default function CustomersPage() {
       key: 'customer',
       render: (_, customer) => (
         <button type="button" onClick={() => setOpenCustomerId(customer.id)} className="min-w-0 text-left">
-          <div className="truncate font-medium text-slate-100 hover:text-indigo-300">{customer.name}</div>
-          <div className="truncate text-xs text-slate-400">{customer.email}</div>
+          <div className="truncate font-medium text-ink hover:text-link-hover">{customer.name}</div>
+          <div className="truncate text-xs text-subtle">{customer.email}</div>
         </button>
       ),
     },
@@ -249,7 +249,7 @@ export default function CustomersPage() {
       title: 'Joined',
       dataIndex: 'createdAt',
       key: 'createdAt',
-      render: (value) => <span className="text-slate-400">{formatDate(value)}</span>,
+      render: (value) => <span className="text-subtle">{formatDate(value)}</span>,
     },
     { title: 'Orders', dataIndex: 'orderCount', key: 'orderCount' },
     {
@@ -262,7 +262,7 @@ export default function CustomersPage() {
       title: 'Last order',
       dataIndex: 'lastOrderAt',
       key: 'lastOrderAt',
-      render: (value) => <span className="text-slate-400">{value ? formatDate(value) : '—'}</span>,
+      render: (value) => <span className="text-subtle">{value ? formatDate(value) : '—'}</span>,
     },
     {
       title: 'Status',
@@ -322,7 +322,7 @@ export default function CustomersPage() {
           action={<Button size="small" onClick={() => setReloadKey((key) => key + 1)}>Retry</Button>}
         />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
+        <div className="overflow-hidden rounded-xl border border-line bg-surface">
           <Table
             rowKey="id"
             columns={columns}

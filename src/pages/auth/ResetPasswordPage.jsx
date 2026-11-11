@@ -108,25 +108,25 @@ export default function ResetPasswordPage() {
         </Button>
       </Form>
 
-      <p className="mt-6 text-center text-sm text-slate-400">
+      <p className="mt-6 text-center text-sm text-subtle">
         Didn&apos;t get the code?{' '}
         {cooldown > 0 ? (
-          <span className="text-slate-500">Resend in {cooldown}s</span>
+          <span className="text-faint">Resend in {cooldown}s</span>
         ) : (
           <button
             type="button"
             onClick={handleResend}
             disabled={resending}
-            className="font-medium text-indigo-400 hover:text-indigo-300 disabled:opacity-50"
+            className="font-medium text-link hover:text-link-hover disabled:opacity-50"
           >
             Resend code
           </button>
         )}
       </p>
 
-      <p className="mt-2 text-center text-sm text-slate-400">
+      <p className="mt-2 text-center text-sm text-subtle">
         Wrong email?{' '}
-        <Link to="/forgot-password" className="font-medium text-indigo-400 hover:text-indigo-300">
+        <Link to="/forgot-password" className="font-medium text-link hover:text-link-hover">
           Start over
         </Link>
       </p>

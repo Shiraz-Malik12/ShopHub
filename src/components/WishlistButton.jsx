@@ -7,8 +7,8 @@ import { useWishlist } from '../context/WishlistContext'
 
 // Heart button that saves a product to the wishlist (or removes it).
 // Guests are sent to sign in first, like "Add to cart".
-// `overlay`: the small round version that sits on a product photo.
-export default function WishlistButton({ product, overlay = false, ...buttonProps }) {
+// `round`: the icon-only circle used next to "Add to cart" on product cards.
+export default function WishlistButton({ product, round = false, ...buttonProps }) {
   const { user } = useAuth()
   const { isSaved, toggle } = useWishlist()
   const navigate = useNavigate()
@@ -37,9 +37,9 @@ export default function WishlistButton({ product, overlay = false, ...buttonProp
     }
   }
 
-  const icon = saved ? <HeartFilled className="text-rose-500" /> : <HeartOutlined />
+  const icon = saved ? <HeartFilled className="text-danger" /> : <HeartOutlined />
 
-  if (overlay) {
+  if (round) {
     return (
       <button
         type="button"
@@ -48,7 +48,7 @@ export default function WishlistButton({ product, overlay = false, ...buttonProp
         title={label}
         disabled={saving}
         onClick={handleClick}
-        className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-950/70 text-lg text-slate-200 backdrop-blur transition hover:scale-110 hover:text-white disabled:opacity-60"
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-line bg-surface text-lg text-subtle transition hover:border-danger/40 hover:text-danger disabled:opacity-60"
       >
         {icon}
       </button>

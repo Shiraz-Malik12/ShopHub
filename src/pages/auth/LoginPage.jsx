@@ -57,10 +57,10 @@ export default function LoginPage() {
             label to its content even in vertical layout, so a flex row
             inside it has no room to spread; this div isn't constrained. */}
         <div className="mb-2 flex items-center justify-between">
-          <label htmlFor="password" className="text-sm text-slate-300">
+          <label htmlFor="password" className="text-sm text-soft">
             Password
           </label>
-          <Link to="/forgot-password" className="text-xs font-medium text-indigo-400 hover:text-indigo-300">
+          <Link to="/forgot-password" className="text-xs font-medium text-link hover:text-link-hover">
             Forgot password?
           </Link>
         </div>
@@ -76,9 +76,9 @@ export default function LoginPage() {
         </Button>
       </Form>
 
-      <p className="mt-6 text-center text-sm text-slate-400">
+      <p className="mt-6 text-center text-sm text-subtle">
         New to ShopHub?{' '}
-        <Link to="/register" className="font-medium text-indigo-400 hover:text-indigo-300">
+        <Link to="/register" className="font-medium text-link hover:text-link-hover">
           Create an account
         </Link>
       </p>

@@ -24,10 +24,10 @@ export default function ContactPage() {
 
   return (
     <StoreLayout>
-      <section className="border-b border-slate-800 bg-slate-900">
+      <section className="border-b border-line bg-surface">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold tracking-tight text-slate-100">Contact Us</h1>
-          <p className="mt-2 text-slate-400">We&apos;re here to help you with any questions you may have.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-ink">Contact Us</h1>
+          <p className="mt-2 text-subtle">We&apos;re here to help you with any questions you may have.</p>
         </div>
       </section>
 

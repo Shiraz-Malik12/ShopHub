@@ -74,8 +74,8 @@ export default function OrdersPage() {
       key: 'order',
       render: (_, order) => (
         <div>
-          <div className="font-medium text-slate-100">{order.orderNumber}</div>
-          <div className="text-xs text-slate-400">{formatDate(order.createdAt)}</div>
+          <div className="font-medium text-ink">{order.orderNumber}</div>
+          <div className="text-xs text-subtle">{formatDate(order.createdAt)}</div>
         </div>
       ),
     },
@@ -84,8 +84,8 @@ export default function OrdersPage() {
       key: 'customer',
       render: (_, order) => (
         <div className="min-w-0">
-          <div className="truncate text-slate-100">{order.user?.name || 'Deleted user'}</div>
-          <div className="truncate text-xs text-slate-400">{order.user?.email}</div>
+          <div className="truncate text-ink">{order.user?.name || 'Deleted user'}</div>
+          <div className="truncate text-xs text-subtle">{order.user?.email}</div>
         </div>
       ),
     },
@@ -107,7 +107,7 @@ export default function OrdersPage() {
       key: 'actions',
       render: (_, order) => {
         const nextStatuses = NEXT_STATUSES[order.status]
-        if (nextStatuses.length === 0) return <span className="text-xs text-slate-500">No actions</span>
+        if (nextStatuses.length === 0) return <span className="text-xs text-faint">No actions</span>
         return (
           <Space>
             {nextStatuses.map((status) =>
@@ -149,26 +149,26 @@ export default function OrdersPage() {
     return (
       <div className="grid gap-6 py-2 md:grid-cols-2">
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Items</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-faint">Items</p>
           <ul className="space-y-2">
             {order.items.map((item) => (
               <li key={item.product} className="flex items-center gap-3 text-sm">
-                <div className="h-10 w-10 shrink-0 overflow-hidden rounded border border-slate-800">
+                <div className="h-10 w-10 shrink-0 overflow-hidden rounded border border-line">
                   <ProductImage src={item.image} alt={item.name} className="h-full w-full" compact />
                 </div>
-                <span className="min-w-0 flex-1 truncate text-slate-100">{item.name}</span>
-                <span className="text-slate-400">
+                <span className="min-w-0 flex-1 truncate text-ink">{item.name}</span>
+                <span className="text-subtle">
                   {formatPrice(item.price)} × {item.quantity}
                 </span>
-                <span className="w-24 text-right font-medium text-slate-100">{formatPrice(item.lineTotal)}</span>
+                <span className="w-24 text-right font-medium text-ink">{formatPrice(item.lineTotal)}</span>
               </li>
             ))}
           </ul>
         </div>
         <div>
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Deliver to</p>
-          <address className="space-y-1 text-sm not-italic text-slate-400">
-            <p className="font-medium text-slate-100">{address.fullName}</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-faint">Deliver to</p>
+          <address className="space-y-1 text-sm not-italic text-subtle">
+            <p className="font-medium text-ink">{address.fullName}</p>
             <p>{address.addressLine}</p>
             <p>
               {address.city}
@@ -177,12 +177,12 @@ export default function OrdersPage() {
             <p>{address.phone}</p>
             {address.notes && <p className="pt-1 italic">“{address.notes}”</p>}
           </address>
-          <p className="mt-3 text-sm text-slate-400">
-            Payment: <span className="text-slate-100">Cash on delivery</span>
+          <p className="mt-3 text-sm text-subtle">
+            Payment: <span className="text-ink">Cash on delivery</span>
           </p>
           {order.discount > 0 && (
-            <p className="mt-1 text-sm text-slate-400">
-              Coupon: <span className="text-emerald-400">{order.coupon?.code} (−{formatPrice(order.discount)})</span>
+            <p className="mt-1 text-sm text-subtle">
+              Coupon: <span className="text-success">{order.coupon?.code} (−{formatPrice(order.discount)})</span>
             </p>
           )}
         </div>
@@ -215,7 +215,7 @@ export default function OrdersPage() {
           action={<Button size="small" onClick={() => setReloadKey((key) => key + 1)}>Retry</Button>}
         />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
+        <div className="overflow-hidden rounded-xl border border-line bg-surface">
           <Table
             rowKey="_id"
             columns={columns}

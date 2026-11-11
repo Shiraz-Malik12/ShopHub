@@ -75,27 +75,27 @@ export default function CheckoutPage() {
 
   return (
     <StoreLayout>
-      <section className="border-b border-slate-800 bg-slate-900">
+      <section className="border-b border-line bg-surface">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold tracking-tight text-slate-100">Checkout</h1>
-          <p className="mt-2 text-slate-400">Tell us where to deliver your order.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-ink">Checkout</h1>
+          <p className="mt-2 text-subtle">Tell us where to deliver your order.</p>
         </div>
       </section>
 
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         {loading ? (
-          <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
+          <div className="rounded-xl border border-line bg-surface p-6">
             <Skeleton active paragraph={{ rows: 6 }} />
           </div>
         ) : (
           <div className="grid gap-8 lg:grid-cols-3">
             <div className="space-y-6 lg:col-span-2">
-              <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-                <h2 className="text-lg font-semibold text-slate-100">Delivery address</h2>
+              <div className="rounded-xl border border-line bg-surface p-6">
+                <h2 className="text-lg font-semibold text-ink">Delivery address</h2>
                 {user?.savedAddress && (
-                  <p className="mt-1 text-sm text-slate-400">
+                  <p className="mt-1 text-sm text-subtle">
                     Filled in from your saved address. You can change it in{' '}
-                    <Link to="/account" className="text-indigo-400 hover:text-indigo-300">My account</Link>.
+                    <Link to="/account" className="text-link hover:text-link-hover">My account</Link>.
                   </p>
                 )}
                 <Form
@@ -163,63 +163,63 @@ export default function CheckoutPage() {
                 </Form>
               </div>
 
-              <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
-                <h2 className="text-lg font-semibold text-slate-100">Payment</h2>
-                <div className="mt-4 flex items-center gap-4 rounded-lg border border-indigo-500/40 bg-indigo-500/10 p-4">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-500/20 text-lg text-indigo-300">
+              <div className="rounded-xl border border-line bg-surface p-6">
+                <h2 className="text-lg font-semibold text-ink">Payment</h2>
+                <div className="mt-4 flex items-center gap-4 rounded-lg border border-link/40 bg-link/10 p-4">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-link/20 text-lg text-link-hover">
                     <DollarOutlined />
                   </span>
                   <div>
-                    <p className="font-semibold text-slate-100">Cash on delivery</p>
-                    <p className="text-sm text-slate-400">Pay in cash when your order arrives.</p>
+                    <p className="font-semibold text-ink">Cash on delivery</p>
+                    <p className="text-sm text-subtle">Pay in cash when your order arrives.</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <aside className="h-fit rounded-xl border border-slate-800 bg-slate-900 p-6">
-              <h2 className="text-lg font-semibold text-slate-100">Order summary</h2>
+            <aside className="h-fit rounded-xl border border-line bg-surface p-6">
+              <h2 className="text-lg font-semibold text-ink">Order summary</h2>
               <ul className="mt-4 space-y-4">
                 {cart.items.map((item) => (
                   <li key={item.product._id} className="flex items-center gap-3">
-                    <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-slate-800">
+                    <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-line">
                       <ProductImage src={item.product.image} alt={item.product.name} className="h-full w-full" compact />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-slate-100">{item.product.name}</p>
-                      <p className="text-xs text-slate-400">
+                      <p className="truncate text-sm font-medium text-ink">{item.product.name}</p>
+                      <p className="text-xs text-subtle">
                         {item.available ? `Qty ${item.quantity}` : 'Unavailable'}
                       </p>
                     </div>
-                    <span className={`text-sm font-semibold ${item.available ? 'text-slate-100' : 'text-slate-500 line-through'}`}>
+                    <span className={`text-sm font-semibold ${item.available ? 'text-ink' : 'text-faint line-through'}`}>
                       {formatPrice(item.lineTotal)}
                     </span>
                   </li>
                 ))}
               </ul>
 
-              <div className="mt-6 border-t border-slate-800 pt-4">
+              <div className="mt-6 border-t border-line pt-4">
                 <CouponBox applied={appliedCoupon} onApplied={setAppliedCoupon} onRemoved={() => setAppliedCoupon(null)} />
               </div>
 
               <dl className="mt-4 space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <dt className="text-slate-400">Subtotal</dt>
-                  <dd className="font-medium text-slate-100">{formatPrice(cart.subtotal)}</dd>
+                  <dt className="text-subtle">Subtotal</dt>
+                  <dd className="font-medium text-ink">{formatPrice(cart.subtotal)}</dd>
                 </div>
                 {appliedCoupon && (
                   <div className="flex justify-between">
-                    <dt className="text-emerald-400">Discount ({appliedCoupon.coupon.code})</dt>
-                    <dd className="font-medium text-emerald-400">−{formatPrice(appliedCoupon.discount)}</dd>
+                    <dt className="text-success">Discount ({appliedCoupon.coupon.code})</dt>
+                    <dd className="font-medium text-success">−{formatPrice(appliedCoupon.discount)}</dd>
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <dt className="text-slate-400">Shipping</dt>
-                  <dd className="font-medium text-emerald-400">Free</dd>
+                  <dt className="text-subtle">Shipping</dt>
+                  <dd className="font-medium text-success">Free</dd>
                 </div>
-                <div className="flex justify-between border-t border-slate-800 pt-3 text-base">
-                  <dt className="font-semibold text-slate-100">Total</dt>
-                  <dd className="font-bold text-slate-100">{formatPrice(total)}</dd>
+                <div className="flex justify-between border-t border-line pt-3 text-base">
+                  <dt className="font-semibold text-ink">Total</dt>
+                  <dd className="font-bold text-ink">{formatPrice(total)}</dd>
                 </div>
               </dl>
 
@@ -247,7 +247,7 @@ export default function CheckoutPage() {
                 Place order
               </Button>
 
-              <Link to="/cart" className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-indigo-400 hover:text-indigo-300">
+              <Link to="/cart" className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-link hover:text-link-hover">
                 <ArrowLeftOutlined />
                 Back to cart
               </Link>

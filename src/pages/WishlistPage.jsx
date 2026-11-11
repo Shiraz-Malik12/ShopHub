@@ -37,10 +37,10 @@ export default function WishlistPage() {
 
   return (
     <StoreLayout>
-      <section className="border-b border-slate-800 bg-slate-900">
+      <section className="border-b border-line bg-surface">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold tracking-tight text-slate-100">My wishlist</h1>
-          <p className="mt-2 text-slate-400">Products you saved for later.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-ink">My wishlist</h1>
+          <p className="mt-2 text-subtle">Products you saved for later.</p>
         </div>
       </section>
 
@@ -48,23 +48,23 @@ export default function WishlistPage() {
         {loading ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {[1, 2, 3, 4].map((key) => (
-              <div key={key} className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+              <div key={key} className="rounded-xl border border-line bg-surface p-4">
                 <Skeleton.Image active className="!h-48 !w-full" />
                 <Skeleton active paragraph={{ rows: 2 }} className="mt-4" />
               </div>
             ))}
           </div>
         ) : loadError ? (
-          <div className="mx-auto max-w-md rounded-xl border border-slate-800 bg-slate-900 p-10 text-center">
-            <WarningOutlined className="text-3xl text-rose-500" />
-            <h2 className="mt-4 text-lg font-semibold text-slate-100">Could not load your wishlist</h2>
-            <p className="mt-1 text-sm text-slate-400">{loadError}</p>
+          <div className="mx-auto max-w-md rounded-xl border border-line bg-surface p-10 text-center">
+            <WarningOutlined className="text-3xl text-danger" />
+            <h2 className="mt-4 text-lg font-semibold text-ink">Could not load your wishlist</h2>
+            <p className="mt-1 text-sm text-subtle">{loadError}</p>
             <Button type="primary" icon={<ReloadOutlined />} className="mt-6" onClick={loadWishlist}>
               Try again
             </Button>
           </div>
         ) : visibleProducts.length === 0 ? (
-          <div className="rounded-xl border border-slate-800 bg-slate-900 py-16">
+          <div className="rounded-xl border border-line bg-surface py-16">
             <Empty description="Your wishlist is empty. Tap the heart on any product to save it here.">
               <Link to="/products">
                 <Button type="primary">Browse products</Button>

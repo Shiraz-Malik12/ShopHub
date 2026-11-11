@@ -47,13 +47,13 @@ export default function ProductDetailPage() {
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {loading ? (
           <div className="grid gap-10 lg:grid-cols-2">
-            <div className="aspect-square animate-pulse rounded-2xl bg-slate-800" />
+            <div className="aspect-square animate-pulse rounded-2xl bg-muted" />
             <Skeleton active paragraph={{ rows: 6 }} />
           </div>
         ) : loadError ? (
-          <div className="mx-auto max-w-md rounded-xl border border-slate-800 bg-slate-900 p-10 text-center">
-            <h1 className="text-lg font-semibold text-slate-100">Product unavailable</h1>
-            <p className="mt-1 text-sm text-slate-400">{loadError}</p>
+          <div className="mx-auto max-w-md rounded-xl border border-line bg-surface p-10 text-center">
+            <h1 className="text-lg font-semibold text-ink">Product unavailable</h1>
+            <p className="mt-1 text-sm text-subtle">{loadError}</p>
             <Link to="/products">
               <Button type="primary" icon={<ArrowLeftOutlined />} className="mt-6">
                 Back to shop
@@ -73,7 +73,7 @@ export default function ProductDetailPage() {
 
             <div className="grid gap-10 lg:grid-cols-2">
               <div>
-                <div className="aspect-square overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
+                <div className="aspect-square overflow-hidden rounded-2xl border border-line bg-surface">
                   {/* key: a fresh ProductImage per image, so a broken image
                       doesn't keep the placeholder after switching. */}
                   <ProductImage
@@ -91,8 +91,8 @@ export default function ProductDetailPage() {
                         key={image._id}
                         type="button"
                         onClick={() => setSelectedImageIndex(index)}
-                        className={`h-20 w-20 overflow-hidden rounded-lg border-2 bg-slate-900 transition ${
-                          index === selectedImageIndex ? 'border-indigo-500' : 'border-slate-800 hover:border-slate-600'
+                        className={`h-20 w-20 overflow-hidden rounded-lg border-2 bg-surface transition ${
+                          index === selectedImageIndex ? 'border-link' : 'border-line hover:border-line-strong'
                         }`}
                       >
                         <ProductImage src={image.url} alt={`${product.name} ${index + 1}`} className="h-full w-full" compact />
@@ -103,15 +103,15 @@ export default function ProductDetailPage() {
               </div>
 
               <div>
-                <p className="text-sm font-medium uppercase tracking-wide text-indigo-400">
+                <p className="text-sm font-medium uppercase tracking-wide text-link">
                   {product.category?.name || 'Uncategorized'}
                 </p>
-                <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-100">{product.name}</h1>
+                <h1 className="mt-2 text-3xl font-bold tracking-tight text-ink">{product.name}</h1>
                 <a href="#reviews" className="mt-2 inline-block">
                   <RatingStars average={product.ratingAverage} count={product.ratingCount} size={16} />
                 </a>
                 <div className="mt-4 flex items-center gap-4">
-                  <span className="text-3xl font-bold text-slate-100">{formatPrice(product.price)}</span>
+                  <span className="text-3xl font-bold text-ink">{formatPrice(product.price)}</span>
                   <StockBadge stock={product.stock} />
                 </div>
 
@@ -123,27 +123,27 @@ export default function ProductDetailPage() {
                   <WishlistButton product={product} size="large" />
                 </div>
 
-                <div className="mt-8 border-t border-slate-800 pt-8">
-                  <h2 className="text-sm font-semibold text-slate-100">Description</h2>
-                  <p className="mt-3 whitespace-pre-wrap leading-relaxed text-slate-400">
+                <div className="mt-8 border-t border-line pt-8">
+                  <h2 className="text-sm font-semibold text-ink">Description</h2>
+                  <p className="mt-3 whitespace-pre-wrap leading-relaxed text-subtle">
                     {product.description || 'No description available.'}
                   </p>
                 </div>
 
-                <dl className="mt-8 grid grid-cols-2 gap-4 rounded-xl border border-slate-800 bg-slate-900 p-5 text-sm">
+                <dl className="mt-8 grid grid-cols-2 gap-4 rounded-xl border border-line bg-surface p-5 text-sm">
                   <div>
-                    <dt className="text-slate-400">Category</dt>
-                    <dd className="mt-1 font-medium text-slate-100">{product.category?.name || 'Uncategorized'}</dd>
+                    <dt className="text-subtle">Category</dt>
+                    <dd className="mt-1 font-medium text-ink">{product.category?.name || 'Uncategorized'}</dd>
                   </div>
                   <div>
-                    <dt className="text-slate-400">Availability</dt>
-                    <dd className="mt-1 font-medium text-slate-100">
+                    <dt className="text-subtle">Availability</dt>
+                    <dd className="mt-1 font-medium text-ink">
                       {product.stock > 0 ? `${product.stock} in stock` : 'Currently unavailable'}
                     </dd>
                   </div>
                 </dl>
 
-                <Link to="/products" className="mt-8 inline-flex items-center gap-2 text-sm font-medium text-indigo-400 hover:text-indigo-300">
+                <Link to="/products" className="mt-8 inline-flex items-center gap-2 text-sm font-medium text-link hover:text-link-hover">
                   <ArrowLeftOutlined />
                   Continue shopping
                 </Link>

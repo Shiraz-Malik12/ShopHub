@@ -159,14 +159,14 @@ export default function CouponsPage() {
       title: 'Code',
       dataIndex: 'code',
       key: 'code',
-      render: (code) => <span className="font-mono font-semibold text-slate-100">{code}</span>,
+      render: (code) => <span className="font-mono font-semibold text-ink">{code}</span>,
     },
     { title: 'Discount', key: 'discount', render: (_, coupon) => describe(coupon) },
     {
       title: 'Min. order',
       dataIndex: 'minSubtotal',
       key: 'minSubtotal',
-      render: (value) => (value > 0 ? formatPrice(value) : <span className="text-slate-500">None</span>),
+      render: (value) => (value > 0 ? formatPrice(value) : <span className="text-faint">None</span>),
     },
     {
       title: 'Used',
@@ -177,7 +177,7 @@ export default function CouponsPage() {
       title: 'Expires',
       dataIndex: 'expiresAt',
       key: 'expiresAt',
-      render: (value) => (value ? formatDate(value) : <span className="text-slate-500">Never</span>),
+      render: (value) => (value ? formatDate(value) : <span className="text-faint">Never</span>),
     },
     { title: 'Status', key: 'status', render: (_, coupon) => <CouponStatusTag coupon={coupon} /> },
     {
@@ -239,7 +239,7 @@ export default function CouponsPage() {
           action={<Button size="small" onClick={loadCoupons}>Retry</Button>}
         />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
+        <div className="overflow-hidden rounded-xl border border-line bg-surface">
           <Table
             rowKey="_id"
             columns={columns}

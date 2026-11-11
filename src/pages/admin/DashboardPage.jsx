@@ -16,19 +16,19 @@ const numberFormatter = new Intl.NumberFormat('en-US')
 // A small headline number: plain label on top, the value below it.
 function StatTile({ label, value, hint }) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900 p-5">
-      <p className="text-sm text-slate-400">{label}</p>
-      <p className="mt-2 text-2xl font-semibold text-slate-100">{value}</p>
-      {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
+    <div className="rounded-xl border border-line bg-surface p-5">
+      <p className="text-sm text-subtle">{label}</p>
+      <p className="mt-2 text-2xl font-semibold text-ink">{value}</p>
+      {hint && <p className="mt-1 text-xs text-faint">{hint}</p>}
     </div>
   )
 }
 
 function Panel({ title, action, children }) {
   return (
-    <section className="rounded-xl border border-slate-800 bg-slate-900">
-      <div className="flex items-center justify-between border-b border-slate-800 px-5 py-4">
-        <h2 className="font-semibold text-slate-100">{title}</h2>
+    <section className="rounded-xl border border-line bg-surface">
+      <div className="flex items-center justify-between border-b border-line px-5 py-4">
+        <h2 className="font-semibold text-ink">{title}</h2>
         {action}
       </div>
       {children}
@@ -38,7 +38,7 @@ function Panel({ title, action, children }) {
 
 function PanelLink({ to, children }) {
   return (
-    <Link to={to} className="inline-flex items-center gap-1 text-sm font-medium text-indigo-400 hover:text-indigo-300">
+    <Link to={to} className="inline-flex items-center gap-1 text-sm font-medium text-link hover:text-link-hover">
       {children}
       <RightOutlined className="text-[10px]" />
     </Link>
@@ -82,7 +82,7 @@ export default function DashboardPage() {
             action={<Button size="small" onClick={loadDashboard}>Retry</Button>}
           />
         ) : (
-          <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
+          <div className="rounded-xl border border-line bg-surface p-6">
             <Skeleton active paragraph={{ rows: 8 }} />
           </div>
         )}
@@ -100,12 +100,12 @@ export default function DashboardPage() {
 
       <div className="grid gap-4 lg:grid-cols-3">
         {/* The one headline number of the page. */}
-        <div className="flex flex-col justify-between rounded-xl border border-slate-800 bg-slate-900 p-6">
+        <div className="flex flex-col justify-between rounded-xl border border-line bg-surface p-6">
           <div>
-            <p className="text-sm text-slate-400">Total sales</p>
-            <p className="mt-3 text-5xl font-semibold tracking-tight text-slate-100">{formatPrice(stats.totalSales)}</p>
+            <p className="text-sm text-subtle">Total sales</p>
+            <p className="mt-3 text-5xl font-semibold tracking-tight text-ink">{formatPrice(stats.totalSales)}</p>
           </div>
-          <p className="mt-4 text-xs text-slate-500">All orders except cancelled ones.</p>
+          <p className="mt-4 text-xs text-faint">All orders except cancelled ones.</p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:col-span-2">
@@ -138,10 +138,10 @@ export default function DashboardPage() {
                     title={`${ORDER_STATUS[status].label}: ${count} of ${stats.totalOrders} orders (${Math.round((count / stats.totalOrders) * 100)}%)`}
                   >
                     <div className="h-6 flex-1 py-2" role="img" aria-label={`${ORDER_STATUS[status].label}: ${count} orders`}>
-                      <div className="h-2 rounded-r bg-indigo-500" style={{ width: `${(count / largestStatusCount) * 100}%` }} />
+                      <div className="h-2 rounded-r bg-accent" style={{ width: `${(count / largestStatusCount) * 100}%` }} />
                     </div>
                   </Tooltip>
-                  <span className="w-8 shrink-0 text-right text-sm font-medium text-slate-100">{count}</span>
+                  <span className="w-8 shrink-0 text-right text-sm font-medium text-ink">{count}</span>
                 </li>
               ))}
             </ul>
@@ -154,19 +154,19 @@ export default function DashboardPage() {
               <Empty description={`Every product has more than ${lowStockThreshold} in stock`} />
             </div>
           ) : (
-            <ul className="divide-y divide-slate-800">
+            <ul className="divide-y divide-line">
               {lowStockProducts.map((product) => (
                 <li key={product._id} className="flex items-center gap-3 px-5 py-3">
-                  <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-slate-800">
+                  <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-line">
                     <ProductImage src={product.image} alt={product.name} className="h-full w-full" compact />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-slate-100">{product.name}</p>
-                    <p className="text-xs text-slate-400">{product.category || 'Uncategorized'}</p>
+                    <p className="truncate text-sm font-medium text-ink">{product.name}</p>
+                    <p className="text-xs text-subtle">{product.category || 'Uncategorized'}</p>
                   </div>
                   <span
                     className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                      product.stock === 0 ? 'bg-rose-500/10 text-rose-400' : 'bg-amber-500/10 text-amber-300'
+                      product.stock === 0 ? 'bg-rose-500/10 text-danger' : 'bg-amber-500/10 text-warning'
                     }`}
                   >
                     {product.stock === 0 ? 'Out of stock' : `${product.stock} left`}
@@ -185,17 +185,17 @@ export default function DashboardPage() {
               <Empty description="No orders yet" />
             </div>
           ) : (
-            <ul className="divide-y divide-slate-800">
+            <ul className="divide-y divide-line">
               {recentOrders.map((order) => (
                 <li key={order._id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-5 py-3">
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-slate-100">{order.orderNumber}</p>
-                    <p className="truncate text-xs text-slate-400">
+                    <p className="text-sm font-medium text-ink">{order.orderNumber}</p>
+                    <p className="truncate text-xs text-subtle">
                       {order.user?.name || 'Deleted user'} · {formatDate(order.createdAt)}
                     </p>
                   </div>
                   <OrderStatusTag status={order.status} />
-                  <span className="w-24 text-right text-sm font-semibold text-slate-100">{formatPrice(order.total)}</span>
+                  <span className="w-24 text-right text-sm font-semibold text-ink">{formatPrice(order.total)}</span>
                 </li>
               ))}
             </ul>

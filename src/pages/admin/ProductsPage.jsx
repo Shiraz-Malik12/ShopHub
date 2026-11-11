@@ -141,12 +141,12 @@ export default function ProductsPage() {
       key: 'product',
       render: (_, product) => (
         <div className="flex items-center gap-3">
-          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-slate-800">
+          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-line">
             <ProductImage src={product.images?.[0]?.url} alt={product.name} className="h-full w-full" compact />
           </div>
           <div className="min-w-0">
-            <div className="truncate font-medium text-slate-100">{product.name}</div>
-            <div className="text-xs text-slate-400">{product.category?.name || 'Unknown category'}</div>
+            <div className="truncate font-medium text-ink">{product.name}</div>
+            <div className="text-xs text-subtle">{product.category?.name || 'Unknown category'}</div>
           </div>
         </div>
       ),
@@ -156,7 +156,7 @@ export default function ProductsPage() {
       title: 'Stock',
       dataIndex: 'stock',
       key: 'stock',
-      render: (stock) => <span className={stock === 0 ? 'whitespace-nowrap font-medium text-rose-400' : ''}>{stock === 0 ? 'Out of stock' : stock}</span>,
+      render: (stock) => <span className={stock === 0 ? 'whitespace-nowrap font-medium text-danger' : ''}>{stock === 0 ? 'Out of stock' : stock}</span>,
     },
     {
       title: 'Status',
@@ -199,7 +199,7 @@ export default function ProductsPage() {
         {loadError ? (
           <Alert type="error" showIcon title="Could not load products" description={loadError} action={<Button size="small" onClick={loadData}>Retry</Button>} />
         ) : (
-          <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
+          <div className="overflow-hidden rounded-xl border border-line bg-surface">
             <Table
               rowKey="_id"
               columns={columns}

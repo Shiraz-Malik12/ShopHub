@@ -5,7 +5,7 @@ import { MinusOutlined, PlusOutlined } from '@ant-design/icons'
 // parent passes the current `value` and decides what to do in `onChange`.
 export default function QuantityStepper({ value, max, onChange, min = 1, disabled = false }) {
   return (
-    <div className="inline-flex items-center rounded-lg border border-slate-700">
+    <div className="inline-flex items-center rounded-lg border border-line-strong">
       <Button
         type="text"
         icon={<MinusOutlined />}
@@ -13,7 +13,7 @@ export default function QuantityStepper({ value, max, onChange, min = 1, disable
         disabled={disabled || value <= min}
         onClick={() => onChange(value - 1)}
       />
-      <span className="w-10 text-center text-sm font-semibold text-slate-100" aria-live="polite">
+      <span className="w-10 text-center text-sm font-semibold text-ink" aria-live="polite">
         {value}
       </span>
       <Button

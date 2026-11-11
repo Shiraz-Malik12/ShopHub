@@ -1,17 +1,93 @@
 /* Layer order (later wins): Tailwind's reset, then antd's component styles,
-   then Tailwind utilities — so a class like text-slate-900 can override antd. */
+   then Tailwind utilities — so a class like text-ink can override antd. */
 @layer theme, base, antd, components, utilities;
 
 @import "tailwindcss";
 
+/* ---------------------------------------------------------------------------
+   Theme colors. Every color in the app comes from these variables, so light
+   and dark mode are just two sets of values. The <html> element gets the
+   `dark` class from ThemeContext (and public/theme-init.js on first paint).
+   Keep the antd colors in src/theme/palette.js in sync with these.
+   --------------------------------------------------------------------------- */
 :root {
-  color-scheme: dark; /* dark native scrollbars and form controls */
+  color-scheme: light; /* native scrollbars and form controls */
+
+  --page: #f3f6fa;        /* page background — blue-tinted white */
+  --surface: #ffffff;     /* cards, header, inputs */
+  --muted: #e9eff6;       /* subtle fills: image placeholders, hovers */
+  --line: #dfe6ef;        /* borders */
+  --line-strong: #c8d3e0; /* stronger borders */
+
+  --ink: #292d32;         /* main text — charcoal */
+  --soft: #3a4350;        /* slightly softer text */
+  --subtle: #5f6b7a;      /* secondary text */
+  --faint: #9aa4b2;       /* hints, placeholders */
+
+  --accent: #2f5e9e;      /* primary buttons, active states — blue */
+  --link: #2f5e9e;        /* links — blue */
+  --link-hover: #1f4478;
+  --brand: #3a6ea5;       /* logo mark, avatars */
+  --brand-deep: #1f3a5f;  /* big brand panel (auth pages) — navy */
+
+  --success: #15803d;
+  --danger: #be123c;
+  --warning: #b45309;
+}
+
+.dark {
+  color-scheme: dark;
+
+  --page: #1b1e23;
+  --surface: #292d32;
+  --muted: #323840;
+  --line: #3a414a;
+  --line-strong: #4a525c;
+
+  --ink: #f1f5fa;
+  --soft: #d0d8e2;
+  --subtle: #9b9b9b;
+  --faint: #7a828c;
+
+  --accent: #3f72b5;      /* blue — reads well on charcoal */
+  --link: #9dc1ec;
+  --link-hover: #c4dbf5;
+  --brand: #3f72b5;
+  --brand-deep: #1f3a5f;
+
+  --success: #4ade80;
+  --danger: #fb7185;
+  --warning: #fcd34d;
+}
+
+/* Turns the variables into Tailwind colors: bg-page, text-ink, border-line,
+   bg-link/10 ... `inline` makes each class use the variable directly, so it
+   changes the moment the theme does. */
+@theme inline {
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-soft: var(--soft);
+  --color-subtle: var(--subtle);
+  --color-faint: var(--faint);
+  --color-accent: var(--accent);
+  --color-link: var(--link);
+  --color-link-hover: var(--link-hover);
+  --color-brand: var(--brand);
+  --color-brand-deep: var(--brand-deep);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
 }
 
 body {
   margin: 0;
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
-  color: #f1f5f9; /* slate-100 */
-  background-color: #020617; /* slate-950 — matches the app background, no flash before React mounts */
+  color: var(--ink);
+  background-color: var(--page); /* no flash before React mounts */
+  transition: background-color 0.2s ease, color 0.2s ease;
 }

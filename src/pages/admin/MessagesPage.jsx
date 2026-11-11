@@ -67,7 +67,7 @@ export default function MessagesPage() {
   key: 'action',
   render: (_, contact) =>
     contact.status === 'resolved' ? (
-      <span className="text-slate-500">Resolved {formatDate(contact.resolvedAt)}</span>
+      <span className="text-faint">Resolved {formatDate(contact.resolvedAt)}</span>
     ) : (
       <Popconfirm
         title="Mark as resolved?"
@@ -97,7 +97,7 @@ export default function MessagesPage() {
           action={<Button size="small" onClick={loadMessages}>Retry</Button>}
         />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
+        <div className="overflow-hidden rounded-xl border border-line bg-surface">
           <Table
             rowKey="_id"
             columns={columns}

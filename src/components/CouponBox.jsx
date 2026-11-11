@@ -30,7 +30,7 @@ export default function CouponBox({ applied, onApplied, onRemoved }) {
   if (applied) {
     return (
       <div className="flex items-center justify-between gap-3 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-sm">
-        <span className="flex min-w-0 items-center gap-2 text-emerald-300">
+        <span className="flex min-w-0 items-center gap-2 text-success">
           <TagOutlined />
           <span className="truncate">
             <strong>{applied.coupon.code}</strong> · {applied.coupon.description} (−{formatPrice(applied.discount)})
@@ -57,7 +57,7 @@ export default function CouponBox({ applied, onApplied, onRemoved }) {
           Apply
         </Button>
       </div>
-      {error && <p className="mt-1.5 text-xs text-rose-400">{error}</p>}
+      {error && <p className="mt-1.5 text-xs text-danger">{error}</p>}
     </div>
   )
 }

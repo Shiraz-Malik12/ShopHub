@@ -15,8 +15,8 @@ function ReviewSummary({ summary }) {
   return (
     <div>
       <div className="flex items-end gap-3">
-        <span className="text-5xl font-semibold text-slate-100">{summary.count ? summary.average.toFixed(1) : '–'}</span>
-        <span className="pb-1 text-sm text-slate-400">out of 5</span>
+        <span className="text-5xl font-semibold text-ink">{summary.count ? summary.average.toFixed(1) : '–'}</span>
+        <span className="pb-1 text-sm text-subtle">out of 5</span>
       </div>
       <div className="mt-2">
         <RatingStars average={summary.average} count={summary.count} size={16} />
@@ -26,11 +26,11 @@ function ReviewSummary({ summary }) {
           const count = summary.breakdown[stars] || 0
           return (
             <li key={stars} className="flex items-center gap-3 text-sm">
-              <span className="w-12 shrink-0 text-slate-400">{stars} star</span>
-              <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-800" role="img" aria-label={`${stars} star: ${count} reviews`}>
+              <span className="w-12 shrink-0 text-subtle">{stars} star</span>
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted" role="img" aria-label={`${stars} star: ${count} reviews`}>
                 <div className="h-full rounded-full bg-amber-400" style={{ width: `${(count / largest) * 100}%` }} />
               </div>
-              <span className="w-6 shrink-0 text-right text-slate-300">{count}</span>
+              <span className="w-6 shrink-0 text-right text-soft">{count}</span>
             </li>
           )
         })}
@@ -133,8 +133,8 @@ export default function ProductReviews({ productId, onSummaryChange }) {
   function renderWriteArea() {
     if (!user) {
       return (
-        <p className="text-sm text-slate-400">
-          <Link to="/login" state={{ from: location }} className="font-medium text-indigo-400 hover:text-indigo-300">
+        <p className="text-sm text-subtle">
+          <Link to="/login" state={{ from: location }} className="font-medium text-link hover:text-link-hover">
             Sign in
           </Link>{' '}
           to write a review.
@@ -142,7 +142,7 @@ export default function ProductReviews({ productId, onSummaryChange }) {
       )
     }
     if (!myStatus?.canReview && !myStatus?.myReview) {
-      return <p className="text-sm text-slate-400">Only customers who have received this product can review it.</p>
+      return <p className="text-sm text-subtle">Only customers who have received this product can review it.</p>
     }
     return (
       <MyReviewForm
@@ -156,8 +156,8 @@ export default function ProductReviews({ productId, onSummaryChange }) {
   }
 
   return (
-    <section id="reviews" className="mt-12 rounded-xl border border-slate-800 bg-slate-900">
-      <h2 className="border-b border-slate-800 px-6 py-4 text-lg font-semibold text-slate-100">Customer reviews</h2>
+    <section id="reviews" className="mt-12 rounded-xl border border-line bg-surface">
+      <h2 className="border-b border-line px-6 py-4 text-lg font-semibold text-ink">Customer reviews</h2>
 
       {loading ? (
         <div className="p-6">
@@ -167,8 +167,8 @@ export default function ProductReviews({ productId, onSummaryChange }) {
         <div className="grid gap-8 p-6 lg:grid-cols-3">
           <div className="space-y-6">
             {summary && <ReviewSummary summary={summary} />}
-            <div className="border-t border-slate-800 pt-6">
-              <h3 className="mb-3 font-medium text-slate-100">
+            <div className="border-t border-line pt-6">
+              <h3 className="mb-3 font-medium text-ink">
                 {myStatus?.myReview ? 'Your review' : 'Write a review'}
               </h3>
               {renderWriteArea()}
@@ -179,19 +179,19 @@ export default function ProductReviews({ productId, onSummaryChange }) {
             {reviews.length === 0 ? (
               <Empty description="No reviews yet. Be the first to share what you think." />
             ) : (
-              <ul className="divide-y divide-slate-800">
+              <ul className="divide-y divide-line">
                 {reviews.map((review) => (
                   <li key={review._id} className="py-5 first:pt-0">
                     <div className="flex items-start gap-3">
-                      <Avatar style={{ backgroundColor: '#334155' }}>{review.author[0]?.toUpperCase()}</Avatar>
+                      <Avatar style={{ backgroundColor: 'var(--brand)' }}>{review.author[0]?.toUpperCase()}</Avatar>
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center justify-between gap-2">
-                          <span className="font-medium text-slate-100">{review.author}</span>
-                          <span className="text-xs text-slate-500">{formatDate(review.createdAt)}</span>
+                          <span className="font-medium text-ink">{review.author}</span>
+                          <span className="text-xs text-faint">{formatDate(review.createdAt)}</span>
                         </div>
                         <Rate disabled value={review.rating} style={{ fontSize: 13, color: '#fbbf24' }} />
                         {/* React escapes this text, so a comment can't inject HTML. */}
-                        {review.comment && <p className="mt-2 whitespace-pre-wrap text-sm text-slate-300">{review.comment}</p>}
+                        {review.comment && <p className="mt-2 whitespace-pre-wrap text-sm text-soft">{review.comment}</p>}
                         {isAdmin && (
                           <Popconfirm
                             title="Remove this review?"

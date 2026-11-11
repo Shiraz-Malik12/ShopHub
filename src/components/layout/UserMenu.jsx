@@ -20,8 +20,8 @@ export default function UserMenu() {
       disabled: true,
       label: (
         <div className="py-1">
-          <div className="font-medium text-slate-100">{user.name}</div>
-          <div className="text-xs text-slate-400">{user.email}</div>
+          <div className="font-medium text-ink">{user.name}</div>
+          <div className="text-xs text-subtle">{user.email}</div>
         </div>
       ),
     },
@@ -40,12 +40,12 @@ export default function UserMenu() {
 
   return (
     <Dropdown menu={{ items }} placement="bottomRight" trigger={['click']}>
-      <button type="button" className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2 hover:bg-slate-800">
-        <Avatar size={32} style={{ backgroundColor: '#4f46e5' }}>
+      <button type="button" className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2 hover:bg-muted">
+        <Avatar size={32} style={{ backgroundColor: 'var(--brand)' }}>
           {user.name?.[0]?.toUpperCase()}
         </Avatar>
-        <span className="hidden text-sm font-medium text-slate-300 sm:inline">{user.name}</span>
-        <DownOutlined className="text-[10px] text-slate-500" />
+        <span className="hidden text-sm font-medium text-soft sm:inline">{user.name}</span>
+        <DownOutlined className="text-[10px] text-faint" />
       </button>
     </Dropdown>
   )

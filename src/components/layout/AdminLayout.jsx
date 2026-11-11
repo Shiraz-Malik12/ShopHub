@@ -1,6 +1,7 @@
 import { AppstoreOutlined, DashboardOutlined, ExportOutlined, MailOutlined, PercentageOutlined, ShoppingOutlined, TagsOutlined, TeamOutlined } from '@ant-design/icons'
 import { Link, NavLink } from 'react-router-dom'
 import Logo from '../Logo'
+import ThemeToggle from '../ThemeToggle'
 import UserMenu from './UserMenu'
 
 const NAV_ITEMS = [
@@ -15,7 +16,7 @@ const NAV_ITEMS = [
 
 function navClass({ isActive }) {
   return `flex shrink-0 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-    isActive ? 'bg-indigo-500/10 text-indigo-300' : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+    isActive ? 'bg-link/10 text-link-hover' : 'text-subtle hover:bg-muted hover:text-ink'
   }`
 }
 
@@ -23,16 +24,16 @@ function navClass({ isActive }) {
 // screens, and a top bar with the signed-in user's menu.
 export default function AdminLayout({ children }) {
   return (
-    <div className="min-h-screen bg-slate-950 lg:pl-64">
-      <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col border-r border-slate-800 bg-slate-900 lg:flex">
-        <div className="flex h-16 items-center gap-2 border-b border-slate-800 px-6">
+    <div className="min-h-screen bg-page lg:pl-64">
+      <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col border-r border-line bg-surface lg:flex">
+        <div className="flex h-16 items-center gap-2 border-b border-line px-6">
           <Logo to="/admin/dashboard" />
-          <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+          <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-subtle">
             Admin
           </span>
         </div>
         <nav className="flex flex-1 flex-col gap-1 p-4">
-          <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Store</p>
+          <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-faint">Store</p>
           {NAV_ITEMS.map((item) => (
             <NavLink key={item.to} to={item.to} className={navClass}>
               {item.icon}
@@ -40,10 +41,10 @@ export default function AdminLayout({ children }) {
             </NavLink>
           ))}
         </nav>
-        <div className="border-t border-slate-800 p-4">
+        <div className="border-t border-line p-4">
           <Link
             to="/products"
-            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white"
+            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-subtle hover:bg-muted hover:text-ink"
           >
             <ExportOutlined />
             View store
@@ -51,13 +52,16 @@ export default function AdminLayout({ children }) {
         </div>
       </aside>
 
-      <header className="sticky top-0 z-20 border-b border-slate-800 bg-slate-950/80 backdrop-blur">
+      <header className="sticky top-0 z-20 border-b border-line bg-surface/85 backdrop-blur">
         <div className="flex h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           <div className="lg:hidden">
             <Logo to="/admin/dashboard" />
           </div>
-          <span className="hidden text-sm text-slate-400 lg:inline">Store management</span>
-          <UserMenu />
+          <span className="hidden text-sm text-subtle lg:inline">Store management</span>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <UserMenu />
+          </div>
         </div>
         <nav className="flex gap-1 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:px-6 lg:hidden">
           {NAV_ITEMS.map((item) => (

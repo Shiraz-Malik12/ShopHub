@@ -46,10 +46,10 @@ export default function CartPage() {
 
   return (
     <StoreLayout>
-      <section className="border-b border-slate-800 bg-slate-900">
+      <section className="border-b border-line bg-surface">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold tracking-tight text-slate-100">Shopping cart</h1>
-          <p className="mt-2 text-slate-400">
+          <h1 className="text-3xl font-bold tracking-tight text-ink">Shopping cart</h1>
+          <p className="mt-2 text-subtle">
             {isEmpty ? 'Your cart is empty.' : `${cart.itemCount} ${cart.itemCount === 1 ? 'item' : 'items'} in your cart`}
           </p>
         </div>
@@ -57,11 +57,11 @@ export default function CartPage() {
 
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         {loading && isEmpty ? (
-          <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
+          <div className="rounded-xl border border-line bg-surface p-6">
             <Skeleton active avatar paragraph={{ rows: 2 }} />
           </div>
         ) : isEmpty ? (
-          <div className="rounded-xl border border-slate-800 bg-slate-900 py-16">
+          <div className="rounded-xl border border-line bg-surface py-16">
             <Empty description="Your cart is empty.">
               <Link to="/products">
                 <Button type="primary">Start shopping</Button>
@@ -70,7 +70,7 @@ export default function CartPage() {
           </div>
         ) : (
           <div className="grid gap-8 lg:grid-cols-3">
-            <ul className="divide-y divide-slate-800 rounded-xl border border-slate-800 bg-slate-900 lg:col-span-2">
+            <ul className="divide-y divide-line rounded-xl border border-line bg-surface lg:col-span-2">
               {cart.items.map((item) => {
                 const { product } = item
                 const busy = busyProductId === product._id
@@ -78,7 +78,7 @@ export default function CartPage() {
                   <li key={product._id} className="flex gap-3 p-4 sm:gap-4 sm:p-5">
                     <Link
                       to={`/products/${product._id}`}
-                      className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-slate-800 sm:h-24 sm:w-24"
+                      className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-line sm:h-24 sm:w-24"
                     >
                       <ProductImage src={product.image} alt={product.name} className="h-full w-full" compact />
                     </Link>
@@ -87,11 +87,11 @@ export default function CartPage() {
                       <div className="min-w-0">
                         <Link
                           to={`/products/${product._id}`}
-                          className="line-clamp-2 font-semibold text-slate-100 hover:text-indigo-400"
+                          className="line-clamp-2 font-semibold text-ink hover:text-link"
                         >
                           {product.name}
                         </Link>
-                        <p className="mt-1 text-sm text-slate-400">
+                        <p className="mt-1 text-sm text-subtle">
                           {product.category?.name || 'Uncategorized'} · {formatPrice(product.price)} each
                         </p>
                         {!item.available && (
@@ -112,7 +112,7 @@ export default function CartPage() {
                             onChange={(quantity) => runItemAction(product._id, () => updateQuantity(product._id, quantity))}
                           />
                         )}
-                        <span className={`font-semibold sm:w-24 sm:text-right ${item.available ? 'text-slate-100' : 'text-slate-500 line-through'}`}>
+                        <span className={`font-semibold sm:w-24 sm:text-right ${item.available ? 'text-ink' : 'text-faint line-through'}`}>
                           {formatPrice(item.lineTotal)}
                         </span>
                         <Tooltip title="Remove">
@@ -132,23 +132,23 @@ export default function CartPage() {
               })}
             </ul>
 
-            <aside className="h-fit rounded-xl border border-slate-800 bg-slate-900 p-6">
-              <h2 className="text-lg font-semibold text-slate-100">Order summary</h2>
+            <aside className="h-fit rounded-xl border border-line bg-surface p-6">
+              <h2 className="text-lg font-semibold text-ink">Order summary</h2>
               <dl className="mt-4 space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <dt className="text-slate-400">Items</dt>
-                  <dd className="font-medium text-slate-100">{cart.itemCount}</dd>
+                  <dt className="text-subtle">Items</dt>
+                  <dd className="font-medium text-ink">{cart.itemCount}</dd>
                 </div>
-                <div className="flex justify-between border-t border-slate-800 pt-3 text-base">
-                  <dt className="font-semibold text-slate-100">Subtotal</dt>
-                  <dd className="font-bold text-slate-100">{formatPrice(cart.subtotal)}</dd>
+                <div className="flex justify-between border-t border-line pt-3 text-base">
+                  <dt className="font-semibold text-ink">Subtotal</dt>
+                  <dd className="font-bold text-ink">{formatPrice(cart.subtotal)}</dd>
                 </div>
               </dl>
-              <p className="mt-2 text-xs text-slate-500">Shipping and taxes are calculated at checkout.</p>
+              <p className="mt-2 text-xs text-faint">Shipping and taxes are calculated at checkout.</p>
 
               {/* Unavailable items must be removed first — an order can't include them. */}
               {hasUnavailableItems && (
-                <p className="mt-4 text-sm text-rose-400">Remove the unavailable items to continue to checkout.</p>
+                <p className="mt-4 text-sm text-danger">Remove the unavailable items to continue to checkout.</p>
               )}
               <Button
                 type="primary"
@@ -162,7 +162,7 @@ export default function CartPage() {
               </Button>
 
               <div className="mt-4 flex items-center justify-between text-sm">
-                <Link to="/products" className="inline-flex items-center gap-2 font-medium text-indigo-400 hover:text-indigo-300">
+                <Link to="/products" className="inline-flex items-center gap-2 font-medium text-link hover:text-link-hover">
                   <ArrowLeftOutlined />
                   Continue shopping
                 </Link>

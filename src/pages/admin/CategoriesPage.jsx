@@ -85,12 +85,12 @@ export default function CategoriesPage() {
   }
 
   const columns = [
-    { title: 'Name', dataIndex: 'name', key: 'name', render: (name) => <span className="font-medium text-slate-100">{name}</span> },
+    { title: 'Name', dataIndex: 'name', key: 'name', render: (name) => <span className="font-medium text-ink">{name}</span> },
     {
       title: 'Slug',
       dataIndex: 'slug',
       key: 'slug',
-      render: (slug) => <code className="rounded bg-slate-800 px-1.5 py-0.5 text-xs text-slate-400">{slug}</code>,
+      render: (slug) => <code className="rounded bg-muted px-1.5 py-0.5 text-xs text-subtle">{slug}</code>,
     },
     {
       title: 'Status',
@@ -154,7 +154,7 @@ export default function CategoriesPage() {
             }
           />
         ) : (
-          <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
+          <div className="overflow-hidden rounded-xl border border-line bg-surface">
             <Table
               rowKey="_id"
               columns={columns}

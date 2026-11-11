@@ -9,10 +9,10 @@ import { useAuth } from '../context/AuthContext'
 
 function Section({ title, description, children }) {
   return (
-    <section className="rounded-xl border border-slate-800 bg-slate-900">
-      <div className="border-b border-slate-800 px-6 py-4">
-        <h2 className="font-semibold text-slate-100">{title}</h2>
-        {description && <p className="mt-1 text-sm text-slate-400">{description}</p>}
+    <section className="rounded-xl border border-line bg-surface">
+      <div className="border-b border-line px-6 py-4">
+        <h2 className="font-semibold text-ink">{title}</h2>
+        {description && <p className="mt-1 text-sm text-subtle">{description}</p>}
       </div>
       <div className="p-6">{children}</div>
     </section>
@@ -265,22 +265,22 @@ export default function DashboardPage() {
 
   return (
     <StoreLayout>
-      <section className="border-b border-slate-800 bg-slate-900">
+      <section className="border-b border-line bg-surface">
         <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold tracking-tight text-slate-100">My account</h1>
-          <p className="mt-2 text-slate-400">Welcome back, {user?.name}.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-ink">My account</h1>
+          <p className="mt-2 text-subtle">Welcome back, {user?.name}.</p>
         </div>
       </section>
 
       <div className="mx-auto grid max-w-5xl gap-6 px-4 py-10 sm:px-6 lg:grid-cols-3 lg:px-8">
         <div className="space-y-4 lg:col-span-1">
-          <div className="rounded-xl border border-slate-800 bg-slate-900 p-6">
+          <div className="rounded-xl border border-line bg-surface p-6">
             <div className="flex flex-col items-center text-center">
-              <Avatar size={72} style={{ backgroundColor: '#4f46e5', fontSize: 28 }}>
+              <Avatar size={72} style={{ backgroundColor: 'var(--brand)', fontSize: 28 }}>
                 {user?.name?.[0]?.toUpperCase()}
               </Avatar>
-              <h2 className="mt-4 text-lg font-semibold text-slate-100">{user?.name}</h2>
-              <p className="break-all text-sm text-slate-400">{user?.email}</p>
+              <h2 className="mt-4 text-lg font-semibold text-ink">{user?.name}</h2>
+              <p className="break-all text-sm text-subtle">{user?.email}</p>
               <div className="mt-3 flex gap-2">
                 <Tag color={isAdmin ? 'purple' : 'blue'}>{isAdmin ? 'Admin' : 'Customer'}</Tag>
                 {user?.isVerified && (
@@ -296,16 +296,16 @@ export default function DashboardPage() {
             <Link
               key={link.to}
               to={link.to}
-              className="group flex items-center gap-4 rounded-xl border border-slate-800 bg-slate-900 p-4 transition hover:border-indigo-500/40 hover:shadow-md"
+              className="group flex items-center gap-4 rounded-xl border border-line bg-surface p-4 transition hover:border-link/40 hover:shadow-md"
             >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-lg text-indigo-400">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-link/10 text-lg text-link">
                 {link.icon}
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block font-semibold text-slate-100">{link.title}</span>
-                <span className="block text-sm text-slate-400">{link.text}</span>
+                <span className="block font-semibold text-ink">{link.title}</span>
+                <span className="block text-sm text-subtle">{link.text}</span>
               </span>
-              <RightOutlined className="text-slate-500 transition group-hover:translate-x-0.5 group-hover:text-indigo-400" />
+              <RightOutlined className="text-faint transition group-hover:translate-x-0.5 group-hover:text-link" />
             </Link>
           ))}
         </div>

@@ -148,16 +148,16 @@ export default function ProductsPage() {
 
   return (
     <StoreLayout>
-      <section className="border-b border-slate-800 bg-slate-900">
+      <section className="border-b border-line bg-surface">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold tracking-tight text-slate-100">All products</h1>
-          <p className="mt-2 text-slate-400">{!hasLoadedOnce || loadError ? 'Browse our full catalog.' : countLabel}</p>
+          <h1 className="text-3xl font-bold tracking-tight text-ink">All products</h1>
+          <p className="mt-2 text-subtle">{!hasLoadedOnce || loadError ? 'Browse our full catalog.' : countLabel}</p>
 
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <Input
               size="large"
               allowClear
-              prefix={<SearchOutlined className="text-slate-500" />}
+              prefix={<SearchOutlined className="text-faint" />}
               placeholder="Search products..."
               aria-label="Search products"
               value={searchText}
@@ -198,8 +198,8 @@ export default function ProductsPage() {
         {loading && !hasLoadedOnce ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-label="Loading products...">
             {Array.from({ length: SKELETON_CARDS }, (_, index) => (
-              <div key={index} className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900">
-                <div className="aspect-square animate-pulse bg-slate-800" />
+              <div key={index} className="overflow-hidden rounded-xl border border-line bg-surface">
+                <div className="aspect-square animate-pulse bg-muted" />
                 <div className="p-4">
                   <Skeleton active title={false} paragraph={{ rows: 3 }} />
                 </div>
@@ -207,10 +207,10 @@ export default function ProductsPage() {
             ))}
           </div>
         ) : loadError ? (
-          <div className="mx-auto max-w-md rounded-xl border border-slate-800 bg-slate-900 p-10 text-center">
-            <WarningOutlined className="text-3xl text-rose-500" />
-            <h2 className="mt-4 text-lg font-semibold text-slate-100">Could not load products</h2>
-            <p className="mt-1 text-sm text-slate-400">{loadError}</p>
+          <div className="mx-auto max-w-md rounded-xl border border-line bg-surface p-10 text-center">
+            <WarningOutlined className="text-3xl text-danger" />
+            <h2 className="mt-4 text-lg font-semibold text-ink">Could not load products</h2>
+            <p className="mt-1 text-sm text-subtle">{loadError}</p>
             <Button
               type="primary"
               icon={<ReloadOutlined />}
@@ -222,13 +222,13 @@ export default function ProductsPage() {
           </div>
         ) : products.length === 0 && page > 1 ? (
           // e.g. an old link to ?page=5 when there are now only 2 pages.
-          <div className="rounded-xl border border-slate-800 bg-slate-900 py-16">
+          <div className="rounded-xl border border-line bg-surface py-16">
             <Empty description="There are no products on this page.">
               <Button onClick={() => goToPage(1)}>Go to the first page</Button>
             </Empty>
           </div>
         ) : products.length === 0 ? (
-          <div className="rounded-xl border border-slate-800 bg-slate-900 py-16">
+          <div className="rounded-xl border border-line bg-surface py-16">
             <Empty description={hasFilters ? 'No products match your search.' : 'No products available.'}>
               {hasFilters && <Button onClick={clearFilters}>Clear filters</Button>}
             </Empty>
@@ -254,7 +254,7 @@ export default function ProductsPage() {
               onChange={goToPage}
               showSizeChanger={false}
             />
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-subtle">
               Showing {firstShown}–{lastShown} of {pagination.total}
             </p>
           </div>

@@ -8,10 +8,10 @@ export default function StockBadge({ stock }) {
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${
         lowStock
-          ? 'bg-amber-500/10 text-amber-300'
+          ? 'bg-amber-500/10 text-warning'
           : inStock
-            ? 'bg-emerald-500/10 text-emerald-400'
-            : 'bg-rose-500/10 text-rose-400'
+            ? 'bg-emerald-500/10 text-success'
+            : 'bg-rose-500/10 text-danger'
       }`}
     >
       <span
