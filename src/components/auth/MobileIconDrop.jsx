@@ -44,6 +44,9 @@ const TILE_STYLES = {
 }
 
 const TILE_SIZE = 42
+const DROP_MS = 3600 // one tile's whole journey
+const STAGGER_MS = 120 // each tile starts this much after the previous one
+const MAX_STEP_MS = 34 // most the animation may move forward per painted frame (~2 frames)
 let dropPlayed = false
 
 function shouldPlay() {
@@ -133,28 +136,50 @@ export default function MobileIconDrop() {
 
     let cancelled = false
     let animations = []
+    let frame = null
 
-    // Start only once the screen is really showing the page. On iPhone
-    // (Safari), a refresh keeps the screen busy for a moment after React
-    // has already rendered — starting right away meant the first half of
-    // the fall happened before anything was drawn, so people only saw the
-    // icons landing at the bottom.
+    // 1. Start only once the screen is really showing the page.
     waitUntilPageIsShown().then(() => {
       if (cancelled) return
       const layer = layerRef.current
       // Measured now (not earlier): Safari's toolbar can change the screen
       // height while the page is still loading.
       const { clientWidth: width, clientHeight: height } = layer
-      animations = [...layer.children].map((tile, index) =>
-        tile.animate(dropKeyframes(index, width, height), { duration: 3600, delay: index * 120, fill: 'both' }),
-      )
-      Promise.all(animations.map((animation) => animation.finished))
-        .then(() => setDone(true))
-        .catch(() => {}) // cancelled (page left early) — nothing to do
+      animations = [...layer.children].map((tile, index) => {
+        const animation = tile.animate(dropKeyframes(index, width, height), {
+          duration: DROP_MS,
+          delay: index * STAGGER_MS,
+          fill: 'both',
+        })
+        animation.pause() // we move it forward ourselves, below
+        return animation
+      })
+
+      // 2. Move the animation forward FRAME BY FRAME, not by the clock.
+      //    Each painted frame advances it by the real time since the last
+      //    frame, but never more than MAX_STEP_MS. So if the phone freezes
+      //    drawing for a while (iPhone Safari does this right after a
+      //    refresh), the animation simply waits and carries on from where
+      //    it was — people always see the whole fall, from the top.
+      const total = DROP_MS + (animations.length - 1) * STAGGER_MS
+      let elapsed = 0
+      let lastFrameAt = null
+      const tick = (now) => {
+        if (cancelled) return
+        if (lastFrameAt !== null) elapsed += Math.min(now - lastFrameAt, MAX_STEP_MS)
+        lastFrameAt = now
+        animations.forEach((animation) => {
+          animation.currentTime = Math.min(elapsed, total)
+        })
+        if (elapsed >= total) setDone(true)
+        else frame = requestAnimationFrame(tick)
+      }
+      frame = requestAnimationFrame(tick)
     })
 
     return () => {
       cancelled = true
+      if (frame) cancelAnimationFrame(frame)
       animations.forEach((animation) => animation.cancel())
     }
   }, [active])
