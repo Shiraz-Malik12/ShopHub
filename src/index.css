@@ -241,3 +241,13 @@ body {
 .glow {
   background: radial-gradient(closest-side, var(--glow), transparent);
 }
+
+/* Full-screen height that matches what is ACTUALLY visible on phones.
+   On iPhone Safari, 100vh is the height with the address bar hidden — so
+   while the bar is showing, a 100vh page is taller than the screen: it
+   scrolls, and anything "centered" sits too low. 100dvh (dynamic viewport
+   height) follows the bar; browsers without dvh keep the 100vh line. */
+.min-h-visible {
+  min-height: 100vh;
+  min-height: 100dvh;
+}

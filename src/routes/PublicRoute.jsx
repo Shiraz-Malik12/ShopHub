@@ -12,7 +12,7 @@ export default function PublicRoute() {
   // server is waking up), show the logo gently pulsing — not a blank screen.
   if (initializing) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-page" role="status" aria-label="Loading">
+      <div className="min-h-visible flex items-center justify-center bg-page" role="status" aria-label="Loading">
         <BrandMark size={56} className="animate-pulse" />
       </div>
     )
