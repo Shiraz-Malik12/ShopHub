@@ -12,7 +12,7 @@ import BrandMark from '../BrandMark'
 
 // Phones & tablets only: when an auth page first opens, shop icons tumble
 // out of the top-left corner, bounce twice on the bottom edge, rest for a
-// moment as a little pile, then fade away (~5s). On laptops the brand panel
+// moment as a little pile, then fade away (~3.5s). On laptops the brand panel
 // with the logo animation plays instead.
 //
 // Plays ONCE per page load: moving between Login / Register / Forgot
@@ -44,9 +44,12 @@ const TILE_STYLES = {
 }
 
 const TILE_SIZE = 42
-const DROP_MS = 3600 // one tile's whole journey
-const STAGGER_MS = 120 // each tile starts this much after the previous one
-const MAX_STEP_MS = 34 // most the animation may move forward per painted frame (~2 frames)
+const DROP_MS = 2600 // one tile's whole journey
+const STAGGER_MS = 70 // each tile starts this much after the previous one
+// A gap between two painted frames longer than this is a "freeze" (iPhone
+// Safari right after a refresh), not just a slow phone.
+const FREEZE_MS = 150
+const FRAME_MS = 16 // one normal frame
 let dropPlayed = false
 
 function shouldPlay() {
@@ -145,36 +148,45 @@ export default function MobileIconDrop() {
       // Measured now (not earlier): Safari's toolbar can change the screen
       // height while the page is still loading.
       const { clientWidth: width, clientHeight: height } = layer
-      animations = [...layer.children].map((tile, index) => {
-        const animation = tile.animate(dropKeyframes(index, width, height), {
+      // 2. Let the browser play it normally — at real speed, on the
+      //    graphics hardware (only transform/opacity change), so it's smooth
+      //    even on slow phones and in Low Power Mode.
+      animations = [...layer.children].map((tile, index) =>
+        tile.animate(dropKeyframes(index, width, height), {
           duration: DROP_MS,
           delay: index * STAGGER_MS,
           fill: 'both',
-        })
-        animation.pause() // we move it forward ourselves, below
-        return animation
-      })
+        }),
+      )
 
-      // 2. Move the animation forward FRAME BY FRAME, not by the clock.
-      //    Each painted frame advances it by the real time since the last
-      //    frame, but never more than MAX_STEP_MS. So if the phone freezes
-      //    drawing for a while (iPhone Safari does this right after a
-      //    refresh), the animation simply waits and carries on from where
-      //    it was — people always see the whole fall, from the top.
-      const total = DROP_MS + (animations.length - 1) * STAGGER_MS
-      let elapsed = 0
+      // 3. Freeze guard. If the screen stops drawing for a moment (iPhone
+      //    Safari does this right after a refresh), the animation's clock
+      //    keeps running and people would miss the start. So we watch the
+      //    frames: after a freeze, wind the animation back by the frozen
+      //    time — before that frame is painted — and it carries on from
+      //    where people last saw it. Normal (even slow) frames are left
+      //    alone, so the speed always stays real.
       let lastFrameAt = null
-      const tick = (now) => {
+      const watch = (now) => {
         if (cancelled) return
-        if (lastFrameAt !== null) elapsed += Math.min(now - lastFrameAt, MAX_STEP_MS)
+        const gap = lastFrameAt === null ? 0 : now - lastFrameAt
+        if (gap > FREEZE_MS) {
+          const missed = gap - FRAME_MS
+          animations.forEach((animation) => {
+            animation.currentTime = Math.max(0, animation.currentTime - missed)
+          })
+        }
         lastFrameAt = now
-        animations.forEach((animation) => {
-          animation.currentTime = Math.min(elapsed, total)
-        })
-        if (elapsed >= total) setDone(true)
-        else frame = requestAnimationFrame(tick)
+        frame = requestAnimationFrame(watch)
       }
-      frame = requestAnimationFrame(tick)
+      frame = requestAnimationFrame(watch)
+
+      Promise.all(animations.map((animation) => animation.finished))
+        .then(() => {
+          cancelAnimationFrame(frame)
+          setDone(true)
+        })
+        .catch(() => {}) // cancelled (page left early) — nothing to do
     })
 
     return () => {
