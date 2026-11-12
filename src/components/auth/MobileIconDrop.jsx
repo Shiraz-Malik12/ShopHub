@@ -19,6 +19,14 @@ import BrandMark from '../BrandMark'
 // password doesn't replay it (`dropPlayed`). Skipped for people who prefer
 // reduced motion. The tiles sit in front of the form but can never be
 // clicked (pointer-events: none), and the layer removes itself when done.
+//
+// WHY THE ICONS ARE MOVED BY HAND (a requestAnimationFrame loop) instead of
+// CSS / element.animate(): on iPhone, Safari runs those animations in a
+// separate graphics process with its own clock. Right after a refresh Safari
+// is busy for a moment and shows no new frames — but that clock keeps going,
+// so when the screen caught up the icons were already at the bottom. Here
+// each icon moves ONLY when a frame is actually drawn, so it can never skip
+// ahead: a stall just pauses it, and it carries on from the same spot.
 
 const TILES = [
   { Icon: ShoppingCartOutlined, style: 'blue' },
@@ -46,10 +54,10 @@ const TILE_STYLES = {
 const TILE_SIZE = 42
 const DROP_MS = 2600 // one tile's whole journey
 const STAGGER_MS = 70 // each tile starts this much after the previous one
-// Start only once the page draws smoothly: SMOOTH_FRAMES frames in a row,
-// each arriving within SMOOTH_GAP_MS of the previous one.
-const SMOOTH_FRAMES = 8
-const SMOOTH_GAP_MS = 50
+// Most the animation may move forward between two drawn frames. Normal frames
+// (16–33 ms on phones) are well under it, so the speed is real; a stall of
+// several seconds (phone busy after a refresh) moves it only this much.
+const MAX_STEP_MS = 100
 let dropPlayed = false
 
 function shouldPlay() {
@@ -59,23 +67,81 @@ function shouldPlay() {
 }
 
 const rand = (min, max) => min + Math.random() * (max - min)
+const lerp = (from, to, t) => from + (to - from) * t
 
-// Resolves when the page is on screen AND drawing smoothly, so the whole
-// fall is seen from the very start. After a refresh, iPhone Safari keeps
-// the screen busy for a moment (building the page) — an animation started
-// then would be half over before it's visible. Steps:
-//   1. the page has finished loading and the tab is visible
-//   2. web fonts are ready (text won't jump around mid-animation)
-//   3. SMOOTH_FRAMES frames in a row are drawn without a stutter
-// Capped at MAX_WAIT_MS, so it never waits forever.
+// CSS-style cubic-bezier(x1, y1, x2, y2) easing as a function of 0..1 —
+// the same curves the browser uses for `transition-timing-function`.
+function cubicBezier(x1, y1, x2, y2) {
+  const sample = (a1, a2, t) => ((1 - 3 * a2 + 3 * a1) * t + (3 * a2 - 6 * a1)) * t * t + 3 * a1 * t
+  const slope = (a1, a2, t) => 3 * (1 - 3 * a2 + 3 * a1) * t * t + 2 * (3 * a2 - 6 * a1) * t + 3 * a1
+  return (x) => {
+    if (x <= 0 || x >= 1) return x
+    let t = x
+    for (let i = 0; i < 8; i += 1) {
+      // Newton's method: find t where the curve's x equals the input x
+      const dx = sample(x1, x2, t) - x
+      const d = slope(x1, x2, t)
+      if (Math.abs(dx) < 1e-5 || d === 0) break
+      t -= dx / d
+    }
+    return sample(y1, y2, Math.min(1, Math.max(0, t)))
+  }
+}
+
+const FALL = cubicBezier(0.6, 0, 1, 1) // speeding up (gravity)
+const LAND = cubicBezier(0, 0, 0.4, 1) // slowing down (hitting the floor)
+const START = cubicBezier(0.35, 0, 0.9, 0.6)
+const LINEAR = (t) => t
+
+// One tile's journey as points in time (t = fraction of DROP_MS): out of the
+// top-left corner → lands → bounces up → lands → small bounce → rests →
+// shrinks away. `ease` shapes the movement from that point to the next.
+function dropPath(index, width, height) {
+  const startX = rand(-60, -30)
+  const startY = rand(-60, -40)
+  const landX = rand(20, width - TILE_SIZE - 50)
+  const spin = rand(180, 420)
+  const floor = height - TILE_SIZE - 20 - (index % 3) * 10 // a slightly uneven pile
+
+  return [
+    { t: 0, x: startX, y: startY, r: 0, s: 1, o: 0, ease: START },
+    { t: 0.05, x: startX + 20, y: startY + 20, r: 20, s: 1, o: 1, ease: FALL },
+    { t: 0.38, x: landX, y: floor, r: spin, s: 1, o: 1, ease: LAND }, // first landing
+    { t: 0.5, x: landX + 18, y: floor - 90, r: spin + 40, s: 1, o: 1, ease: FALL }, // bounce up
+    { t: 0.6, x: landX + 30, y: floor, r: spin + 70, s: 1, o: 1, ease: LAND }, // lands again
+    { t: 0.66, x: landX + 36, y: floor - 30, r: spin + 80, s: 1, o: 1, ease: LINEAR }, // small bounce
+    { t: 0.72, x: landX + 40, y: floor, r: spin + 90, s: 1, o: 1, ease: LINEAR }, // rests
+    { t: 0.88, x: landX + 40, y: floor, r: spin + 90, s: 1, o: 1, ease: LINEAR },
+    { t: 1, x: landX + 40, y: floor + 10, r: spin + 90, s: 0.6, o: 0, ease: LINEAR }, // shrinks away
+  ]
+}
+
+// Where a tile is at `progress` (0..1) along its path.
+function pointAt(path, progress) {
+  let i = 0
+  while (i < path.length - 2 && progress > path[i + 1].t) i += 1
+  const from = path[i]
+  const to = path[i + 1]
+  const local = Math.min(1, Math.max(0, (progress - from.t) / (to.t - from.t)))
+  const k = from.ease(local)
+  return {
+    x: lerp(from.x, to.x, k),
+    y: lerp(from.y, to.y, k),
+    r: lerp(from.r, to.r, k),
+    s: lerp(from.s, to.s, k),
+    o: lerp(from.o, to.o, local),
+  }
+}
+
+// Resolves once the page has loaded, is visible and its fonts are ready —
+// so the fall starts on a finished page. Capped, so it never waits forever.
 const MAX_WAIT_MS = 3000
 
-function waitForSmoothPage() {
+function waitForPage() {
   const loaded =
     document.readyState === 'complete'
       ? Promise.resolve()
       : new Promise((resolve) => window.addEventListener('load', resolve, { once: true }))
-
   const visible =
     document.visibilityState === 'visible'
       ? Promise.resolve()
@@ -87,48 +153,8 @@ function waitForSmoothPage() {
           }
           document.addEventListener('visibilitychange', onChange)
         })
-
-  const smoothFrames = () =>
-    new Promise((resolve) => {
-      let streak = 0
-      let last = null
-      const check = (now) => {
-        streak = last !== null && now - last <= SMOOTH_GAP_MS ? streak + 1 : 0
-        last = now
-        if (streak >= SMOOTH_FRAMES) resolve()
-        else requestAnimationFrame(check)
-      }
-      requestAnimationFrame(check)
-    })
-
-  const ready = loaded.then(() => visible).then(() => document.fonts?.ready).then(smoothFrames)
-  const giveUp = new Promise((resolve) => setTimeout(resolve, MAX_WAIT_MS)).then(() => visible)
-  return Promise.race([ready, giveUp])
-}
-
-// One tile's journey: out of the top-left corner → lands → bounces up →
-// lands → small bounce → rests → shrinks away. Offsets are fractions of the
-// whole animation; each landing uses an "ease-out" curve (slowing down like
-// it hit the floor) and each fall an "ease-in" curve (speeding up, gravity).
-function dropKeyframes(index, width, height) {
-  const startX = rand(-60, -30)
-  const startY = rand(-60, -40)
-  const landX = rand(20, width - TILE_SIZE - 50)
-  const spin = rand(180, 420)
-  const floor = height - TILE_SIZE - 20 - (index % 3) * 10 // a slightly uneven pile
-
-  const at = (x, y, rotate, extra = {}) => ({ transform: `translate(${x}px, ${y}px) rotate(${rotate}deg)`, ...extra })
-  return [
-    at(startX, startY, 0, { opacity: 0, easing: 'cubic-bezier(.35,0,.9,.6)' }),
-    at(startX + 20, startY + 20, 20, { opacity: 1, offset: 0.05, easing: 'cubic-bezier(.4,0,1,1)' }),
-    at(landX, floor, spin, { offset: 0.38, easing: 'cubic-bezier(0,0,.4,1)' }),
-    at(landX + 18, floor - 90, spin + 40, { offset: 0.5, easing: 'cubic-bezier(.6,0,1,1)' }),
-    at(landX + 30, floor, spin + 70, { offset: 0.6, easing: 'cubic-bezier(0,0,.4,1)' }),
-    at(landX + 36, floor - 30, spin + 80, { offset: 0.66, easing: 'cubic-bezier(.6,0,1,1)' }),
-    at(landX + 40, floor, spin + 90, { opacity: 1, offset: 0.72 }),
-    at(landX + 40, floor, spin + 90, { opacity: 1, offset: 0.88 }),
-    { transform: `translate(${landX + 40}px, ${floor + 10}px) rotate(${spin + 90}deg) scale(0.6)`, opacity: 0 },
-  ]
+  const ready = loaded.then(() => visible).then(() => document.fonts?.ready)
+  return Promise.race([ready, new Promise((resolve) => setTimeout(resolve, MAX_WAIT_MS))])
 }
 
 export default function MobileIconDrop() {
@@ -142,45 +168,43 @@ export default function MobileIconDrop() {
     dropPlayed = true
 
     let cancelled = false
-    let animations = []
-    let safetyTimer = null
+    let frame = null
 
-    waitForSmoothPage().then(() => {
+    waitForPage().then(() => {
       if (cancelled) return
       const layer = layerRef.current
+      const tiles = [...layer.children]
       // Measured now (not earlier): Safari's toolbar can change the screen
       // height while the page is still loading.
-      const { clientWidth: width, clientHeight: height } = layer
+      const paths = tiles.map((_, index) => dropPath(index, layer.clientWidth, layer.clientHeight))
+      const total = DROP_MS + (tiles.length - 1) * STAGGER_MS
 
-      // Played ONCE, normally, at real speed — the browser runs it on the
-      // graphics hardware (only transform/opacity change). Nothing ever
-      // rewinds or restarts it.
-      animations = [...layer.children].map((tile, index) =>
-        tile.animate(dropKeyframes(index, width, height), {
-          duration: DROP_MS,
-          delay: index * STAGGER_MS,
-          fill: 'both',
-        }),
-      )
+      let elapsed = 0
+      let lastFrameAt = null
+      const draw = (now) => {
+        if (cancelled) return
+        // Real time between drawn frames (so the speed is right even at
+        // 20–30 fps), but never more than MAX_STEP_MS after a stall.
+        const gap = lastFrameAt === null ? 0 : now - lastFrameAt
+        lastFrameAt = now
+        elapsed += Math.min(gap, MAX_STEP_MS)
 
-      const finish = () => {
-        clearTimeout(safetyTimer)
-        setDone(true)
+        tiles.forEach((tile, index) => {
+          const progress = (elapsed - index * STAGGER_MS) / DROP_MS
+          const p = pointAt(paths[index], Math.min(1, Math.max(0, progress)))
+          tile.style.transform = `translate3d(${p.x}px, ${p.y}px, 0) rotate(${p.r}deg) scale(${p.s})`
+          tile.style.opacity = progress < 0 ? '0' : String(p.o)
+        })
+
+        if (elapsed >= total) setDone(true)
+        else frame = requestAnimationFrame(draw)
       }
-      Promise.all(animations.map((animation) => animation.finished))
-        .then(finish)
-        .catch(() => {}) // cancelled (page left early) — nothing to do
-
-      // Safety net: whatever happens, the layer is gone shortly after the
-      // animation's length — it can never keep running.
-      const total = DROP_MS + (animations.length - 1) * STAGGER_MS
-      safetyTimer = setTimeout(finish, total + 1000)
+      frame = requestAnimationFrame(draw)
     })
 
     return () => {
       cancelled = true
-      clearTimeout(safetyTimer)
-      animations.forEach((animation) => animation.cancel())
+      if (frame) cancelAnimationFrame(frame)
     }
   }, [active])
 
@@ -191,7 +215,7 @@ export default function MobileIconDrop() {
       {TILES.map(({ Icon, style }, index) => (
         <div
           key={index}
-          className={`absolute left-0 top-0 flex items-center justify-center rounded-[14px] text-xl opacity-0 shadow-[0_8px_18px_-6px_rgb(26_32_51/0.35)] ${TILE_STYLES[style]}`}
+          className={`absolute left-0 top-0 flex items-center justify-center rounded-[14px] text-xl opacity-0 shadow-[0_8px_18px_-6px_rgb(26_32_51/0.35)] will-change-transform ${TILE_STYLES[style]}`}
           style={{ width: TILE_SIZE, height: TILE_SIZE }}
         >
           {Icon ? <Icon /> : <BrandMark size={24} />}

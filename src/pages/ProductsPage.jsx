@@ -153,8 +153,8 @@ export default function ProductsPage() {
           and the search/filter row. */}
       <section className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
         <div className="relative overflow-hidden rounded-[28px] border border-line bg-surface p-6 shadow-card sm:p-10">
-          <div className="pointer-events-none absolute -right-16 -top-24 h-72 w-72 rounded-full bg-accent/15 blur-3xl" aria-hidden="true" />
-          <div className="pointer-events-none absolute -bottom-28 left-1/3 h-64 w-64 rounded-full bg-coral/15 blur-3xl" aria-hidden="true" />
+          <div className="glow pointer-events-none absolute -right-28 -top-36 h-96 w-96" style={{ '--glow': 'color-mix(in srgb, var(--accent) 18%, transparent)' }} aria-hidden="true" />
+          <div className="glow pointer-events-none absolute -bottom-40 left-1/4 h-96 w-96" style={{ '--glow': 'color-mix(in srgb, var(--coral) 18%, transparent)' }} aria-hidden="true" />
 
           <div className="relative">
             <span className="inline-flex items-center gap-2 rounded-full bg-coral/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-highlight">

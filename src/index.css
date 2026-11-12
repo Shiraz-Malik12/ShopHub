@@ -220,13 +220,24 @@ body {
   background-size: 22px 22px;
   mask-image: linear-gradient(to bottom, black, transparent 85%);
 }
-.auth-blob-a { animation: auth-blob-a 16s ease-in-out infinite; }
-.auth-blob-b { animation: auth-blob-b 19s ease-in-out infinite; }
-.auth-blob-c { animation: auth-blob-c 23s ease-in-out infinite; }
+/* The drift starts after the mobile icon drop (~4.5s): measured in Safari's
+   engine, moving glows cost a lot of frames, and the falling icons need
+   every frame to look smooth. */
+.auth-blob-a { animation: auth-blob-a 16s ease-in-out 4.5s infinite; }
+.auth-blob-b { animation: auth-blob-b 19s ease-in-out 4.5s infinite; }
+.auth-blob-c { animation: auth-blob-c 23s ease-in-out 4.5s infinite; }
 @keyframes auth-blob-a { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(-60px, 70px) scale(1.15); } }
 @keyframes auth-blob-b { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(70px, -60px) scale(1.2); } }
 @keyframes auth-blob-c { 0%, 100% { transform: translate(0, 0); } 33% { transform: translate(60px, -40px); } 66% { transform: translate(-50px, 30px); } }
 
 @media (prefers-reduced-motion: reduce) {
   .auth-blob-a, .auth-blob-b, .auth-blob-c { animation: none; }
+}
+
+/* Soft color glow: a circle that fades to transparent. Drawn with a radial
+   gradient instead of `filter: blur()` — a big blur filter made iPhone
+   Safari draw the login page at ~3 fps (measured), which broke animations;
+   a gradient looks the same and is cheap. Set the color with --glow. */
+.glow {
+  background: radial-gradient(closest-side, var(--glow), transparent);
 }
