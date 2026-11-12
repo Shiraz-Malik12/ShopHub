@@ -46,10 +46,10 @@ const TILE_STYLES = {
 const TILE_SIZE = 42
 const DROP_MS = 2600 // one tile's whole journey
 const STAGGER_MS = 70 // each tile starts this much after the previous one
-// A gap between two painted frames longer than this is a "freeze" (iPhone
-// Safari right after a refresh), not just a slow phone.
-const FREEZE_MS = 150
-const FRAME_MS = 16 // one normal frame
+// Start only once the page draws smoothly: SMOOTH_FRAMES frames in a row,
+// each arriving within SMOOTH_GAP_MS of the previous one.
+const SMOOTH_FRAMES = 8
+const SMOOTH_GAP_MS = 50
 let dropPlayed = false
 
 function shouldPlay() {
@@ -60,15 +60,17 @@ function shouldPlay() {
 
 const rand = (min, max) => min + Math.random() * (max - min)
 
-// Resolves when the page is actually on screen and settled:
-//   1. fully loaded (after a refresh: scripts, styles, images)
-//   2. web fonts ready (text won't jump around mid-animation)
-//   3. the tab is visible (not still loading in the background)
-//   4. two frames have been painted (the browser has really drawn the page)
-// Capped at MAX_WAIT_MS, so the animation never waits forever.
-const MAX_WAIT_MS = 2500
+// Resolves when the page is on screen AND drawing smoothly, so the whole
+// fall is seen from the very start. After a refresh, iPhone Safari keeps
+// the screen busy for a moment (building the page) — an animation started
+// then would be half over before it's visible. Steps:
+//   1. the page has finished loading and the tab is visible
+//   2. web fonts are ready (text won't jump around mid-animation)
+//   3. SMOOTH_FRAMES frames in a row are drawn without a stutter
+// Capped at MAX_WAIT_MS, so it never waits forever.
+const MAX_WAIT_MS = 3000
 
-function waitUntilPageIsShown() {
+function waitForSmoothPage() {
   const loaded =
     document.readyState === 'complete'
       ? Promise.resolve()
@@ -86,19 +88,21 @@ function waitUntilPageIsShown() {
           document.addEventListener('visibilitychange', onChange)
         })
 
-  const twoFrames = () =>
-    new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+  const smoothFrames = () =>
+    new Promise((resolve) => {
+      let streak = 0
+      let last = null
+      const check = (now) => {
+        streak = last !== null && now - last <= SMOOTH_GAP_MS ? streak + 1 : 0
+        last = now
+        if (streak >= SMOOTH_FRAMES) resolve()
+        else requestAnimationFrame(check)
+      }
+      requestAnimationFrame(check)
+    })
 
-  const ready = loaded
-    .then(() => document.fonts?.ready)
-    .then(() => visible)
-    .then(twoFrames)
-    .then(() => new Promise((resolve) => setTimeout(resolve, 150))) // a short breath after the first paint
-
-  // Even when giving up on "loaded", never start while the tab is hidden.
-  const giveUp = new Promise((resolve) => setTimeout(resolve, MAX_WAIT_MS))
-    .then(() => visible)
-    .then(twoFrames)
+  const ready = loaded.then(() => visible).then(() => document.fonts?.ready).then(smoothFrames)
+  const giveUp = new Promise((resolve) => setTimeout(resolve, MAX_WAIT_MS)).then(() => visible)
   return Promise.race([ready, giveUp])
 }
 
@@ -139,18 +143,18 @@ export default function MobileIconDrop() {
 
     let cancelled = false
     let animations = []
-    let frame = null
+    let safetyTimer = null
 
-    // 1. Start only once the screen is really showing the page.
-    waitUntilPageIsShown().then(() => {
+    waitForSmoothPage().then(() => {
       if (cancelled) return
       const layer = layerRef.current
       // Measured now (not earlier): Safari's toolbar can change the screen
       // height while the page is still loading.
       const { clientWidth: width, clientHeight: height } = layer
-      // 2. Let the browser play it normally — at real speed, on the
-      //    graphics hardware (only transform/opacity change), so it's smooth
-      //    even on slow phones and in Low Power Mode.
+
+      // Played ONCE, normally, at real speed — the browser runs it on the
+      // graphics hardware (only transform/opacity change). Nothing ever
+      // rewinds or restarts it.
       animations = [...layer.children].map((tile, index) =>
         tile.animate(dropKeyframes(index, width, height), {
           duration: DROP_MS,
@@ -159,39 +163,23 @@ export default function MobileIconDrop() {
         }),
       )
 
-      // 3. Freeze guard. If the screen stops drawing for a moment (iPhone
-      //    Safari does this right after a refresh), the animation's clock
-      //    keeps running and people would miss the start. So we watch the
-      //    frames: after a freeze, wind the animation back by the frozen
-      //    time — before that frame is painted — and it carries on from
-      //    where people last saw it. Normal (even slow) frames are left
-      //    alone, so the speed always stays real.
-      let lastFrameAt = null
-      const watch = (now) => {
-        if (cancelled) return
-        const gap = lastFrameAt === null ? 0 : now - lastFrameAt
-        if (gap > FREEZE_MS) {
-          const missed = gap - FRAME_MS
-          animations.forEach((animation) => {
-            animation.currentTime = Math.max(0, animation.currentTime - missed)
-          })
-        }
-        lastFrameAt = now
-        frame = requestAnimationFrame(watch)
+      const finish = () => {
+        clearTimeout(safetyTimer)
+        setDone(true)
       }
-      frame = requestAnimationFrame(watch)
-
       Promise.all(animations.map((animation) => animation.finished))
-        .then(() => {
-          cancelAnimationFrame(frame)
-          setDone(true)
-        })
+        .then(finish)
         .catch(() => {}) // cancelled (page left early) — nothing to do
+
+      // Safety net: whatever happens, the layer is gone shortly after the
+      // animation's length — it can never keep running.
+      const total = DROP_MS + (animations.length - 1) * STAGGER_MS
+      safetyTimer = setTimeout(finish, total + 1000)
     })
 
     return () => {
       cancelled = true
-      if (frame) cancelAnimationFrame(frame)
+      clearTimeout(safetyTimer)
       animations.forEach((animation) => animation.cancel())
     }
   }, [active])
