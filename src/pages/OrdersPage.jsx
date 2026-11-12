@@ -47,13 +47,13 @@ export default function OrdersPage() {
         {loading ? (
           <div className="space-y-4">
             {[1, 2].map((key) => (
-              <div key={key} className="rounded-xl border border-line bg-surface p-6">
+              <div key={key} className="rounded-2xl border border-line bg-surface shadow-card p-6">
                 <Skeleton active paragraph={{ rows: 2 }} />
               </div>
             ))}
           </div>
         ) : loadError ? (
-          <div className="mx-auto max-w-md rounded-xl border border-line bg-surface p-10 text-center">
+          <div className="mx-auto max-w-md rounded-2xl border border-line bg-surface shadow-card p-10 text-center">
             <WarningOutlined className="text-3xl text-danger" />
             <h2 className="mt-4 text-lg font-semibold text-ink">Could not load your orders</h2>
             <p className="mt-1 text-sm text-subtle">{loadError}</p>
@@ -62,7 +62,7 @@ export default function OrdersPage() {
             </Button>
           </div>
         ) : orders.length === 0 ? (
-          <div className="rounded-xl border border-line bg-surface py-16">
+          <div className="rounded-2xl border border-line bg-surface shadow-card py-16">
             <Empty description="You have not placed any orders yet.">
               <Link to="/products">
                 <Button type="primary">Start shopping</Button>
@@ -75,7 +75,7 @@ export default function OrdersPage() {
               <li key={order._id}>
                 <Link
                   to={`/orders/${order._id}`}
-                  className="group block rounded-xl border border-line bg-surface p-5 transition hover:border-link/40 hover:shadow-md"
+                  className="group block rounded-2xl border border-line bg-surface shadow-card p-5 transition hover:border-coral/40 hover:shadow-card-hover"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
@@ -103,7 +103,7 @@ export default function OrdersPage() {
                           {order.itemCount} {order.itemCount === 1 ? 'item' : 'items'}
                         </p>
                       </div>
-                      <RightOutlined className="text-faint transition group-hover:translate-x-0.5 group-hover:text-link" />
+                      <RightOutlined className="text-faint transition group-hover:translate-x-0.5 group-hover:text-highlight" />
                     </div>
                   </div>
                 </Link>

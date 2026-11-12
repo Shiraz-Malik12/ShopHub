@@ -16,7 +16,7 @@ const numberFormatter = new Intl.NumberFormat('en-US')
 // A small headline number: plain label on top, the value below it.
 function StatTile({ label, value, hint }) {
   return (
-    <div className="rounded-xl border border-line bg-surface p-5">
+    <div className="rounded-2xl border border-line bg-surface shadow-card p-5">
       <p className="text-sm text-subtle">{label}</p>
       <p className="mt-2 text-2xl font-semibold text-ink">{value}</p>
       {hint && <p className="mt-1 text-xs text-faint">{hint}</p>}
@@ -26,7 +26,7 @@ function StatTile({ label, value, hint }) {
 
 function Panel({ title, action, children }) {
   return (
-    <section className="rounded-xl border border-line bg-surface">
+    <section className="rounded-2xl border border-line bg-surface shadow-card">
       <div className="flex items-center justify-between border-b border-line px-5 py-4">
         <h2 className="font-semibold text-ink">{title}</h2>
         {action}
@@ -38,7 +38,7 @@ function Panel({ title, action, children }) {
 
 function PanelLink({ to, children }) {
   return (
-    <Link to={to} className="inline-flex items-center gap-1 text-sm font-medium text-link hover:text-link-hover">
+    <Link to={to} className="inline-flex items-center gap-1 text-sm font-medium text-link hover:text-highlight">
       {children}
       <RightOutlined className="text-[10px]" />
     </Link>
@@ -82,7 +82,7 @@ export default function DashboardPage() {
             action={<Button size="small" onClick={loadDashboard}>Retry</Button>}
           />
         ) : (
-          <div className="rounded-xl border border-line bg-surface p-6">
+          <div className="rounded-2xl border border-line bg-surface shadow-card p-6">
             <Skeleton active paragraph={{ rows: 8 }} />
           </div>
         )}
@@ -100,7 +100,7 @@ export default function DashboardPage() {
 
       <div className="grid gap-4 lg:grid-cols-3">
         {/* The one headline number of the page. */}
-        <div className="flex flex-col justify-between rounded-xl border border-line bg-surface p-6">
+        <div className="flex flex-col justify-between rounded-2xl border border-line bg-surface shadow-card p-6">
           <div>
             <p className="text-sm text-subtle">Total sales</p>
             <p className="mt-3 text-5xl font-semibold tracking-tight text-ink">{formatPrice(stats.totalSales)}</p>

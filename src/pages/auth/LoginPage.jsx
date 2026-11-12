@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Alert, Form, Input, Button, App as AntdApp } from 'antd'
+import { ArrowRightOutlined } from '@ant-design/icons'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import AuthLayout from '../../components/auth/AuthLayout'
 import { useAuth } from '../../context/AuthContext'
@@ -60,7 +61,7 @@ export default function LoginPage() {
           <label htmlFor="password" className="text-sm text-soft">
             Password
           </label>
-          <Link to="/forgot-password" className="text-xs font-medium text-link hover:text-link-hover">
+          <Link to="/forgot-password" className="text-xs font-medium text-link hover:text-highlight">
             Forgot password?
           </Link>
         </div>
@@ -71,14 +72,15 @@ export default function LoginPage() {
           <Input.Password id="password" size="large" placeholder="••••••••" autoComplete="current-password" />
         </Form.Item>
 
-        <Button type="primary" htmlType="submit" size="large" block loading={loading}>
+        <Button type="primary" htmlType="submit" size="large" block loading={loading} icon={<ArrowRightOutlined />} iconPlacement="end">
           Sign in
         </Button>
       </Form>
 
       <p className="mt-6 text-center text-sm text-subtle">
         New to ShopHub?{' '}
-        <Link to="/register" className="font-medium text-link hover:text-link-hover">
+        {/* Pass `from` along, so a new account also returns to e.g. /checkout. */}
+        <Link to="/register" state={location.state} className="font-medium text-link hover:text-highlight">
           Create an account
         </Link>
       </p>

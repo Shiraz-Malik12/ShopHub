@@ -6,7 +6,7 @@ export default function NotFoundPage() {
   return (
     <StoreLayout>
       <div className="flex flex-col items-center justify-center px-4 py-24 text-center">
-        <p className="text-sm font-semibold uppercase tracking-wide text-link">404 error</p>
+        <p className="text-sm font-semibold uppercase tracking-wide text-highlight">404 error</p>
         <h1 className="mt-2 text-4xl font-bold tracking-tight text-ink">Page not found</h1>
         <p className="mt-3 text-subtle">Sorry, we could not find the page you are looking for.</p>
         <Link to="/products" className="mt-8">

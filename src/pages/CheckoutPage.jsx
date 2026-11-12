@@ -84,18 +84,18 @@ export default function CheckoutPage() {
 
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         {loading ? (
-          <div className="rounded-xl border border-line bg-surface p-6">
+          <div className="rounded-2xl border border-line bg-surface shadow-card p-6">
             <Skeleton active paragraph={{ rows: 6 }} />
           </div>
         ) : (
           <div className="grid gap-8 lg:grid-cols-3">
             <div className="space-y-6 lg:col-span-2">
-              <div className="rounded-xl border border-line bg-surface p-6">
+              <div className="rounded-2xl border border-line bg-surface shadow-card p-6">
                 <h2 className="text-lg font-semibold text-ink">Delivery address</h2>
                 {user?.savedAddress && (
                   <p className="mt-1 text-sm text-subtle">
                     Filled in from your saved address. You can change it in{' '}
-                    <Link to="/account" className="text-link hover:text-link-hover">My account</Link>.
+                    <Link to="/account" className="text-link hover:text-highlight">My account</Link>.
                   </p>
                 )}
                 <Form
@@ -163,7 +163,7 @@ export default function CheckoutPage() {
                 </Form>
               </div>
 
-              <div className="rounded-xl border border-line bg-surface p-6">
+              <div className="rounded-2xl border border-line bg-surface shadow-card p-6">
                 <h2 className="text-lg font-semibold text-ink">Payment</h2>
                 <div className="mt-4 flex items-center gap-4 rounded-lg border border-link/40 bg-link/10 p-4">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-link/20 text-lg text-link-hover">
@@ -177,7 +177,7 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            <aside className="h-fit rounded-xl border border-line bg-surface p-6">
+            <aside className="h-fit rounded-2xl border border-line bg-surface shadow-card p-6">
               <h2 className="text-lg font-semibold text-ink">Order summary</h2>
               <ul className="mt-4 space-y-4">
                 {cart.items.map((item) => (
@@ -247,7 +247,7 @@ export default function CheckoutPage() {
                 Place order
               </Button>
 
-              <Link to="/cart" className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-link hover:text-link-hover">
+              <Link to="/cart" className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-link hover:text-highlight">
                 <ArrowLeftOutlined />
                 Back to cart
               </Link>

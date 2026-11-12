@@ -16,7 +16,7 @@ const NAV_ITEMS = [
 
 function navClass({ isActive }) {
   return `flex shrink-0 items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-    isActive ? 'bg-link/10 text-link-hover' : 'text-subtle hover:bg-muted hover:text-ink'
+    isActive ? 'bg-coral/10 text-highlight' : 'text-subtle hover:bg-muted hover:text-ink'
   }`
 }
 

@@ -56,3 +56,13 @@ export const contactLimiter = rateLimit({
   legacyHeaders: false,
   message: { message: 'Too many contact attempts. Please try again later.' },
 })
+// Guest cart preview (public): the storefront calls it each time a guest
+// changes their cart. Plenty for real shopping; stops a script from using
+// it to hammer the database.
+export const cartPreviewLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many requests. Please try again later.' },
+})

@@ -51,7 +51,7 @@ export default function ProductDetailPage() {
             <Skeleton active paragraph={{ rows: 6 }} />
           </div>
         ) : loadError ? (
-          <div className="mx-auto max-w-md rounded-xl border border-line bg-surface p-10 text-center">
+          <div className="mx-auto max-w-md rounded-2xl border border-line bg-surface shadow-card p-10 text-center">
             <h1 className="text-lg font-semibold text-ink">Product unavailable</h1>
             <p className="mt-1 text-sm text-subtle">{loadError}</p>
             <Link to="/products">
@@ -73,7 +73,7 @@ export default function ProductDetailPage() {
 
             <div className="grid gap-10 lg:grid-cols-2">
               <div>
-                <div className="aspect-square overflow-hidden rounded-2xl border border-line bg-surface">
+                <div className="aspect-square overflow-hidden rounded-2xl border border-line bg-surface shadow-card">
                   {/* key: a fresh ProductImage per image, so a broken image
                       doesn't keep the placeholder after switching. */}
                   <ProductImage
@@ -103,7 +103,7 @@ export default function ProductDetailPage() {
               </div>
 
               <div>
-                <p className="text-sm font-medium uppercase tracking-wide text-link">
+                <p className="text-sm font-medium uppercase tracking-wide text-highlight">
                   {product.category?.name || 'Uncategorized'}
                 </p>
                 <h1 className="mt-2 text-3xl font-bold tracking-tight text-ink">{product.name}</h1>
@@ -111,7 +111,7 @@ export default function ProductDetailPage() {
                   <RatingStars average={product.ratingAverage} count={product.ratingCount} size={16} />
                 </a>
                 <div className="mt-4 flex items-center gap-4">
-                  <span className="text-3xl font-bold text-ink">{formatPrice(product.price)}</span>
+                  <span className="text-3xl font-bold text-highlight">{formatPrice(product.price)}</span>
                   <StockBadge stock={product.stock} />
                 </div>
 
@@ -130,7 +130,7 @@ export default function ProductDetailPage() {
                   </p>
                 </div>
 
-                <dl className="mt-8 grid grid-cols-2 gap-4 rounded-xl border border-line bg-surface p-5 text-sm">
+                <dl className="mt-8 grid grid-cols-2 gap-4 rounded-2xl border border-line bg-surface shadow-card p-5 text-sm">
                   <div>
                     <dt className="text-subtle">Category</dt>
                     <dd className="mt-1 font-medium text-ink">{product.category?.name || 'Uncategorized'}</dd>
@@ -143,7 +143,7 @@ export default function ProductDetailPage() {
                   </div>
                 </dl>
 
-                <Link to="/products" className="mt-8 inline-flex items-center gap-2 text-sm font-medium text-link hover:text-link-hover">
+                <Link to="/products" className="mt-8 inline-flex items-center gap-2 text-sm font-medium text-link hover:text-highlight">
                   <ArrowLeftOutlined />
                   Continue shopping
                 </Link>

@@ -134,7 +134,7 @@ export default function ProductReviews({ productId, onSummaryChange }) {
     if (!user) {
       return (
         <p className="text-sm text-subtle">
-          <Link to="/login" state={{ from: location }} className="font-medium text-link hover:text-link-hover">
+          <Link to="/login" state={{ from: location }} className="font-medium text-link hover:text-highlight">
             Sign in
           </Link>{' '}
           to write a review.
@@ -156,7 +156,7 @@ export default function ProductReviews({ productId, onSummaryChange }) {
   }
 
   return (
-    <section id="reviews" className="mt-12 rounded-xl border border-line bg-surface">
+    <section id="reviews" className="mt-12 rounded-2xl border border-line bg-surface shadow-card">
       <h2 className="border-b border-line px-6 py-4 text-lg font-semibold text-ink">Customer reviews</h2>
 
       {loading ? (

@@ -5,30 +5,41 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
-   Theme colors. Every color in the app comes from these variables, so light
-   and dark mode are just two sets of values. The <html> element gets the
-   `dark` class from ThemeContext (and public/theme-init.js on first paint).
+   Theme colors — the "Hub Bag" brand in blue + coral, following the
+   60 / 30 / 10 design rule:
+     60%  calm base   — soft mist-white page, white cards, navy text
+     30%  coral       — prices, active menu, badges, hovers, highlights
+     10%  blue        — main actions: buttons, links, the logo bag
+   Every color in the app comes from these variables, so light and dark mode
+   are just two sets of values. The <html> element gets the `dark` class from
+   ThemeContext (and public/theme-init.js on first paint).
    Keep the antd colors in src/theme/palette.js in sync with these.
    --------------------------------------------------------------------------- */
 :root {
   color-scheme: light; /* native scrollbars and form controls */
 
-  --page: #f3f6fa;        /* page background — blue-tinted white */
-  --surface: #ffffff;     /* cards, header, inputs */
-  --muted: #e9eff6;       /* subtle fills: image placeholders, hovers */
-  --line: #dfe6ef;        /* borders */
-  --line-strong: #c8d3e0; /* stronger borders */
+  --page: #f4f6fb;        /* page background — soft cool "mist" white */
+  --surface: #ffffff;     /* cards, header, inputs — white on mist */
+  --muted: #ecf0f7;       /* subtle fills: image placeholders, hovers */
+  --line: #e3e8f1;        /* borders */
+  --line-strong: #cdd5e3; /* stronger borders */
 
-  --ink: #292d32;         /* main text — charcoal */
-  --soft: #3a4350;        /* slightly softer text */
-  --subtle: #5f6b7a;      /* secondary text */
-  --faint: #9aa4b2;       /* hints, placeholders */
+  --ink: #1a2033;         /* main text — deep navy */
+  --soft: #343a4d;        /* slightly softer text */
+  --subtle: #5b6478;      /* secondary text — cool gray */
+  --faint: #98a1b4;       /* hints, placeholders */
 
-  --accent: #2f5e9e;      /* primary buttons, active states — blue */
-  --link: #2f5e9e;        /* links — blue */
-  --link-hover: #1f4478;
-  --brand: #3a6ea5;       /* logo mark, avatars */
-  --brand-deep: #1f3a5f;  /* big brand panel (auth pages) — navy */
+  --accent: #2457d6;      /* primary buttons, active states — blue */
+  --link: #2457d6;        /* links */
+  --link-hover: #1a43a8;
+  --highlight: #c8401f;   /* coral for TEXT (prices, labels) — readable on white */
+  --coral: #ff6b4a;       /* coral for FILLS (badges, dots, bars) */
+  --brand: #2457d6;       /* avatars */
+  --brand-deep: #1a2033;  /* big brand panel (auth pages) — navy */
+
+  /* Soft, navy-tinted card shadows. */
+  --card-shadow: 0 1px 2px rgb(26 32 51 / 0.04), 0 8px 24px -12px rgb(26 32 51 / 0.14);
+  --card-shadow-hover: 0 2px 4px rgb(26 32 51 / 0.05), 0 22px 44px -18px rgb(26 32 51 / 0.24);
 
   --success: #15803d;
   --danger: #be123c;
@@ -38,31 +49,37 @@
 .dark {
   color-scheme: dark;
 
-  --page: #1b1e23;
-  --surface: #292d32;
-  --muted: #323840;
-  --line: #3a414a;
-  --line-strong: #4a525c;
+  --page: #0f1420;        /* deep blue-navy */
+  --surface: #171d2c;
+  --muted: #212838;
+  --line: #283043;
+  --line-strong: #39435a;
 
-  --ink: #f1f5fa;
-  --soft: #d0d8e2;
-  --subtle: #9b9b9b;
-  --faint: #7a828c;
+  --ink: #f1f4fa;
+  --soft: #d2d8e4;
+  --subtle: #98a1b3;
+  --faint: #6e788c;
 
-  --accent: #3f72b5;      /* blue — reads well on charcoal */
-  --link: #9dc1ec;
-  --link-hover: #c4dbf5;
-  --brand: #3f72b5;
-  --brand-deep: #1f3a5f;
+  --accent: #3366e8;      /* a brighter blue — reads well on navy */
+  --link: #8db0ff;
+  --link-hover: #b5ccff;
+  --highlight: #ff8a6e;   /* lighter coral for dark backgrounds */
+  --coral: #ff7a5c;
+  --brand: #3366e8;
+  --brand-deep: #171d2c;
+
+
+  --card-shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 10px 28px -14px rgb(0 0 0 / 0.6);
+  --card-shadow-hover: 0 2px 4px rgb(0 0 0 / 0.35), 0 24px 48px -18px rgb(0 0 0 / 0.75);
 
   --success: #4ade80;
   --danger: #fb7185;
   --warning: #fcd34d;
 }
 
-/* Turns the variables into Tailwind colors: bg-page, text-ink, border-line,
-   bg-link/10 ... `inline` makes each class use the variable directly, so it
-   changes the moment the theme does. */
+/* Turns the variables into Tailwind classes: bg-page, text-ink, border-line,
+   bg-coral/10, shadow-card, font-brand ... `inline` makes each class use the
+   variable directly, so it changes the moment the theme does. */
 @theme inline {
   --color-page: var(--page);
   --color-surface: var(--surface);
@@ -76,11 +93,19 @@
   --color-accent: var(--accent);
   --color-link: var(--link);
   --color-link-hover: var(--link-hover);
+  --color-highlight: var(--highlight);
+  --color-coral: var(--coral);
   --color-brand: var(--brand);
   --color-brand-deep: var(--brand-deep);
   --color-success: var(--success);
   --color-danger: var(--danger);
   --color-warning: var(--warning);
+
+  --shadow-card: var(--card-shadow);
+  --shadow-card-hover: var(--card-shadow-hover);
+
+  /* The logo's wordmark font (loaded in index.html). */
+  --font-brand: 'Poppins', 'Inter', system-ui, sans-serif;
 }
 
 body {
@@ -90,4 +115,118 @@ body {
   color: var(--ink);
   background-color: var(--page); /* no flash before React mounts */
   transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Text you select gets a soft coral highlight — a small brand touch. */
+::selection {
+  background: rgb(255 107 74 / 0.22);
+}
+
+/* ---------------------------------------------------------------------------
+   Login-page logo reveal (see components/auth/LogoReveal.jsx). Plays ONCE
+   (4.5s) and then stays on its last frame (`forwards`). Every part shares the
+   same 4.5s timeline with its own keyframes, so the steps happen in order:
+   outline draws → bag fills → hub lines grow → dots pop → coral center
+   bursts → "ShopHub" types in → "STORE". After that, LogoReveal moves the
+   logo to the top with a normal CSS transition.
+   `pathLength="100"` on the SVG shapes lets dasharray/offset work in %.
+   --------------------------------------------------------------------------- */
+.reveal-mark { filter: drop-shadow(0 0 30px rgb(91 140 255 / 0.4)); }
+
+.reveal-outline { stroke-dasharray: 100; animation: reveal-draw 4.5s ease-in-out forwards; }
+.reveal-fill { fill: #2457d6; }
+@keyframes reveal-draw {
+  0%   { stroke-dashoffset: 100; fill-opacity: 0; }
+  35%  { stroke-dashoffset: 0; fill-opacity: 0; }
+  48%  { stroke-dashoffset: 0; fill-opacity: 1; }
+  100% { stroke-dashoffset: 0; fill-opacity: 1; }
+}
+
+.reveal-line { stroke-dasharray: 100; animation: reveal-line 4.5s ease-out forwards; }
+@keyframes reveal-line {
+  0%, 48%   { stroke-dashoffset: 100; }
+  62%, 100% { stroke-dashoffset: 0; }
+}
+
+/* SVG circles scale around their own center, not the corner of the SVG. */
+.reveal-node, .reveal-core, .reveal-burst { transform-box: fill-box; transform-origin: center; }
+.reveal-node { animation: reveal-pop 4.5s ease-out forwards; }
+@keyframes reveal-pop {
+  0%, 60%   { transform: scale(0); }
+  66%       { transform: scale(1.4); }
+  70%, 100% { transform: scale(1); }
+}
+.reveal-core { animation: reveal-core 4.5s ease-out forwards; }
+@keyframes reveal-core {
+  0%, 68%   { transform: scale(0); }
+  75%       { transform: scale(1.5); }
+  79%, 100% { transform: scale(1); }
+}
+.reveal-burst { animation: reveal-burst 4.5s ease-out forwards; }
+@keyframes reveal-burst {
+  0%, 74%   { transform: scale(0.6); opacity: 0; }
+  76%       { opacity: 0.9; }
+  95%, 100% { transform: scale(3.2); opacity: 0; }
+}
+
+/* Letters: same timeline, each a little later (animation-delay inline). */
+.reveal-letter { display: inline-block; animation: reveal-letter 4.5s ease-out both; }
+@keyframes reveal-letter {
+  0%, 78%   { opacity: 0; transform: translateY(12px); }
+  88%, 100% { opacity: 1; transform: translateY(0); }
+}
+.reveal-tag { animation: reveal-tag 4.5s ease-out forwards; }
+@keyframes reveal-tag {
+  0%, 92% { opacity: 0; }
+  100%    { opacity: 1; }
+}
+
+/* Finished logo, no drawing: used when the intro has already played (moving
+   between auth pages) and for people who prefer reduced motion. */
+.reveal-done .reveal-outline, .reveal-done .reveal-line, .reveal-done .reveal-node,
+.reveal-done .reveal-core, .reveal-done .reveal-letter, .reveal-done .reveal-tag {
+  animation: none;
+}
+.reveal-done .reveal-burst { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .reveal-outline, .reveal-line, .reveal-node, .reveal-core, .reveal-letter, .reveal-tag { animation: none; }
+  .reveal-burst { display: none; }
+}
+
+/* Little looping icon animations for the auth panel's feature cards and
+   links (see LogoReveal.jsx). Gentle and slow, so they add life without
+   pulling attention from the form. */
+.auth-icon-drive  { animation: auth-drive 2.6s ease-in-out infinite; }
+.auth-icon-bounce { animation: auth-bounce 2.2s ease-in-out infinite; }
+.auth-icon-wiggle { animation: auth-wiggle 2.8s ease-in-out infinite; }
+.auth-icon-beat   { animation: auth-beat 1.6s ease-in-out infinite; }
+.auth-icon-nudge  { animation: auth-nudge 1.8s ease-in-out infinite; }
+
+@keyframes auth-drive  { 0%, 100% { transform: translateX(-3px); } 50% { transform: translateX(3px); } }
+@keyframes auth-bounce { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-4px); } 60% { transform: translateY(0); } }
+@keyframes auth-wiggle { 0%, 70%, 100% { transform: rotate(0); } 78% { transform: rotate(-14deg); } 86% { transform: rotate(10deg); } 94% { transform: rotate(-5deg); } }
+@keyframes auth-beat   { 0%, 100% { transform: scale(1); } 15% { transform: scale(1.22); } 30% { transform: scale(1); } 45% { transform: scale(1.14); } 60% { transform: scale(1); } }
+@keyframes auth-nudge  { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(5px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-icon-drive, .auth-icon-bounce, .auth-icon-wiggle, .auth-icon-beat, .auth-icon-nudge { animation: none; }
+}
+
+/* Auth pages on phones/tablets (see AuthLayout.jsx): three soft glows drift
+   slowly in different directions, over a faint dot grid. Long, gentle loops
+   so it feels alive without distracting from the form. */
+.auth-dots {
+  background-image: radial-gradient(rgb(36 87 214 / 0.12) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: linear-gradient(to bottom, black, transparent 85%);
+}
+.auth-blob-a { animation: auth-blob-a 16s ease-in-out infinite; }
+.auth-blob-b { animation: auth-blob-b 19s ease-in-out infinite; }
+.auth-blob-c { animation: auth-blob-c 23s ease-in-out infinite; }
+@keyframes auth-blob-a { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(-60px, 70px) scale(1.15); } }
+@keyframes auth-blob-b { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(70px, -60px) scale(1.2); } }
+@keyframes auth-blob-c { 0%, 100% { transform: translate(0, 0); } 33% { transform: translate(60px, -40px); } 66% { transform: translate(-50px, 30px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-blob-a, .auth-blob-b, .auth-blob-c { animation: none; }
 }

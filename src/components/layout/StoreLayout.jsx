@@ -11,7 +11,7 @@ import { useWishlist } from '../../context/WishlistContext'
 // Shell for every customer-facing page: sticky header, page content, footer.
 // Active page: a soft pill behind the link; other links are plain text.
 function navLinkClass({ isActive }) {
-  return `rounded-full px-3 py-1.5 transition-colors ${isActive ? 'bg-muted text-ink' : 'text-subtle hover:text-ink'}`
+  return `rounded-full px-3 py-1.5 transition-colors ${isActive ? 'bg-coral/10 text-highlight' : 'text-subtle hover:text-highlight'}`
 }
 
 export default function StoreLayout({ children }) {
@@ -41,9 +41,9 @@ export default function StoreLayout({ children }) {
             <Link
               to="/wishlist"
               aria-label={`Wishlist, ${wishlistCount} saved`}
-              className="flex h-9 w-9 items-center justify-center rounded-full text-soft hover:bg-muted hover:text-ink"
+              className="flex h-9 w-9 items-center justify-center rounded-full text-soft hover:bg-coral/10 hover:text-highlight"
             >
-              <Badge count={wishlistCount} size="small" color="#f43f5e">
+              <Badge count={wishlistCount} size="small" color="var(--coral)">
                 <HeartOutlined className="text-xl text-soft" />
               </Badge>
             </Link>
@@ -52,9 +52,9 @@ export default function StoreLayout({ children }) {
             <Link
               to="/cart"
               aria-label={`Cart, ${cart.itemCount} items`}
-              className="flex h-9 w-9 items-center justify-center rounded-full text-soft hover:bg-muted hover:text-ink"
+              className="flex h-9 w-9 items-center justify-center rounded-full text-soft hover:bg-coral/10 hover:text-highlight"
             >
-              <Badge count={cart.itemCount} size="small" color="var(--accent)">
+              <Badge count={cart.itemCount} size="small" color="var(--coral)">
                 <ShoppingCartOutlined className="text-xl text-soft" />
               </Badge>
             </Link>
@@ -84,8 +84,8 @@ export default function StoreLayout({ children }) {
       <footer className="border-t border-line bg-surface">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-sm text-subtle sm:flex-row sm:px-6 lg:px-8">
           <span>© {new Date().getFullYear()} ShopHub. All rights reserved.</span>
-          <Link to="/products" className="hover:text-ink">Shop all products</Link>
-          <Link to="/contact" className="hover:text-ink">Contact us</Link>
+          <Link to="/products" className="hover:text-highlight">Shop all products</Link>
+          <Link to="/contact" className="hover:text-highlight">Contact us</Link>
         </div>
       </footer>
     </div>

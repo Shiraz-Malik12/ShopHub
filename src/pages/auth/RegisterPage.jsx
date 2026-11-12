@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Form, Input, Button, App as AntdApp } from 'antd'
-import { Link, useNavigate } from 'react-router-dom'
+import { UserAddOutlined } from '@ant-design/icons'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import AuthLayout from '../../components/auth/AuthLayout'
 import { useAuth } from '../../context/AuthContext'
 
@@ -8,6 +9,9 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const { register } = useAuth()
   const navigate = useNavigate()
+  // Where the visitor was going before signing up (e.g. /checkout) — handed
+  // on to the verify page, which sends them there once the email is verified.
+  const { state } = useLocation()
   // useApp() (not the static `message` import) so toasts correctly pick up
   // the ConfigProvider theme — antd v5's documented pattern.
   const { message } = AntdApp.useApp()
@@ -21,7 +25,7 @@ export default function RegisterPage() {
         password: values.password,
       })
       message.success('OTP sent to your email')
-      navigate('/verify-otp', { state: { email: data?.email ?? values.email } })
+      navigate('/verify-otp', { state: { email: data?.email ?? values.email, from: state?.from } })
     } catch (err) {
       message.error(err?.response?.data?.message || 'Registration failed. Please try again.')
     } finally {
@@ -81,14 +85,14 @@ export default function RegisterPage() {
           <Input.Password size="large" placeholder="••••••••" autoComplete="new-password" />
         </Form.Item>
 
-        <Button type="primary" htmlType="submit" size="large" block loading={loading} className="mt-2">
+        <Button type="primary" htmlType="submit" size="large" block loading={loading} icon={<UserAddOutlined />} className="mt-2">
           Create account
         </Button>
       </Form>
 
       <p className="mt-6 text-center text-sm text-subtle">
         Already have an account?{' '}
-        <Link to="/login" className="font-medium text-link hover:text-link-hover">
+        <Link to="/login" className="font-medium text-link hover:text-highlight">
           Sign in
         </Link>
       </p>

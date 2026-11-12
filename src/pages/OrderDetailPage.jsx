@@ -61,17 +61,17 @@ export default function OrderDetailPage() {
   return (
     <StoreLayout>
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-        <Link to="/orders" className="inline-flex items-center gap-2 text-sm font-medium text-link hover:text-link-hover">
+        <Link to="/orders" className="inline-flex items-center gap-2 text-sm font-medium text-link hover:text-highlight">
           <ArrowLeftOutlined />
           My orders
         </Link>
 
         {loading ? (
-          <div className="mt-6 rounded-xl border border-line bg-surface p-6">
+          <div className="mt-6 rounded-2xl border border-line bg-surface shadow-card p-6">
             <Skeleton active paragraph={{ rows: 8 }} />
           </div>
         ) : loadError ? (
-          <div className="mx-auto mt-6 max-w-md rounded-xl border border-line bg-surface p-10 text-center">
+          <div className="mx-auto mt-6 max-w-md rounded-2xl border border-line bg-surface shadow-card p-10 text-center">
             <h1 className="text-lg font-semibold text-ink">Order unavailable</h1>
             <p className="mt-1 text-sm text-subtle">{loadError}</p>
             <Link to="/orders">
@@ -112,7 +112,7 @@ export default function OrderDetailPage() {
               </div>
             </div>
 
-            <div className="mt-6 rounded-xl border border-line bg-surface p-6">
+            <div className="mt-6 rounded-2xl border border-line bg-surface shadow-card p-6">
               {order.status === 'cancelled' ? (
                 <p className="text-sm text-subtle">This order was cancelled. Nothing will be delivered or charged.</p>
               ) : (
@@ -127,7 +127,7 @@ export default function OrderDetailPage() {
             </div>
 
             <div className="mt-6 grid gap-6 lg:grid-cols-3">
-              <div className="rounded-xl border border-line bg-surface lg:col-span-2">
+              <div className="rounded-2xl border border-line bg-surface shadow-card lg:col-span-2">
                 <h2 className="border-b border-line px-6 py-4 font-semibold text-ink">
                   Items ({order.itemCount})
                 </h2>
@@ -150,7 +150,7 @@ export default function OrderDetailPage() {
               </div>
 
               <div className="space-y-6">
-                <div className="rounded-xl border border-line bg-surface p-6">
+                <div className="rounded-2xl border border-line bg-surface shadow-card p-6">
                   <h2 className="font-semibold text-ink">Delivery address</h2>
                   <address className="mt-3 space-y-1 text-sm not-italic text-subtle">
                     <p className="font-medium text-ink">{order.shippingAddress.fullName}</p>
@@ -164,7 +164,7 @@ export default function OrderDetailPage() {
                   </address>
                 </div>
 
-                <div className="rounded-xl border border-line bg-surface p-6">
+                <div className="rounded-2xl border border-line bg-surface shadow-card p-6">
                   <h2 className="font-semibold text-ink">Payment summary</h2>
                   <dl className="mt-3 space-y-3 text-sm">
                     <div className="flex justify-between">

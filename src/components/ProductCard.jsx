@@ -15,7 +15,7 @@ export default function ProductCard({ product }) {
   const productUrl = `/products/${product._id}`
 
   return (
-    <article className="group flex flex-col rounded-[28px] border border-line bg-surface p-3 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-xl">
+    <article className="group flex flex-col rounded-[28px] border border-line bg-surface shadow-card p-3 transition duration-200 hover:-translate-y-1 hover:border-coral/30 hover:shadow-card-hover">
       <Link to={productUrl} className="block aspect-square overflow-hidden rounded-[22px] bg-muted">
         <ProductImage
           src={product.images?.[0]?.url}
@@ -25,7 +25,7 @@ export default function ProductCard({ product }) {
       </Link>
 
       <div className="flex flex-1 flex-col px-2 pb-1 pt-4">
-        <Link to={productUrl} className="line-clamp-2 text-lg font-semibold leading-snug tracking-tight text-ink hover:text-link">
+        <Link to={productUrl} className="line-clamp-2 text-lg font-semibold leading-snug tracking-tight text-ink hover:text-highlight">
           {product.name}
         </Link>
         <p className="mt-0.5 text-sm text-faint">{product.category?.name || 'Uncategorized'}</p>
@@ -33,7 +33,7 @@ export default function ProductCard({ product }) {
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-subtle">
           <span className="inline-flex items-center gap-1.5">
             <TagOutlined />
-            <span className="font-semibold text-ink">{formatPrice(product.price)}</span>
+            <span className="font-semibold text-highlight">{formatPrice(product.price)}</span>
           </span>
           <StockBadge stock={product.stock} />
         </div>

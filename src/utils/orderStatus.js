@@ -3,7 +3,7 @@
 export const ORDER_STATUS = {
   pending: { label: 'Pending', color: 'gold' },
   processing: { label: 'Processing', color: 'blue' },
-  shipped: { label: 'Shipped', color: 'purple' },
+  shipped: { label: 'Shipped', color: 'cyan' },
   delivered: { label: 'Delivered', color: 'success' },
   cancelled: { label: 'Cancelled', color: 'error' },
 }

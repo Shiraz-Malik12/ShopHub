@@ -4,6 +4,7 @@ export default function PageHeader({ title, description, actions }) {
   return (
     <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
+        <span className="mb-2 block h-1 w-8 rounded-full bg-coral" aria-hidden="true" />
         <h1 className="text-2xl font-semibold tracking-tight text-ink">{title}</h1>
         {description && <p className="mt-1 text-sm text-subtle">{description}</p>}
       </div>

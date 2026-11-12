@@ -17,3 +17,13 @@ export const updateCartItemRules = [
 ]
 
 export const cartItemIdRules = [param('productId').isMongoId().withMessage('Invalid product id')]
+
+// A guest's cart sent from the browser: [{ productId, quantity }, ...].
+// Capped at MAX_GUEST_LINES so nobody can post a giant list.
+export const MAX_GUEST_LINES = 50
+
+export const guestCartRules = [
+  body('items').isArray({ max: MAX_GUEST_LINES }).withMessage(`items must be a list of at most ${MAX_GUEST_LINES} products`),
+  body('items.*.productId').isMongoId().withMessage('Invalid product id'),
+  body('items.*.quantity').isInt({ min: 1, max: MAX_ITEM_QUANTITY }).withMessage(quantityMessage).toInt(),
+]

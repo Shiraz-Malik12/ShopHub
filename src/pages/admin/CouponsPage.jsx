@@ -239,7 +239,7 @@ export default function CouponsPage() {
           action={<Button size="small" onClick={loadCoupons}>Retry</Button>}
         />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-line bg-surface">
+        <div className="overflow-hidden rounded-2xl border border-line bg-surface shadow-card">
           <Table
             rowKey="_id"
             columns={columns}

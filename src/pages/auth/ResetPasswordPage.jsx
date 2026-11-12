@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Form, Input, Button, App as AntdApp } from 'antd'
+import { LockOutlined } from '@ant-design/icons'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import AuthLayout from '../../components/auth/AuthLayout'
 import { useAuth } from '../../context/AuthContext'
@@ -103,7 +104,7 @@ export default function ResetPasswordPage() {
           <Input.Password size="large" placeholder="••••••••" autoComplete="new-password" />
         </Form.Item>
 
-        <Button type="primary" htmlType="submit" size="large" block loading={loading} className="mt-2">
+        <Button type="primary" htmlType="submit" size="large" block loading={loading} icon={<LockOutlined />} className="mt-2">
           Reset password
         </Button>
       </Form>
@@ -117,7 +118,7 @@ export default function ResetPasswordPage() {
             type="button"
             onClick={handleResend}
             disabled={resending}
-            className="font-medium text-link hover:text-link-hover disabled:opacity-50"
+            className="font-medium text-link hover:text-highlight disabled:opacity-50"
           >
             Resend code
           </button>
@@ -126,7 +127,7 @@ export default function ResetPasswordPage() {
 
       <p className="mt-2 text-center text-sm text-subtle">
         Wrong email?{' '}
-        <Link to="/forgot-password" className="font-medium text-link hover:text-link-hover">
+        <Link to="/forgot-password" className="font-medium text-link hover:text-highlight">
           Start over
         </Link>
       </p>

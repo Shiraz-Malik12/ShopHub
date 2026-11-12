@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { App as AntdApp, Button, Empty, Popconfirm, Skeleton, Tag, Tooltip } from 'antd'
-import { ArrowLeftOutlined, DeleteOutlined } from '@ant-design/icons'
+import { ArrowLeftOutlined, ArrowRightOutlined, DeleteOutlined, LockOutlined } from '@ant-design/icons'
 import { Link, useNavigate } from 'react-router-dom'
 import StoreLayout from '../components/layout/StoreLayout'
 import ProductImage from '../components/ProductImage'
@@ -8,10 +8,12 @@ import QuantityStepper from '../components/QuantityStepper'
 import { useCart } from '../context/CartContext'
 import { formatPrice } from '../utils/formatPrice'
 
-// The signed-in customer's cart. All data and actions come from
-// CartContext — this page only displays the cart and calls those actions.
+// The shopping cart — for guests (browser cart) and signed-in customers alike.
+// All data and actions come from CartContext — this page only displays the
+// cart and calls those actions. Checkout needs an account: a guest who clicks
+// it is sent to sign in by ProtectedRoute and comes back to /checkout after.
 export default function CartPage() {
-  const { cart, loading, updateQuantity, removeItem, clear } = useCart()
+  const { cart, loading, isGuest, updateQuantity, removeItem, clear } = useCart()
   const { message } = AntdApp.useApp()
   const navigate = useNavigate()
   // Id of the product whose row is waiting on the server, so only that
@@ -57,11 +59,11 @@ export default function CartPage() {
 
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         {loading && isEmpty ? (
-          <div className="rounded-xl border border-line bg-surface p-6">
+          <div className="rounded-2xl border border-line bg-surface shadow-card p-6">
             <Skeleton active avatar paragraph={{ rows: 2 }} />
           </div>
         ) : isEmpty ? (
-          <div className="rounded-xl border border-line bg-surface py-16">
+          <div className="rounded-2xl border border-line bg-surface shadow-card py-16">
             <Empty description="Your cart is empty.">
               <Link to="/products">
                 <Button type="primary">Start shopping</Button>
@@ -70,7 +72,7 @@ export default function CartPage() {
           </div>
         ) : (
           <div className="grid gap-8 lg:grid-cols-3">
-            <ul className="divide-y divide-line rounded-xl border border-line bg-surface lg:col-span-2">
+            <ul className="divide-y divide-line rounded-2xl border border-line bg-surface shadow-card lg:col-span-2">
               {cart.items.map((item) => {
                 const { product } = item
                 const busy = busyProductId === product._id
@@ -87,7 +89,7 @@ export default function CartPage() {
                       <div className="min-w-0">
                         <Link
                           to={`/products/${product._id}`}
-                          className="line-clamp-2 font-semibold text-ink hover:text-link"
+                          className="line-clamp-2 font-semibold text-ink hover:text-highlight"
                         >
                           {product.name}
                         </Link>
@@ -132,7 +134,7 @@ export default function CartPage() {
               })}
             </ul>
 
-            <aside className="h-fit rounded-xl border border-line bg-surface p-6">
+            <aside className="h-fit rounded-2xl border border-line bg-surface shadow-card p-6">
               <h2 className="text-lg font-semibold text-ink">Order summary</h2>
               <dl className="mt-4 space-y-3 text-sm">
                 <div className="flex justify-between">
@@ -156,13 +158,20 @@ export default function CartPage() {
                 block
                 disabled={cart.itemCount === 0 || hasUnavailableItems}
                 className="mt-6"
+                icon={isGuest ? <LockOutlined /> : <ArrowRightOutlined />}
+                iconPlacement={isGuest ? 'start' : 'end'}
                 onClick={() => navigate('/checkout')}
               >
-                Checkout
+                {isGuest ? 'Sign in to checkout' : 'Checkout'}
               </Button>
+              {isGuest && (
+                <p className="mt-2 text-center text-xs text-faint">
+                  Your cart is saved — sign in or create an account to place your order.
+                </p>
+              )}
 
               <div className="mt-4 flex items-center justify-between text-sm">
-                <Link to="/products" className="inline-flex items-center gap-2 font-medium text-link hover:text-link-hover">
+                <Link to="/products" className="inline-flex items-center gap-2 font-medium text-link hover:text-highlight">
                   <ArrowLeftOutlined />
                   Continue shopping
                 </Link>

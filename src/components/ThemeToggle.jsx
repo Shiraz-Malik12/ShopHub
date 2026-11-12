@@ -13,7 +13,7 @@ export default function ThemeToggle() {
       onClick={toggleMode}
       aria-label={label}
       title={label}
-      className="flex h-9 w-9 items-center justify-center rounded-full border border-line bg-surface text-base text-subtle transition hover:border-line-strong hover:text-ink"
+      className="flex h-9 w-9 items-center justify-center rounded-full border border-line bg-surface text-base text-subtle transition hover:border-coral/40 hover:text-highlight"
     >
       {isDark ? <SunOutlined /> : <MoonOutlined />}
     </button>

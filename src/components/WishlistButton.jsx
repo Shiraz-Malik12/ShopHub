@@ -37,7 +37,7 @@ export default function WishlistButton({ product, round = false, ...buttonProps 
     }
   }
 
-  const icon = saved ? <HeartFilled className="text-danger" /> : <HeartOutlined />
+  const icon = saved ? <HeartFilled className="text-coral" /> : <HeartOutlined />
 
   if (round) {
     return (
@@ -48,7 +48,7 @@ export default function WishlistButton({ product, round = false, ...buttonProps 
         title={label}
         disabled={saving}
         onClick={handleClick}
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-line bg-surface text-lg text-subtle transition hover:border-danger/40 hover:text-danger disabled:opacity-60"
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-line bg-surface text-lg text-subtle transition hover:border-coral/40 hover:text-highlight disabled:opacity-60"
       >
         {icon}
       </button>

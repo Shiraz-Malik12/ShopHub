@@ -240,7 +240,7 @@ export default function CustomersPage() {
       key: 'customer',
       render: (_, customer) => (
         <button type="button" onClick={() => setOpenCustomerId(customer.id)} className="min-w-0 text-left">
-          <div className="truncate font-medium text-ink hover:text-link-hover">{customer.name}</div>
+          <div className="truncate font-medium text-ink hover:text-highlight">{customer.name}</div>
           <div className="truncate text-xs text-subtle">{customer.email}</div>
         </button>
       ),
@@ -322,7 +322,7 @@ export default function CustomersPage() {
           action={<Button size="small" onClick={() => setReloadKey((key) => key + 1)}>Retry</Button>}
         />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-line bg-surface">
+        <div className="overflow-hidden rounded-2xl border border-line bg-surface shadow-card">
           <Table
             rowKey="id"
             columns={columns}

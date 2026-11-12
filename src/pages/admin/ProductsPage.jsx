@@ -199,7 +199,7 @@ export default function ProductsPage() {
         {loadError ? (
           <Alert type="error" showIcon title="Could not load products" description={loadError} action={<Button size="small" onClick={loadData}>Retry</Button>} />
         ) : (
-          <div className="overflow-hidden rounded-xl border border-line bg-surface">
+          <div className="overflow-hidden rounded-2xl border border-line bg-surface shadow-card">
             <Table
               rowKey="_id"
               columns={columns}

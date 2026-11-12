@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext'
 
 function Section({ title, description, children }) {
   return (
-    <section className="rounded-xl border border-line bg-surface">
+    <section className="rounded-2xl border border-line bg-surface shadow-card">
       <div className="border-b border-line px-6 py-4">
         <h2 className="font-semibold text-ink">{title}</h2>
         {description && <p className="mt-1 text-sm text-subtle">{description}</p>}
@@ -274,7 +274,7 @@ export default function DashboardPage() {
 
       <div className="mx-auto grid max-w-5xl gap-6 px-4 py-10 sm:px-6 lg:grid-cols-3 lg:px-8">
         <div className="space-y-4 lg:col-span-1">
-          <div className="rounded-xl border border-line bg-surface p-6">
+          <div className="rounded-2xl border border-line bg-surface shadow-card p-6">
             <div className="flex flex-col items-center text-center">
               <Avatar size={72} style={{ backgroundColor: 'var(--brand)', fontSize: 28 }}>
                 {user?.name?.[0]?.toUpperCase()}
@@ -282,7 +282,7 @@ export default function DashboardPage() {
               <h2 className="mt-4 text-lg font-semibold text-ink">{user?.name}</h2>
               <p className="break-all text-sm text-subtle">{user?.email}</p>
               <div className="mt-3 flex gap-2">
-                <Tag color={isAdmin ? 'purple' : 'blue'}>{isAdmin ? 'Admin' : 'Customer'}</Tag>
+                <Tag color={isAdmin ? 'volcano' : 'blue'}>{isAdmin ? 'Admin' : 'Customer'}</Tag>
                 {user?.isVerified && (
                   <Tag icon={<CheckCircleFilled />} color="success">
                     Verified
@@ -296,16 +296,16 @@ export default function DashboardPage() {
             <Link
               key={link.to}
               to={link.to}
-              className="group flex items-center gap-4 rounded-xl border border-line bg-surface p-4 transition hover:border-link/40 hover:shadow-md"
+              className="group flex items-center gap-4 rounded-2xl border border-line bg-surface shadow-card p-4 transition hover:border-coral/40 hover:shadow-card-hover"
             >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-link/10 text-lg text-link">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-coral/10 text-lg text-highlight">
                 {link.icon}
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block font-semibold text-ink">{link.title}</span>
                 <span className="block text-sm text-subtle">{link.text}</span>
               </span>
-              <RightOutlined className="text-faint transition group-hover:translate-x-0.5 group-hover:text-link" />
+              <RightOutlined className="text-faint transition group-hover:translate-x-0.5 group-hover:text-highlight" />
             </Link>
           ))}
         </div>

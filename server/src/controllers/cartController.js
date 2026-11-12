@@ -1,4 +1,4 @@
-import Cart from '../models/Cart.js'
+import Cart, { MAX_ITEM_QUANTITY } from '../models/Cart.js'
 import Product from '../models/Product.js'
 import { customerVisibleFilter } from '../utils/customerVisibleFilter.js'
 
@@ -163,6 +163,72 @@ export async function clearCart(req, res, next) {
     await cart.save()
 
     res.status(200).json({ message: 'Cart cleared', cart: await buildCartResponse(cart) })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Guest carts. A visitor who isn't signed in keeps their cart in the browser
+// (only product ids + quantities). The two endpoints below let the server
+// stay the source of truth for prices anyway:
+//   • preview — prices the guest's list from the database (nothing saved)
+//   • merge   — after sign-in, moves the guest's items into the real cart
+// ---------------------------------------------------------------------------
+
+// [{ productId, quantity }] → cart lines, one per product (a product listed
+// twice is added up, never above the per-item maximum).
+function toCartItems(list) {
+  const quantities = new Map()
+  for (const { productId, quantity } of list) {
+    quantities.set(productId, Math.min((quantities.get(productId) || 0) + quantity, MAX_ITEM_QUANTITY))
+  }
+  return [...quantities].map(([product, quantity]) => ({ product, quantity }))
+}
+
+// POST /api/cart/preview  { items: [{ productId, quantity }] }  — public.
+// Returns exactly the same shape as GET /api/cart, built by the same
+// buildCartResponse, so the cart page works the same for guests and users.
+// The cart is a temporary document: it is never saved.
+export async function previewCart(req, res, next) {
+  try {
+    const cart = new Cart({ items: toCartItems(req.body.items) })
+    res.status(200).json({ cart: await buildCartResponse(cart) })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// POST /api/cart/merge  { items: [{ productId, quantity }] }  — signed in.
+// Called right after a guest signs in: adds their browser cart to their
+// account cart. Quantities are added together but never go above the stock;
+// products that are hidden, deleted or sold out are skipped.
+export async function mergeCart(req, res, next) {
+  try {
+    const guestItems = toCartItems(req.body.items)
+    const cart = await getOrCreateCart(req.user._id)
+
+    const products = await Product.find({
+      _id: { $in: guestItems.map((item) => item.product) },
+      ...(await customerVisibleFilter()),
+    }).select('stock')
+    const stockById = new Map(products.map((product) => [product._id.toString(), product.stock]))
+
+    for (const { product, quantity } of guestItems) {
+      const stock = stockById.get(product)
+      if (!stock) continue
+
+      const existing = cart.items.find((item) => item.product.equals(product))
+      if (existing) {
+        // Never lower what was already in the account cart.
+        existing.quantity = Math.max(existing.quantity, Math.min(existing.quantity + quantity, stock))
+      } else {
+        cart.items.push({ product, quantity: Math.min(quantity, stock) })
+      }
+    }
+    await cart.save()
+
+    res.status(200).json({ message: 'Cart merged', cart: await buildCartResponse(cart) })
   } catch (err) {
     next(err)
   }

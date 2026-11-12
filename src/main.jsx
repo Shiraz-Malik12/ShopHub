@@ -10,6 +10,7 @@ import { CartProvider } from './context/CartContext.jsx'
 import { WishlistProvider } from './context/WishlistContext.jsx'
 import { ThemeProvider, useTheme } from './context/ThemeContext.jsx'
 import { antdTheme } from './theme/palette.js'
+import { showClickEffect } from './theme/clickEffect.js'
 
 // Gives every antd component (buttons, inputs, tables, modals) the colors of
 // the current light/dark mode. A separate component because it needs
@@ -18,7 +19,8 @@ function ThemedApp() {
   const { mode } = useTheme()
 
   return (
-    <ConfigProvider theme={antdTheme(mode)}>
+    // wave: our own click animation (ripple + sparkles) instead of antd's default.
+    <ConfigProvider theme={antdTheme(mode)} wave={{ showEffect: showClickEffect }}>
       {/* antd's <App> provides the context that message/notification/modal
           hooks (AntdApp.useApp()) need to render on-theme — see the auth
           pages for the useApp() pattern. */}

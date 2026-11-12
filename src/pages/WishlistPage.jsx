@@ -48,14 +48,14 @@ export default function WishlistPage() {
         {loading ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {[1, 2, 3, 4].map((key) => (
-              <div key={key} className="rounded-xl border border-line bg-surface p-4">
+              <div key={key} className="rounded-2xl border border-line bg-surface shadow-card p-4">
                 <Skeleton.Image active className="!h-48 !w-full" />
                 <Skeleton active paragraph={{ rows: 2 }} className="mt-4" />
               </div>
             ))}
           </div>
         ) : loadError ? (
-          <div className="mx-auto max-w-md rounded-xl border border-line bg-surface p-10 text-center">
+          <div className="mx-auto max-w-md rounded-2xl border border-line bg-surface shadow-card p-10 text-center">
             <WarningOutlined className="text-3xl text-danger" />
             <h2 className="mt-4 text-lg font-semibold text-ink">Could not load your wishlist</h2>
             <p className="mt-1 text-sm text-subtle">{loadError}</p>
@@ -64,7 +64,7 @@ export default function WishlistPage() {
             </Button>
           </div>
         ) : visibleProducts.length === 0 ? (
-          <div className="rounded-xl border border-line bg-surface py-16">
+          <div className="rounded-2xl border border-line bg-surface shadow-card py-16">
             <Empty description="Your wishlist is empty. Tap the heart on any product to save it here.">
               <Link to="/products">
                 <Button type="primary">Browse products</Button>

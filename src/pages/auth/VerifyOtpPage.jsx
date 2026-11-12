@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Button, Input, App as AntdApp } from 'antd'
+import { SafetyCertificateOutlined } from '@ant-design/icons'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import AuthLayout from '../../components/auth/AuthLayout'
 import { useAuth } from '../../context/AuthContext'
@@ -42,7 +43,8 @@ export default function VerifyOtpPage() {
     try {
       const data = await verifyOtp({ email, code })
       message.success('Email verified! Welcome to ShopHub.')
-      navigate(homePathFor(data.user), { replace: true })
+      // Back to where they were going (e.g. /checkout), or their home page.
+      navigate(state?.from?.pathname || homePathFor(data.user), { replace: true })
     } catch (err) {
       message.error(err?.response?.data?.message || 'Invalid or expired code')
     } finally {
@@ -69,7 +71,7 @@ export default function VerifyOtpPage() {
     <AuthLayout title="Verify your email" subtitle={`Enter the 6-digit code sent to ${email}`}>
       <Input.OTP length={6} size="large" value={code} onChange={setCode} className="w-full [&>*]:flex-1" />
 
-      <Button type="primary" size="large" block loading={loading} onClick={handleVerify} className="mt-6">
+      <Button type="primary" size="large" block loading={loading} onClick={handleVerify} icon={<SafetyCertificateOutlined />} className="mt-6">
         Verify email
       </Button>
 
@@ -82,7 +84,7 @@ export default function VerifyOtpPage() {
             type="button"
             onClick={handleResend}
             disabled={resending}
-            className="font-medium text-link hover:text-link-hover disabled:opacity-50"
+            className="font-medium text-link hover:text-highlight disabled:opacity-50"
           >
             Resend code
           </button>
@@ -91,7 +93,7 @@ export default function VerifyOtpPage() {
 
       <p className="mt-2 text-center text-sm text-subtle">
         Wrong email?{' '}
-        <Link to="/register" className="font-medium text-link hover:text-link-hover">
+        <Link to="/register" className="font-medium text-link hover:text-highlight">
           Start over
         </Link>
       </p>

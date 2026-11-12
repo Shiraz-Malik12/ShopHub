@@ -1,12 +1,11 @@
-import { CheckCircleOutlined } from '@ant-design/icons'
 import Logo from '../Logo'
 import ThemeToggle from '../ThemeToggle'
-
-const HIGHLIGHTS = ['Curated products, updated regularly', 'Secure sign-in with email verification', 'Fast, simple checkout experience']
+import LogoReveal from './LogoReveal'
 
 // Shared split-screen shell for every auth page (Login/Register/VerifyOtp/
 // ForgotPassword/ResetPassword) so they stay visually consistent without
-// repeating markup.
+// repeating markup. Left (large screens only): the navy brand panel with the
+// animated logo in the middle; right: the page's form.
 export default function AuthLayout({ title, subtitle, children }) {
   return (
     <div className="relative flex min-h-screen bg-page">
@@ -14,30 +13,26 @@ export default function AuthLayout({ title, subtitle, children }) {
         <ThemeToggle />
       </div>
 
-      <div className="relative hidden flex-col justify-between overflow-hidden bg-brand-deep p-12 text-white lg:flex lg:w-1/2">
-        {/* Soft decorative glow — purely visual (icy blue + deep navy). */}
-        <div className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-[#a9c7e8]/35 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-32 -left-16 h-96 w-96 rounded-full bg-[#0f1e32]/60 blur-3xl" />
+      <div className="relative hidden overflow-hidden bg-brand-deep lg:block lg:w-1/2">
+        {/* Soft decorative glow — purely visual (brand blue + coral). */}
+        <div className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-[#2457d6]/55 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-32 -left-16 h-96 w-96 rounded-full bg-[#ff6b4a]/25 blur-3xl" />
 
-        <div className="relative">
-          <Logo light />
-        </div>
-        <div className="relative">
-          <h2 className="max-w-md text-4xl font-bold leading-tight tracking-tight">Everything you need, in one place.</h2>
-          <ul className="mt-8 space-y-3 text-white/85">
-            {HIGHLIGHTS.map((item) => (
-              <li key={item} className="flex items-center gap-3">
-                <CheckCircleOutlined className="text-white" />
-                {item}
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="relative text-sm text-white/60">© {new Date().getFullYear()} ShopHub</div>
+        <LogoReveal />
       </div>
 
-      <div className="flex w-full items-center justify-center p-6 sm:p-10 lg:w-1/2">
+      {/* Phones & tablets (no brand panel): soft brand-color glows drift
+          slowly behind the form, over a faint dot pattern. Decorative only. */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden lg:hidden" aria-hidden="true">
+        <div className="auth-dots absolute inset-0" />
+        <div className="auth-blob-a absolute -right-24 -top-20 h-72 w-72 rounded-full bg-accent/25 blur-3xl" />
+        <div className="auth-blob-b absolute -bottom-24 -left-20 h-72 w-72 rounded-full bg-coral/25 blur-3xl" />
+        <div className="auth-blob-c absolute left-1/3 top-1/2 h-48 w-48 rounded-full bg-[#5b8cff]/15 blur-3xl" />
+      </div>
+
+      <div className="relative flex w-full items-center justify-center p-6 sm:p-10 lg:w-1/2">
         <div className="w-full max-w-sm">
+          {/* On small screens the brand panel is hidden, so show the logo here. */}
           <div className="mb-10 lg:hidden">
             <Logo />
           </div>

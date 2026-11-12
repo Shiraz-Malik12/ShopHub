@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Form, Input, Button, App as AntdApp } from 'antd'
+import { MailOutlined } from '@ant-design/icons'
 import { Link, useNavigate } from 'react-router-dom'
 import AuthLayout from '../../components/auth/AuthLayout'
 import { useAuth } from '../../context/AuthContext'
@@ -40,14 +41,14 @@ export default function ForgotPasswordPage() {
           <Input size="large" placeholder="you@example.com" autoComplete="email" />
         </Form.Item>
 
-        <Button type="primary" htmlType="submit" size="large" block loading={loading}>
+        <Button type="primary" htmlType="submit" size="large" block loading={loading} icon={<MailOutlined />}>
           Send reset code
         </Button>
       </Form>
 
       <p className="mt-6 text-center text-sm text-subtle">
         Remembered it?{' '}
-        <Link to="/login" className="font-medium text-link hover:text-link-hover">
+        <Link to="/login" className="font-medium text-link hover:text-highlight">
           Back to sign in
         </Link>
       </p>

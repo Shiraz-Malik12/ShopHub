@@ -49,11 +49,11 @@ function App() {
       <Route path="/products" element={<StorefrontProductsPage />} />
       <Route path="/products/:id" element={<ProductDetailPage />} />
       <Route path="/contact" element={<ContactPage />} />
-      
+      {/* Guests have a cart too (kept in the browser); they sign in at checkout. */}
+      <Route path="/cart" element={<CartPage />} />
 
       <Route element={<ProtectedRoute />}>
         <Route path="/account" element={<DashboardPage />} />
-        <Route path="/cart" element={<CartPage />} />
         <Route path="/wishlist" element={<WishlistPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/orders" element={<OrdersPage />} />

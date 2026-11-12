@@ -3,6 +3,7 @@ import { Button, Checkbox, Empty, Input, Pagination, Select, Skeleton } from 'an
 import { ReloadOutlined, SearchOutlined, WarningOutlined } from '@ant-design/icons'
 import { useSearchParams } from 'react-router-dom'
 import StoreLayout from '../components/layout/StoreLayout'
+import BrandMark from '../components/BrandMark'
 import ProductCard from '../components/ProductCard'
 import * as productApi from '../api/productApi'
 import * as categoryApi from '../api/categoryApi'
@@ -148,57 +149,68 @@ export default function ProductsPage() {
 
   return (
     <StoreLayout>
-      <section className="border-b border-line bg-surface">
-        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold tracking-tight text-ink">All products</h1>
-          <p className="mt-2 text-subtle">{!hasLoadedOnce || loadError ? 'Browse our full catalog.' : countLabel}</p>
+      {/* Page banner: a rounded card with soft brand glows behind the title
+          and the search/filter row. */}
+      <section className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
+        <div className="relative overflow-hidden rounded-[28px] border border-line bg-surface p-6 shadow-card sm:p-10">
+          <div className="pointer-events-none absolute -right-16 -top-24 h-72 w-72 rounded-full bg-accent/15 blur-3xl" aria-hidden="true" />
+          <div className="pointer-events-none absolute -bottom-28 left-1/3 h-64 w-64 rounded-full bg-coral/15 blur-3xl" aria-hidden="true" />
 
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <Input
-              size="large"
-              allowClear
-              prefix={<SearchOutlined className="text-faint" />}
-              placeholder="Search products..."
-              aria-label="Search products"
-              value={searchText}
-              onChange={(event) => setSearchText(event.target.value)}
-              maxLength={100}
-              className="sm:flex-1"
-            />
-            <Select
-              size="large"
-              allowClear
-              placeholder="All categories"
-              aria-label="Filter by category"
-              value={category || undefined}
-              onChange={(value) => setFilter('category', value)}
-              options={categories.map((item) => ({ value: item._id, label: item.name }))}
-              className="sm:w-52"
-            />
-            <Select
-              size="large"
-              aria-label="Sort products"
-              value={sort}
-              onChange={(value) => setFilter('sort', value === DEFAULT_SORT ? '' : value)}
-              options={SORT_OPTIONS}
-              className="sm:w-52"
-            />
-            <Checkbox
-              checked={inStock}
-              onChange={(event) => setFilter('inStock', event.target.checked ? 'true' : '')}
-              className="self-center whitespace-nowrap"
-            >
-              In stock only
-            </Checkbox>
+          <div className="relative">
+            <span className="inline-flex items-center gap-2 rounded-full bg-coral/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-highlight">
+              <BrandMark size={14} />
+              ShopHub Store
+            </span>
+            <h1 className="mt-4 text-3xl font-bold tracking-tight text-ink sm:text-4xl">All products</h1>
+            <p className="mt-2 text-subtle">{!hasLoadedOnce || loadError ? 'Browse our full catalog.' : countLabel}</p>
+
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <Input
+                size="large"
+                allowClear
+                prefix={<SearchOutlined className="text-faint" />}
+                placeholder="Search products..."
+                aria-label="Search products"
+                value={searchText}
+                onChange={(event) => setSearchText(event.target.value)}
+                maxLength={100}
+                className="sm:flex-1"
+              />
+              <Select
+                size="large"
+                allowClear
+                placeholder="All categories"
+                aria-label="Filter by category"
+                value={category || undefined}
+                onChange={(value) => setFilter('category', value)}
+                options={categories.map((item) => ({ value: item._id, label: item.name }))}
+                className="sm:w-52"
+              />
+              <Select
+                size="large"
+                aria-label="Sort products"
+                value={sort}
+                onChange={(value) => setFilter('sort', value === DEFAULT_SORT ? '' : value)}
+                options={SORT_OPTIONS}
+                className="sm:w-52"
+              />
+              <Checkbox
+                checked={inStock}
+                onChange={(event) => setFilter('inStock', event.target.checked ? 'true' : '')}
+                className="self-center whitespace-nowrap"
+              >
+                In stock only
+              </Checkbox>
+            </div>
           </div>
         </div>
       </section>
 
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {loading && !hasLoadedOnce ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-label="Loading products...">
             {Array.from({ length: SKELETON_CARDS }, (_, index) => (
-              <div key={index} className="overflow-hidden rounded-xl border border-line bg-surface">
+              <div key={index} className="overflow-hidden rounded-2xl border border-line bg-surface shadow-card">
                 <div className="aspect-square animate-pulse bg-muted" />
                 <div className="p-4">
                   <Skeleton active title={false} paragraph={{ rows: 3 }} />
@@ -207,7 +219,7 @@ export default function ProductsPage() {
             ))}
           </div>
         ) : loadError ? (
-          <div className="mx-auto max-w-md rounded-xl border border-line bg-surface p-10 text-center">
+          <div className="mx-auto max-w-md rounded-2xl border border-line bg-surface shadow-card p-10 text-center">
             <WarningOutlined className="text-3xl text-danger" />
             <h2 className="mt-4 text-lg font-semibold text-ink">Could not load products</h2>
             <p className="mt-1 text-sm text-subtle">{loadError}</p>
@@ -222,13 +234,13 @@ export default function ProductsPage() {
           </div>
         ) : products.length === 0 && page > 1 ? (
           // e.g. an old link to ?page=5 when there are now only 2 pages.
-          <div className="rounded-xl border border-line bg-surface py-16">
+          <div className="rounded-2xl border border-line bg-surface shadow-card py-16">
             <Empty description="There are no products on this page.">
               <Button onClick={() => goToPage(1)}>Go to the first page</Button>
             </Empty>
           </div>
         ) : products.length === 0 ? (
-          <div className="rounded-xl border border-line bg-surface py-16">
+          <div className="rounded-2xl border border-line bg-surface shadow-card py-16">
             <Empty description={hasFilters ? 'No products match your search.' : 'No products available.'}>
               {hasFilters && <Button onClick={clearFilters}>Clear filters</Button>}
             </Empty>
