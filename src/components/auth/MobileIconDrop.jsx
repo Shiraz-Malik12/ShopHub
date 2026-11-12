@@ -54,6 +54,48 @@ function shouldPlay() {
 
 const rand = (min, max) => min + Math.random() * (max - min)
 
+// Resolves when the page is actually on screen and settled:
+//   1. fully loaded (after a refresh: scripts, styles, images)
+//   2. web fonts ready (text won't jump around mid-animation)
+//   3. the tab is visible (not still loading in the background)
+//   4. two frames have been painted (the browser has really drawn the page)
+// Capped at MAX_WAIT_MS, so the animation never waits forever.
+const MAX_WAIT_MS = 2500
+
+function waitUntilPageIsShown() {
+  const loaded =
+    document.readyState === 'complete'
+      ? Promise.resolve()
+      : new Promise((resolve) => window.addEventListener('load', resolve, { once: true }))
+
+  const visible =
+    document.visibilityState === 'visible'
+      ? Promise.resolve()
+      : new Promise((resolve) => {
+          const onChange = () => {
+            if (document.visibilityState !== 'visible') return
+            document.removeEventListener('visibilitychange', onChange)
+            resolve()
+          }
+          document.addEventListener('visibilitychange', onChange)
+        })
+
+  const twoFrames = () =>
+    new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+
+  const ready = loaded
+    .then(() => document.fonts?.ready)
+    .then(() => visible)
+    .then(twoFrames)
+    .then(() => new Promise((resolve) => setTimeout(resolve, 150))) // a short breath after the first paint
+
+  // Even when giving up on "loaded", never start while the tab is hidden.
+  const giveUp = new Promise((resolve) => setTimeout(resolve, MAX_WAIT_MS))
+    .then(() => visible)
+    .then(twoFrames)
+  return Promise.race([ready, giveUp])
+}
+
 // One tile's journey: out of the top-left corner → lands → bounces up →
 // lands → small bounce → rests → shrinks away. Offsets are fractions of the
 // whole animation; each landing uses an "ease-out" curve (slowing down like
@@ -89,17 +131,32 @@ export default function MobileIconDrop() {
     if (!active) return undefined
     dropPlayed = true
 
-    const layer = layerRef.current
-    const { clientWidth: width, clientHeight: height } = layer
-    const animations = [...layer.children].map((tile, index) =>
-      tile.animate(dropKeyframes(index, width, height), { duration: 3600, delay: index * 120, fill: 'both' }),
-    )
+    let cancelled = false
+    let animations = []
 
-    Promise.all(animations.map((animation) => animation.finished))
-      .then(() => setDone(true))
-      .catch(() => {}) // cancelled (page left early) — nothing to do
+    // Start only once the screen is really showing the page. On iPhone
+    // (Safari), a refresh keeps the screen busy for a moment after React
+    // has already rendered — starting right away meant the first half of
+    // the fall happened before anything was drawn, so people only saw the
+    // icons landing at the bottom.
+    waitUntilPageIsShown().then(() => {
+      if (cancelled) return
+      const layer = layerRef.current
+      // Measured now (not earlier): Safari's toolbar can change the screen
+      // height while the page is still loading.
+      const { clientWidth: width, clientHeight: height } = layer
+      animations = [...layer.children].map((tile, index) =>
+        tile.animate(dropKeyframes(index, width, height), { duration: 3600, delay: index * 120, fill: 'both' }),
+      )
+      Promise.all(animations.map((animation) => animation.finished))
+        .then(() => setDone(true))
+        .catch(() => {}) // cancelled (page left early) — nothing to do
+    })
 
-    return () => animations.forEach((animation) => animation.cancel())
+    return () => {
+      cancelled = true
+      animations.forEach((animation) => animation.cancel())
+    }
   }, [active])
 
   if (!active || done) return null
