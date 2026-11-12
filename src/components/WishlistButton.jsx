@@ -1,18 +1,13 @@
 import { useState } from 'react'
 import { App as AntdApp, Button } from 'antd'
 import { HeartFilled, HeartOutlined } from '@ant-design/icons'
-import { useLocation, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
 import { useWishlist } from '../context/WishlistContext'
 
-// Heart button that saves a product to the wishlist (or removes it).
-// Guests are sent to sign in first, like "Add to cart".
+// Heart button that saves a product to the wishlist (or removes it). Works
+// for guests too — their hearts are kept in the browser (WishlistContext).
 // `round`: the icon-only circle used next to "Add to cart" on product cards.
 export default function WishlistButton({ product, round = false, ...buttonProps }) {
-  const { user } = useAuth()
   const { isSaved, toggle } = useWishlist()
-  const navigate = useNavigate()
-  const location = useLocation()
   const { message } = AntdApp.useApp()
   const [saving, setSaving] = useState(false)
 
@@ -20,12 +15,6 @@ export default function WishlistButton({ product, round = false, ...buttonProps 
   const label = saved ? `Remove ${product.name} from wishlist` : `Save ${product.name} to wishlist`
 
   async function handleClick() {
-    if (!user) {
-      message.info('Please sign in to save products to your wishlist.')
-      navigate('/login', { state: { from: location } })
-      return
-    }
-
     setSaving(true)
     try {
       const nowSaved = await toggle(product._id)

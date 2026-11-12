@@ -30,8 +30,15 @@ export const forgotPasswordRules = [
   body('email').trim().isEmail().withMessage('Enter a valid email address').normalizeEmail(),
 ]
 
-export const resetPasswordRules = [
+// Step 1 of a reset: the emailed code (same shape as the sign-up OTP).
+export const verifyResetCodeRules = [
   body('email').trim().isEmail().withMessage('Enter a valid email address').normalizeEmail(),
   body('code').trim().isLength({ min: 6, max: 6 }).isNumeric().withMessage('Enter the 6-digit code'),
+]
+
+// Step 2: the one-time token from step 1 (64 hex characters) + new password.
+export const resetPasswordRules = [
+  body('email').trim().isEmail().withMessage('Enter a valid email address').normalizeEmail(),
+  body('resetToken').isHexadecimal().isLength({ min: 64, max: 64 }).withMessage('Invalid reset session'),
   body('newPassword').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
 ]

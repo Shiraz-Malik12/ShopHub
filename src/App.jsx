@@ -3,7 +3,8 @@ import LoginPage from './pages/auth/LoginPage'
 import RegisterPage from './pages/auth/RegisterPage'
 import VerifyOtpPage from './pages/auth/VerifyOtpPage'
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
-import ResetPasswordPage from './pages/auth/ResetPasswordPage'
+import ResetCodePage from './pages/auth/ResetCodePage'
+import NewPasswordPage from './pages/auth/NewPasswordPage'
 import DashboardPage from './pages/DashboardPage'
 import NotFoundPage from './pages/NotFoundPage'
 import CategoriesPage from './pages/admin/CategoriesPage'
@@ -31,9 +32,11 @@ function App() {
       {/* Mid-flow pages: not guest-only (you must have just come from
           Register/ForgotPassword) and not auth-only (you're not logged in
           yet), so they sit outside both guards and validate their own
-          state (see VerifyOtpPage / ResetPasswordPage). */}
+          state (see VerifyOtpPage / ResetCodePage / NewPasswordPage). */}
       <Route path="/verify-otp" element={<VerifyOtpPage />} />
-      <Route path="/reset-password" element={<ResetPasswordPage />} />
+      {/* Forgot password: enter the emailed code, then choose a new password. */}
+      <Route path="/reset-password/verify" element={<ResetCodePage />} />
+      <Route path="/reset-password/new" element={<NewPasswordPage />} />
       
 
       <Route element={<PublicRoute />}>
@@ -49,12 +52,13 @@ function App() {
       <Route path="/products" element={<StorefrontProductsPage />} />
       <Route path="/products/:id" element={<ProductDetailPage />} />
       <Route path="/contact" element={<ContactPage />} />
-      {/* Guests have a cart too (kept in the browser); they sign in at checkout. */}
+      {/* Guests have a cart and a wishlist too (kept in the browser); they
+          only need to sign in at checkout. */}
       <Route path="/cart" element={<CartPage />} />
+      <Route path="/wishlist" element={<WishlistPage />} />
 
       <Route element={<ProtectedRoute />}>
         <Route path="/account" element={<DashboardPage />} />
-        <Route path="/wishlist" element={<WishlistPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/orders" element={<OrdersPage />} />
         <Route path="/orders/:id" element={<OrderDetailPage />} />

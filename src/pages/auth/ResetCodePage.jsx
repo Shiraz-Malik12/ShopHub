@@ -1,17 +1,21 @@
 import { useEffect, useState } from 'react'
 import { Form, Input, Button, App as AntdApp } from 'antd'
-import { LockOutlined } from '@ant-design/icons'
+import { SafetyCertificateOutlined } from '@ant-design/icons'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import AuthLayout from '../../components/auth/AuthLayout'
 import { useAuth } from '../../context/AuthContext'
 
 const RESEND_COOLDOWN_SECONDS = 60
 
-export default function ResetPasswordPage() {
+// Forgot password, page 2 of 3: enter the 6-digit code from the email.
+// The SERVER checks it (not the browser) and answers with a one-time
+// resetToken, which is handed to the next page in router state — so the
+// "new password" page can't be opened without a correct code.
+export default function ResetCodePage() {
   const { state } = useLocation()
   const email = state?.email
   const navigate = useNavigate()
-  const { resetPassword, forgotPassword } = useAuth()
+  const { verifyResetCode, forgotPassword } = useAuth()
   const { message } = AntdApp.useApp()
 
   const [loading, setLoading] = useState(false)
@@ -21,13 +25,11 @@ export default function ResetPasswordPage() {
   // No email in route state means someone landed here directly instead of
   // going through ForgotPasswordPage first.
   useEffect(() => {
-    if (!email) {
-      navigate('/forgot-password', { replace: true })
-    }
+    if (!email) navigate('/forgot-password', { replace: true })
   }, [email, navigate])
 
   useEffect(() => {
-    if (cooldown <= 0) return
+    if (cooldown <= 0) return undefined
     const id = setInterval(() => setCooldown((prev) => prev - 1), 1000)
     return () => clearInterval(id)
   }, [cooldown])
@@ -35,9 +37,10 @@ export default function ResetPasswordPage() {
   async function onFinish(values) {
     setLoading(true)
     try {
-      await resetPassword({ email, code: values.code, newPassword: values.newPassword })
-      message.success('Password reset! Please sign in with your new password.')
-      navigate('/login', { replace: true })
+      const { resetToken } = await verifyResetCode({ email, code: values.code })
+      message.success('Code verified')
+      // replace: the Back button shouldn't return to an already-used code.
+      navigate('/reset-password/new', { replace: true, state: { email, resetToken } })
     } catch (err) {
       message.error(err?.response?.data?.message || 'Invalid or expired code')
     } finally {
@@ -61,11 +64,11 @@ export default function ResetPasswordPage() {
   if (!email) return null
 
   return (
-    <AuthLayout title="Reset your password" subtitle={`Enter the code sent to ${email} and a new password`}>
+    <AuthLayout title="Check your email" subtitle={`Enter the 6-digit code we sent to ${email}`}>
       <Form layout="vertical" onFinish={onFinish} requiredMark={false}>
         <Form.Item
           name="code"
-          label="6-digit code"
+          label="Reset code"
           rules={[
             { required: true, message: 'Please enter the code' },
             { len: 6, message: 'Enter the 6-digit code' },
@@ -74,38 +77,16 @@ export default function ResetPasswordPage() {
           <Input.OTP length={6} size="large" className="w-full [&>*]:flex-1" />
         </Form.Item>
 
-        <Form.Item
-          name="newPassword"
-          label="New password"
-          hasFeedback
-          rules={[
-            { required: true, message: 'Please enter a new password' },
-            { min: 8, message: 'At least 8 characters' },
-          ]}
+        <Button
+          type="primary"
+          htmlType="submit"
+          size="large"
+          block
+          loading={loading}
+          icon={<SafetyCertificateOutlined />}
+          className="mt-2"
         >
-          <Input.Password size="large" placeholder="••••••••" autoComplete="new-password" />
-        </Form.Item>
-
-        <Form.Item
-          name="confirmPassword"
-          label="Confirm new password"
-          dependencies={['newPassword']}
-          hasFeedback
-          rules={[
-            { required: true, message: 'Please confirm your new password' },
-            ({ getFieldValue }) => ({
-              validator(_, value) {
-                if (!value || getFieldValue('newPassword') === value) return Promise.resolve()
-                return Promise.reject(new Error('Passwords do not match'))
-              },
-            }),
-          ]}
-        >
-          <Input.Password size="large" placeholder="••••••••" autoComplete="new-password" />
-        </Form.Item>
-
-        <Button type="primary" htmlType="submit" size="large" block loading={loading} icon={<LockOutlined />} className="mt-2">
-          Reset password
+          Verify code
         </Button>
       </Form>
 

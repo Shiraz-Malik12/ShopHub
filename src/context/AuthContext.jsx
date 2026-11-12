@@ -80,6 +80,11 @@ export function AuthProvider({ children }) {
     return data
   }
 
+  async function verifyResetCode(payload) {
+    const { data } = await authApi.verifyResetCode(payload)
+    return data
+  }
+
   async function resetPassword(payload) {
     const { data } = await authApi.resetPassword(payload)
     return data
@@ -120,6 +125,7 @@ export function AuthProvider({ children }) {
     updateUser,
     refreshUser,
     forgotPassword,
+    verifyResetCode,
     resetPassword,
   }
 

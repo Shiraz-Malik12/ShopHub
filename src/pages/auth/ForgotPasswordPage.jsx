@@ -19,7 +19,7 @@ export default function ForgotPasswordPage() {
       // registered (prevents account enumeration) — so we always move
       // forward to the code-entry screen too, regardless of the outcome.
       message.success('If an account exists for that email, a reset code has been sent.')
-      navigate('/reset-password', { state: { email: values.email } })
+      navigate('/reset-password/verify', { state: { email: values.email } })
     } catch (err) {
       message.error(err?.response?.data?.message || 'Something went wrong. Please try again.')
     } finally {

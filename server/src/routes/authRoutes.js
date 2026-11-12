@@ -8,6 +8,7 @@ import {
   otpRules,
   resendOtpRules,
   forgotPasswordRules,
+  verifyResetCodeRules,
   resetPasswordRules,
   handleValidation,
 } from '../validators/authValidators.js'
@@ -28,6 +29,15 @@ router.post(
   handleValidation,
   authController.forgotPassword,
 )
+// Forgot password, step 1: check the emailed code → one-time reset token.
+router.post(
+  '/verify-reset-code',
+  otpLimiter,
+  verifyResetCodeRules,
+  handleValidation,
+  authController.verifyResetCode,
+)
+// Step 2: set the new password with that token.
 router.post(
   '/reset-password',
   otpLimiter,

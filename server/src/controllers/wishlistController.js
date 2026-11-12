@@ -86,3 +86,54 @@ export async function removeFromWishlist(req, res, next) {
     next(err)
   }
 }
+
+// ---------------------------------------------------------------------------
+// Guest wishlists, the same idea as guest carts: a visitor who isn't signed
+// in keeps the saved product ids in the browser.
+//   • preview — returns those products, in the shop-listing shape
+//   • merge   — after sign-in, adds the ids to the account wishlist
+// ---------------------------------------------------------------------------
+
+// Visible products for a list of ids, newest-saved first (the browser keeps
+// the list oldest first, like the database does).
+async function visibleProductsInSavedOrder(ids) {
+  const products = await Product.find({ _id: { $in: ids }, ...(await customerVisibleFilter()) }).populate(
+    'category',
+    'name slug',
+  )
+  const savedOrder = new Map(ids.map((id, index) => [id.toString(), index]))
+  return products.sort((a, b) => savedOrder.get(b._id.toString()) - savedOrder.get(a._id.toString()))
+}
+
+// POST /api/wishlist/preview  { productIds }  — public.
+export async function previewWishlist(req, res, next) {
+  try {
+    const ids = [...new Set(req.body.productIds)]
+    res.status(200).json({ products: await visibleProductsInSavedOrder(ids), productIds: ids })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// POST /api/wishlist/merge  { productIds }  — signed in.
+// Adds the guest's saved products to the account wishlist (only products a
+// customer can see, no duplicates, never above MAX_WISHLIST_ITEMS).
+export async function mergeWishlist(req, res, next) {
+  try {
+    const visible = await Product.find({
+      _id: { $in: [...new Set(req.body.productIds)] },
+      ...(await customerVisibleFilter()),
+    }).distinct('_id')
+
+    const wishlist = await getOrCreateWishlist(req.user._id)
+    for (const id of visible) {
+      if (wishlist.products.length >= MAX_WISHLIST_ITEMS) break
+      if (!wishlist.products.some((saved) => saved.equals(id))) wishlist.products.push(id)
+    }
+    await wishlist.save()
+
+    res.status(200).json({ productIds: idsOf(wishlist) })
+  } catch (err) {
+    next(err)
+  }
+}

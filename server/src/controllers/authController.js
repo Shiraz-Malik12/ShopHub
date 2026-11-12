@@ -1,3 +1,4 @@
+import crypto from 'node:crypto'
 import bcrypt from 'bcryptjs'
 import User from '../models/User.js'
 import { generateOtpCode, hashOtp, compareOtp } from '../utils/otp.js'
@@ -9,6 +10,7 @@ import { ACCOUNT_BLOCKED_RESPONSE } from '../middleware/protect.js'
 const OTP_TTL_MS = 10 * 60 * 1000 // 10 minutes
 const OTP_RESEND_COOLDOWN_MS = 60 * 1000 // 60 seconds — backend's own copy of the frontend's timer
 const MAX_OTP_ATTEMPTS = 5
+const RESET_TOKEN_TTL_MS = 10 * 60 * 1000 // the "new password" page must be used within 10 minutes
 
 const REFRESH_COOKIE_NAME = 'refreshToken'
 const REFRESH_COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
@@ -252,9 +254,20 @@ export async function forgotPassword(req, res, next) {
   }
 }
 
-export async function resetPassword(req, res, next) {
+// Resetting a password takes two steps, so the code and the new password
+// are on separate pages:
+//   1. POST /verify-reset-code { email, code }
+//        checks the emailed code (same rules as before: expiry, 5 attempts)
+//        and swaps it for a one-time reset token, valid 10 minutes.
+//   2. POST /reset-password { email, resetToken, newPassword }
+//        sets the new password — only with that token, and only once.
+// The token is random (not a JWT) so it can be stored hashed and thrown away
+// after use: a used or expired token can never work again.
+
+// POST /api/auth/verify-reset-code
+export async function verifyResetCode(req, res, next) {
   try {
-    const { email, code, newPassword } = req.body
+    const { email, code } = req.body
     const user = await User.findOne({ email })
 
     if (!user || user.otp?.purpose !== 'reset-password' || !user.otp?.codeHash) {
@@ -274,8 +287,37 @@ export async function resetPassword(req, res, next) {
       return res.status(400).json({ message: 'Invalid or expired code.' })
     }
 
-    user.passwordHash = await bcrypt.hash(newPassword, 10)
+    // The code is used up; from now on only the reset token works.
+    const resetToken = crypto.randomBytes(32).toString('hex')
     user.otp = undefined
+    user.passwordResetTokenHash = hashToken(resetToken)
+    user.passwordResetExpiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MS)
+    await user.save()
+
+    res.status(200).json({ message: 'Code verified. Choose a new password.', resetToken })
+  } catch (err) {
+    next(err)
+  }
+}
+
+// POST /api/auth/reset-password
+export async function resetPassword(req, res, next) {
+  try {
+    const { email, resetToken, newPassword } = req.body
+    const user = await User.findOne({ email }).select('+passwordResetTokenHash')
+
+    const valid =
+      user?.passwordResetTokenHash &&
+      user.passwordResetExpiresAt > new Date() &&
+      tokenMatchesHash(resetToken, user.passwordResetTokenHash)
+    if (!valid) {
+      return res.status(400).json({ message: 'This reset session has expired. Please request a new code.' })
+    }
+
+    user.passwordHash = await bcrypt.hash(newPassword, 10)
+    // One use only: the token is deleted with the password change.
+    user.passwordResetTokenHash = undefined
+    user.passwordResetExpiresAt = undefined
     // Changing the password invalidates every existing session — anyone
     // (including whoever the password was reset against) needs to log in
     // fresh with the new one.

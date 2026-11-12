@@ -4,22 +4,22 @@ import { ReloadOutlined, WarningOutlined } from '@ant-design/icons'
 import { Link } from 'react-router-dom'
 import StoreLayout from '../components/layout/StoreLayout'
 import ProductCard from '../components/ProductCard'
-import * as wishlistApi from '../api/wishlistApi'
 import { useWishlist } from '../context/WishlistContext'
 
-// "My wishlist": the products the signed-in customer saved with the heart.
+// "My wishlist": the products saved with the heart — for guests (saved in
+// the browser) and signed-in customers alike. The product data comes from
+// WishlistContext.loadProducts(), which asks the server in both cases.
 export default function WishlistPage() {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
-  const { isSaved } = useWishlist()
+  const { owner, isGuest, isSaved, loadProducts } = useWishlist()
 
   async function loadWishlist() {
     setLoading(true)
     setLoadError(null)
     try {
-      const { data } = await wishlistApi.fetchWishlist()
-      setProducts(data.products)
+      setProducts(await loadProducts())
     } catch (err) {
       setLoadError(err?.response?.data?.message || 'Could not load your wishlist. Please try again.')
     } finally {
@@ -27,9 +27,11 @@ export default function WishlistPage() {
     }
   }
 
+  // Load once we know who is visiting, and again if that changes (sign in).
   useEffect(() => {
-    loadWishlist()
-  }, [])
+    if (owner) loadWishlist()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [owner])
 
   // Un-hearting a card on this page removes it from the context right away,
   // so we hide it here too — no need to reload the whole list.
@@ -40,7 +42,10 @@ export default function WishlistPage() {
       <section className="border-b border-line bg-surface">
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold tracking-tight text-ink">My wishlist</h1>
-          <p className="mt-2 text-subtle">Products you saved for later.</p>
+          <p className="mt-2 text-subtle">
+            Products you saved for later.
+            {isGuest && ' Sign in to keep them on every device — they move to your account automatically.'}
+          </p>
         </div>
       </section>
 

@@ -10,4 +10,7 @@ export const refreshSession = () => api.post('/auth/refresh')
 export const logoutUser = () => api.post('/auth/logout')
 export const fetchCurrentUser = () => api.get('/auth/me')
 export const forgotPassword = (payload) => api.post('/auth/forgot-password', payload)
+// Forgot password: step 1 checks the emailed code and returns a one-time
+// resetToken; step 2 sets the new password with that token.
+export const verifyResetCode = (payload) => api.post('/auth/verify-reset-code', payload)
 export const resetPassword = (payload) => api.post('/auth/reset-password', payload)

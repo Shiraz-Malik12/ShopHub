@@ -43,6 +43,11 @@ const userSchema = new mongoose.Schema(
     isVerified: { type: Boolean, default: false },
     otp: { type: otpSchema, default: undefined },
     refreshTokenHash: { type: String, select: false },
+    // Forgot-password "ticket": after the emailed code is checked, the user
+    // gets a random one-time token for the "new password" page. Only its
+    // SHA-256 hash is stored, and it expires after 10 minutes.
+    passwordResetTokenHash: { type: String, select: false },
+    passwordResetExpiresAt: { type: Date, default: undefined },
     savedAddress: { type: savedAddressSchema, default: undefined },
     // Set by the admin on the Customers page. A blocked customer can't log
     // in, and protect.js turns away any request they still make.

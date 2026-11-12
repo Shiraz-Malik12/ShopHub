@@ -10,6 +10,10 @@
 // and every piece removes itself when its animation ends.
 
 const SPARK_COLORS = ['#ff6b4a', '#ff8a6e', '#2457d6', '#5b8cff', '#ffffff']
+
+// How much longer every effect lasts than its quick base timing — one
+// place to make all the click animations slower or faster.
+const EXTRA_MS = 2000
 const SPARK_COUNT = 12
 
 function prefersReducedMotion() {
@@ -58,7 +62,7 @@ function ripple(element, { x, y, rect }) {
         { transform: 'scale(0)', opacity: 1 },
         { transform: 'scale(1)', opacity: 0 },
       ],
-      { duration: 600, easing: 'cubic-bezier(.2,.7,.3,1)' },
+      { duration: 600 + EXTRA_MS, easing: 'cubic-bezier(.2,.7,.3,1)' },
     )
     .finished.finally(() => clip.remove())
 }
@@ -67,7 +71,7 @@ function ripple(element, { x, y, rect }) {
 function sparkBurst({ x, y }) {
   for (let i = 0; i < SPARK_COUNT; i += 1) {
     const angle = (i / SPARK_COUNT) * Math.PI * 2 + Math.random() * 0.4
-    const distance = 28 + Math.random() * 30
+    const distance = 40 + Math.random() * 40
     const size = 4 + Math.random() * 4
 
     const spark = document.createElement('span')
@@ -93,7 +97,7 @@ function sparkBurst({ x, y }) {
             opacity: 0,
           },
         ],
-        { duration: 550 + Math.random() * 250, easing: 'cubic-bezier(.15,.8,.3,1)' },
+        { duration: 550 + EXTRA_MS + Math.random() * 250, easing: 'cubic-bezier(.15,.8,.3,1)' },
       )
       .finished.finally(() => spark.remove())
   }
@@ -104,7 +108,7 @@ function glowRing(element) {
   element
     .animate(
       [{ boxShadow: '0 0 0 0 rgba(255, 107, 74, 0.5)' }, { boxShadow: '0 0 0 8px rgba(255, 107, 74, 0)' }],
-      { duration: 500, easing: 'ease-out' },
+      { duration: 500 + EXTRA_MS, easing: 'ease-out' },
     )
 }
 
@@ -135,7 +139,7 @@ function addToCartPop(element) {
           { transform: 'scale(1)', opacity: 0.9 },
           { transform: 'scale(1.18, 1.6)', opacity: 0 },
         ],
-        { duration: 650, delay, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'backwards' },
+        { duration: 650 + EXTRA_MS, delay, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'backwards' },
       )
       .finished.finally(() => ring.remove())
   })
@@ -146,7 +150,7 @@ function addToCartPop(element) {
       { boxShadow: `0 0 24px 4px rgba(${blue}, 0.35)`, offset: 0.3 },
       { boxShadow: `0 0 0 0 rgba(${blue}, 0)` },
     ],
-    { duration: 700 },
+    { duration: 700 + EXTRA_MS },
   )
 
   element.querySelector('.anticon')?.animate(
@@ -156,7 +160,7 @@ function addToCartPop(element) {
       { transform: 'scale(0.9) rotate(6deg)', offset: 0.7 },
       { transform: 'scale(1) rotate(0)' },
     ],
-    { duration: 520, easing: 'ease-out' },
+    { duration: 520 + EXTRA_MS, easing: 'ease-out' },
   )
 
   const plusOne = document.createElement('span')
@@ -183,7 +187,7 @@ function addToCartPop(element) {
         { transform: 'translateY(-14px) scale(1.05)', opacity: 1, offset: 0.3 },
         { transform: 'translateY(-36px) scale(1)', opacity: 0 },
       ],
-      { duration: 900, easing: 'ease-out' },
+      { duration: 900 + EXTRA_MS, easing: 'ease-out' },
     )
     .finished.finally(() => plusOne.remove())
 }
