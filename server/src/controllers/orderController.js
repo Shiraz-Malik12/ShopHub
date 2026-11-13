@@ -5,7 +5,10 @@ import Shop from '../models/Shop.js'
 import Cart from '../models/Cart.js'
 import Product from '../models/Product.js'
 import User from '../models/User.js'
-import { sendInBackground, sendOrderPlacedEmail, sendOrderStatusEmail } from '../utils/orderEmails.js'
+import { checkoutForEmail, sendInBackground, sendOrderPlacedEmail, sendOrderStatusEmail } from '../utils/orderEmails.js'
+import { restock } from '../utils/orderStock.js'
+import { isStripeConfigured, MIN_CARD_AMOUNT } from '../utils/stripe.js'
+import { createCheckoutSession, handleCancelledOrderPayment } from '../utils/payments.js'
 import { checkCoupon, claimCouponUse, releaseCouponForCheckout, releaseCouponUse, subtotalsByShop } from '../utils/coupons.js'
 import { shopScopeOf } from '../middleware/shopScope.js'
 import { isFromSellingShop, sellingShopIds } from '../utils/customerVisibleFilter.js'
@@ -74,45 +77,27 @@ function groupCartByShop(items) {
   return groups
 }
 
-// The "order confirmed" email covers the whole checkout. With several
-// shops it lists every item together and says how many parcels to expect.
-function checkoutForEmail(orders) {
-  if (orders.length === 1) return orders[0]
-  const sum = (field) => Math.round(orders.reduce((total, order) => total + order[field], 0) * 100) / 100
-  return {
-    _id: orders[0]._id,
-    orderNumber: orders[0].checkoutId,
-    items: orders.flatMap((order) => order.items),
-    shippingAddress: orders[0].shippingAddress,
-    coupon: orders.find((order) => order.coupon)?.coupon,
-    discount: sum('discount'),
-    total: sum('total'),
-    parcelCount: orders.length,
-  }
-}
-
-// Puts stock back (order cancelled, or placing the order failed half-way).
-// Accepts cart items or order items — `product` may be a document or an id.
-async function restock(items) {
-  await Promise.all(
-    items.map((item) =>
-      Product.updateOne({ _id: item.product._id || item.product }, { $inc: { stock: item.quantity } }),
-    ),
-  )
-}
-
 function fail(status, message) {
   const error = new Error(message)
   error.status = status
   return error
 }
 
-// POST /api/orders  { shippingAddress, saveAddress?, couponCode? }
+// POST /api/orders  { shippingAddress, saveAddress?, couponCode?, paymentMethod? }
 // Turns the signed-in user's cart into an order. The items and prices come
 // from the cart and the database — never from the request — so a client
 // can't choose its own prices.
+// paymentMethod 'card': the orders are saved as "awaiting payment" and the
+// answer includes `paymentUrl`, Stripe's payment page to send the customer to.
 export async function placeOrder(req, res, next) {
   try {
+    const paymentMethod = req.body.paymentMethod || 'cod'
+    // Checked before anything is reserved, so a shop without Stripe keys
+    // never leaves an order stuck waiting for a payment it can't take.
+    if (paymentMethod === 'card' && !isStripeConfigured()) {
+      throw fail(503, 'Card payments are not available right now. Please choose cash on delivery.')
+    }
+
     const cart = await Cart.findOne({ user: req.user._id }).populate({
       path: 'items.product',
       select: 'name price stock images isActive category shop',
@@ -157,6 +142,12 @@ export async function placeOrder(req, res, next) {
       const checked = await checkCoupon(req.body.couponCode, { shopTotals, userId: req.user._id })
       if (checked.error) throw fail(400, checked.error)
       ;({ coupon, discount, shopId: couponShopId } = checked)
+    }
+
+    // Stripe can't take a card payment under $0.50 (e.g. a big coupon).
+    const cartTotal = cart.items.reduce((sum, item) => sum + item.product.price * item.quantity, 0) - discount
+    if (paymentMethod === 'card' && cartTotal < MIN_CARD_AMOUNT) {
+      throw fail(400, 'This order is too small to pay by card. Please choose cash on delivery.')
     }
 
     // 2. Take the stock. Each update only succeeds if enough stock is STILL
@@ -211,20 +202,27 @@ export async function placeOrder(req, res, next) {
       const couponFor = (part) => (couponSnapshot && (!couponShopId || part.shopId === couponShopId) ? couponSnapshot : undefined)
 
       orders = await createCheckoutOrders(
-        parts.map((part, index) => ({
-          user: req.user._id,
-          shop: part.shopId,
-          shopName: shopNameById.get(part.shopId) || 'Unknown shop',
-          items: part.items,
-          shippingAddress: req.body.shippingAddress,
-          paymentMethod: 'cod',
-          itemCount: part.items.reduce((sum, item) => sum + item.quantity, 0),
-          subtotal: part.subtotal,
-          discount: discounts[index],
-          coupon: couponFor(part),
+        parts.map((part, index) => {
           // Shipping is free for now. Rounded to cents (e.g. 10% of $18.99).
-          total: Math.round((part.subtotal - discounts[index]) * 100) / 100,
-        })),
+          const total = Math.round((part.subtotal - discounts[index]) * 100) / 100
+          return {
+            user: req.user._id,
+            shop: part.shopId,
+            shopName: shopNameById.get(part.shopId) || 'Unknown shop',
+            items: part.items,
+            shippingAddress: req.body.shippingAddress,
+            paymentMethod,
+            // A card order waits for Stripe. (A part a coupon made free has
+            // nothing to pay, so it counts as paid straight away.)
+            paymentStatus: paymentMethod === 'cod' ? 'cod' : total > 0 ? 'awaiting' : 'paid',
+            paidAt: paymentMethod === 'card' && total === 0 ? new Date() : undefined,
+            itemCount: part.items.reduce((sum, item) => sum + item.quantity, 0),
+            subtotal: part.subtotal,
+            discount: discounts[index],
+            coupon: couponFor(part),
+            total,
+          }
+        }),
       )
     } catch (err) {
       await restock(reserved)
@@ -243,12 +241,37 @@ export async function placeOrder(req, res, next) {
       await User.updateOne({ _id: req.user._id }, { savedAddress: { fullName, phone, addressLine, city, postalCode } })
     }
 
-    // 6. One "order confirmed" email for the whole checkout (in the
-    //    background — never delays or breaks the order).
-    sendInBackground(sendOrderPlacedEmail(checkoutForEmail(orders), req.user))
+    // 6a. Cash on delivery: one "order confirmed" email for the whole
+    //     checkout (in the background — never delays or breaks the order).
+    if (paymentMethod === 'cod') {
+      sendInBackground(sendOrderPlacedEmail(checkoutForEmail(orders), req.user))
+      // `order` (the first one) is kept so older screens still find an order.
+      return res.status(201).json({ message: 'Order placed', checkoutId: orders[0].checkoutId, order: orders[0], orders })
+    }
 
-    // `order` (the first one) is kept so older screens still find an order.
-    res.status(201).json({ message: 'Order placed', checkoutId: orders[0].checkoutId, order: orders[0], orders })
+    // 6b. Card: open Stripe's payment page. The "confirmed" email waits until
+    //     Stripe says it's paid (see utils/payments.js). If Stripe can't be
+    //     reached right now, the order still exists and the customer can try
+    //     again with "Pay now" on the order page.
+    let paymentUrl = null
+    let paymentError = null
+    try {
+      paymentUrl = await createCheckoutSession(
+        orders.filter((order) => order.paymentStatus === 'awaiting'),
+        req.user,
+      )
+    } catch (err) {
+      console.error('[payments] Could not open the payment page:', err.message)
+      paymentError = 'We could not open the payment page. Please try "Pay now" on your order.'
+    }
+    res.status(201).json({
+      message: 'Order placed — waiting for payment',
+      checkoutId: orders[0].checkoutId,
+      order: orders[0],
+      orders,
+      paymentUrl,
+      paymentError,
+    })
   } catch (err) {
     next(err)
   }
@@ -293,7 +316,7 @@ export async function getOrder(req, res, next) {
     // say "this purchase came in 2 parcels" and link to the rest.
     const siblings = await Order.find({ checkoutId: order.checkoutId, _id: { $ne: order._id } })
       .sort({ orderNumber: 1 })
-      .select('orderNumber shopName status total itemCount')
+      .select('orderNumber shopName status total itemCount paymentStatus')
     res.status(200).json({ order, siblings })
   } catch (err) {
     next(err)
@@ -321,8 +344,11 @@ export async function cancelMyOrder(req, res, next) {
 
     await restock(order.items)
     await releaseCouponForCheckout(order) // the coupon comes back once the whole checkout is cancelled
-    sendInBackground(sendOrderStatusEmail(order, req.user))
-    res.status(200).json({ message: 'Order cancelled', order })
+    // Paid by card → refund it; still waiting for payment → close the payment page.
+    await handleCancelledOrderPayment(order)
+    const updated = await Order.findById(order._id)
+    sendInBackground(sendOrderStatusEmail(updated, req.user))
+    res.status(200).json({ message: 'Order cancelled', order: updated })
   } catch (err) {
     next(err)
   }
@@ -343,6 +369,11 @@ export async function updateOrderStatus(req, res, next) {
     if (!NEXT_STATUSES[current.status].includes(status)) {
       throw fail(400, `An order that is ${current.status} cannot be changed to ${status}.`)
     }
+    // A card order is only packed and sent once Stripe confirmed the money.
+    // (Cancelling it is always allowed.)
+    if (current.paymentStatus === 'awaiting' && status !== 'cancelled') {
+      throw fail(409, "This order hasn't been paid yet. Wait for the payment before preparing it.")
+    }
 
     // Only apply the change if the status is still what we just read, so two
     // admins acting at once can't both move (or both cancel) the same order.
@@ -356,17 +387,21 @@ export async function updateOrderStatus(req, res, next) {
       throw fail(409, 'This order was just updated by someone else. Please refresh.')
     }
 
+    let result = order
     if (status === 'cancelled') {
       await restock(order.items)
       await releaseCouponForCheckout(order)
+      // Paid by card → refund this shop's part; unpaid → close the payment page.
+      await handleCancelledOrderPayment(order)
+      result = await Order.findById(order._id).populate('user', 'name email')
     }
 
     // Tell the customer (skipped if their account no longer exists).
-    if (order.user?.email) {
-      sendInBackground(sendOrderStatusEmail(order, order.user))
+    if (result.user?.email) {
+      sendInBackground(sendOrderStatusEmail(result, result.user))
     }
 
-    res.status(200).json({ message: 'Order updated', order })
+    res.status(200).json({ message: 'Order updated', order: result })
   } catch (err) {
     next(err)
   }

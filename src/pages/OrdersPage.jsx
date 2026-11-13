@@ -4,6 +4,7 @@ import { ReloadOutlined, RightOutlined, WarningOutlined } from '@ant-design/icon
 import { Link } from 'react-router-dom'
 import StoreLayout from '../components/layout/StoreLayout'
 import OrderStatusTag from '../components/OrderStatusTag'
+import PaymentStatusTag from '../components/PaymentStatusTag'
 import ProductImage from '../components/ProductImage'
 import * as orderApi from '../api/orderApi'
 import { formatDate } from '../utils/formatDate'
@@ -117,7 +118,10 @@ export default function OrdersPage() {
                             Sold by <span className="font-medium text-ink">{order.shopName}</span>
                             {checkout.orders.length > 1 && <span className="text-faint"> · {order.orderNumber}</span>}
                           </p>
-                          <OrderStatusTag status={order.status} />
+                          <span className="flex gap-1">
+                            {order.paymentMethod === 'card' && <PaymentStatusTag status={order.paymentStatus} />}
+                            <OrderStatusTag status={order.status} />
+                          </span>
                         </div>
 
                         <div className="mt-3 flex items-center justify-between gap-4">

@@ -80,7 +80,7 @@ function layout({ headline, intro, order, showItems }) {
              <p style="margin-top:16px;"><strong>Deliver to</strong><br/>
                ${escapeHtml(address.fullName)}<br/>${escapeHtml(address.addressLine)}<br/>${escapeHtml(address.city)}<br/>${escapeHtml(address.phone)}
              </p>
-             <p>Payment: cash on delivery</p>`
+             <p>Payment: ${order.paymentMethod === 'card' ? 'paid by card' : 'cash on delivery'}</p>`
           : `<p>Total: <strong>${formatPrice(order.total)}</strong></p>`
       }
       <p style="margin-top:24px;">
@@ -93,7 +93,26 @@ function layout({ headline, intro, order, showItems }) {
 function plainText({ headline, intro, order }) {
   const lines = order.items.map((item) => `- ${item.name} x ${item.quantity}: ${formatPrice(item.lineTotal)}`)
   if (order.discount > 0) lines.push(`Discount (${order.coupon?.code || 'coupon'}): -${formatPrice(order.discount)}`)
-  return [headline, '', intro, '', `Order ${order.orderNumber}`, ...lines, `Total: ${formatPrice(order.total)}`, '', `View your order: ${orderUrl(order)}`].join('\n')
+  const payment = `Payment: ${order.paymentMethod === 'card' ? 'paid by card' : 'cash on delivery'}`
+  return [headline, '', intro, '', `Order ${order.orderNumber}`, ...lines, `Total: ${formatPrice(order.total)}`, payment, '', `View your order: ${orderUrl(order)}`].join('\n')
+}
+
+// The "order confirmed" email covers the whole checkout. With several
+// shops it lists every item together and says how many parcels to expect.
+export function checkoutForEmail(orders) {
+  if (orders.length === 1) return orders[0]
+  const sum = (field) => Math.round(orders.reduce((total, order) => total + order[field], 0) * 100) / 100
+  return {
+    _id: orders[0]._id,
+    orderNumber: orders[0].checkoutId,
+    items: orders.flatMap((order) => order.items),
+    shippingAddress: orders[0].shippingAddress,
+    coupon: orders.find((order) => order.coupon)?.coupon,
+    discount: sum('discount'),
+    total: sum('total'),
+    parcelCount: orders.length,
+    paymentMethod: orders[0].paymentMethod,
+  }
 }
 
 // "Build" and "send" are separate so an email can be checked or previewed
@@ -123,7 +142,9 @@ export function buildOrderPlacedEmail(order, customer) {
 export function buildOrderStatusEmail(order, customer) {
   const copy = STATUS_COPY[order.status]
   if (!copy) return null
-  const content = { headline: copy.headline, intro: `Hi ${customer.name}, ${copy.message}`, order }
+  // A card order is already paid — don't ask them to have cash ready.
+  const message = order.paymentMethod === 'card' ? copy.message.replace(' Please keep cash ready for delivery.', '') : copy.message
+  const content = { headline: copy.headline, intro: `Hi ${customer.name}, ${message}`, order }
   return {
     to: customer.email,
     subject: `Your order ${order.orderNumber} ${copy.subject}`,

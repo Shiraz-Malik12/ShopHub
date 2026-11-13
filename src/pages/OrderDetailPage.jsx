@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Alert, App as AntdApp, Button, Popconfirm, Skeleton, Steps } from 'antd'
 import { ArrowLeftOutlined } from '@ant-design/icons'
-import { Link, useLocation, useParams } from 'react-router-dom'
+import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom'
+import PaymentStatusTag from '../components/PaymentStatusTag'
+import * as paymentApi from '../api/paymentApi'
 import StoreLayout from '../components/layout/StoreLayout'
 import OrderStatusTag from '../components/OrderStatusTag'
 import ProductImage from '../components/ProductImage'
@@ -25,6 +27,13 @@ export default function OrderDetailPage() {
   const [loadError, setLoadError] = useState(null)
   const [cancelling, setCancelling] = useState(false)
 
+  const [paying, setPaying] = useState(false)
+  // Stripe sends the customer back here with ?payment=success or
+  // ?payment=cancelled. That's only a HINT for which message to show —
+  // whether it's really paid always comes from the server.
+  const [searchParams] = useSearchParams()
+  const paymentReturn = searchParams.get('payment')
+
   const justPlaced = Boolean(location.state?.justPlaced)
 
   useEffect(() => {
@@ -32,7 +41,13 @@ export default function OrderDetailPage() {
       setLoading(true)
       setLoadError(null)
       try {
-        const { data } = await orderApi.fetchOrder(id)
+        let { data } = await orderApi.fetchOrder(id)
+        // Still waiting for payment? Ask the server to check with Stripe
+        // (the customer may have just paid), then load the fresh order.
+        if (data.order.paymentStatus === 'awaiting') {
+          await paymentApi.fetchCheckoutPayment(data.order.checkoutId).catch(() => {})
+          ;({ data } = await orderApi.fetchOrder(id))
+        }
         setOrder(data.order)
         setSiblings(data.siblings || [])
       } catch (err) {
@@ -43,6 +58,23 @@ export default function OrderDetailPage() {
     }
     loadOrder()
   }, [id])
+
+  // "Pay now": a fresh Stripe payment page for whatever is still unpaid.
+  async function handlePayNow() {
+    setPaying(true)
+    try {
+      const { data } = await paymentApi.payCheckout(order.checkoutId)
+      if (data.paymentUrl) {
+        window.location.assign(data.paymentUrl)
+        return
+      }
+      message.success(data.message || 'This order is already paid.')
+      window.location.reload()
+    } catch (err) {
+      message.error(err?.response?.data?.message || 'Could not open the payment page. Please try again.')
+      setPaying(false)
+    }
+  }
 
   async function handleCancel() {
     setCancelling(true)
@@ -59,7 +91,9 @@ export default function OrderDetailPage() {
   }
 
   // Only the customer who placed it can cancel, and only while it is pending.
-  const canCancel = order?.status === 'pending' && order?.user?._id === user?.id
+  const isOwner = order?.user?._id === user?.id
+  const canCancel = order?.status === 'pending' && isOwner
+  const awaitingPayment = order?.paymentStatus === 'awaiting' && order?.status === 'pending'
 
   return (
     <StoreLayout>
@@ -83,7 +117,7 @@ export default function OrderDetailPage() {
           </div>
         ) : (
           <>
-            {justPlaced && (
+            {justPlaced && order.paymentMethod === 'cod' && (
               <Alert
                 type="success"
                 showIcon
@@ -93,6 +127,41 @@ export default function OrderDetailPage() {
                   siblings.length > 0
                     ? `Your items come from ${siblings.length + 1} shops, so they arrive in ${siblings.length + 1} parcels. You pay in cash for each one when it is delivered.`
                     : 'You will pay in cash when it is delivered. You can follow its progress on this page.'
+                }
+              />
+            )}
+
+            {/* Back from Stripe and the server confirmed the payment. */}
+            {paymentReturn === 'success' && order.paymentStatus === 'paid' && (
+              <Alert
+                type="success"
+                showIcon
+                className="mt-6"
+                title="Payment received — thank you!"
+                description={
+                  siblings.length > 0
+                    ? `Your items come from ${siblings.length + 1} shops, so they arrive in ${siblings.length + 1} parcels. We've emailed you a confirmation.`
+                    : "We've emailed you a confirmation. You can follow your order's progress on this page."
+                }
+              />
+            )}
+
+            {/* Card order not paid yet: explain, and offer to pay. */}
+            {awaitingPayment && isOwner && (
+              <Alert
+                type="warning"
+                showIcon
+                className="mt-6"
+                title={paymentReturn === 'success' ? "We're still confirming your payment" : 'This order is waiting for payment'}
+                description={
+                  paymentReturn === 'success'
+                    ? 'Stripe is still processing it. Refresh this page in a moment.'
+                    : 'Your items are reserved for a short time. Pay now to confirm the order, or cancel it.'
+                }
+                action={
+                  <Button type="primary" size="small" loading={paying} onClick={handlePayNow}>
+                    Pay now
+                  </Button>
                 }
               />
             )}
@@ -112,6 +181,7 @@ export default function OrderDetailPage() {
               </div>
               <div className="flex items-center gap-3">
                 <OrderStatusTag status={order.status} />
+                {order.paymentMethod === 'card' && <PaymentStatusTag status={order.paymentStatus} />}
                 {canCancel && (
                   <Popconfirm
                     title="Cancel this order?"
@@ -147,6 +217,7 @@ export default function OrderDetailPage() {
                         </span>
                         <span className="flex items-center gap-3">
                           <span className="text-sm font-medium text-ink">{formatPrice(sibling.total)}</span>
+                          {sibling.paymentStatus && sibling.paymentStatus !== 'cod' && <PaymentStatusTag status={sibling.paymentStatus} />}
                           <OrderStatusTag status={sibling.status} />
                         </span>
                       </Link>
@@ -231,7 +302,9 @@ export default function OrderDetailPage() {
                     </div>
                     <div className="flex justify-between">
                       <dt className="text-subtle">Payment</dt>
-                      <dd className="font-medium text-ink">Cash on delivery</dd>
+                      <dd className="font-medium text-ink">
+                        {order.paymentMethod === 'card' ? <PaymentStatusTag status={order.paymentStatus} /> : 'Cash on delivery'}
+                      </dd>
                     </div>
                   </dl>
                 </div>

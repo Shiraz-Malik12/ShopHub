@@ -42,6 +42,20 @@ export function checkEnv(env = process.env) {
     problems.push('ACCESS_TOKEN_SECRET and REFRESH_TOKEN_SECRET must be different.')
   }
 
+  // Stripe (optional). A LIVE key outside production means real cards would
+  // be charged while you're testing — almost always a mistake.
+  const stripeKey = env.STRIPE_SECRET_KEY
+  if (stripeKey) {
+    if (!/^sk_(test|live)_/.test(stripeKey)) {
+      problems.push('STRIPE_SECRET_KEY must start with sk_test_ or sk_live_ (the SECRET key, not the publishable pk_ one).')
+    } else if (stripeKey.startsWith('sk_live_') && !isProduction) {
+      warnings.push('STRIPE_SECRET_KEY is a LIVE key but NODE_ENV is not production — real cards would be charged. Use an sk_test_ key while developing.')
+    }
+    if (isProduction && !env.STRIPE_WEBHOOK_SECRET) {
+      problems.push('STRIPE_WEBHOOK_SECRET is missing — a live shop needs Stripe webhooks to confirm payments.')
+    }
+  }
+
   if (isProduction) {
     for (const name of REQUIRED_IN_PRODUCTION) {
       if (!env[name]) problems.push(`${name} is missing (required when NODE_ENV=production).`)

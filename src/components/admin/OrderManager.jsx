@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Alert, App as AntdApp, Button, Empty, Popconfirm, Select, Space, Table } from 'antd'
 import PageHeader from '../layout/PageHeader'
 import OrderStatusTag from '../OrderStatusTag'
+import PaymentStatusTag from '../PaymentStatusTag'
 import ProductImage from '../ProductImage'
 import { formatDate } from '../../utils/formatDate'
 import { formatPrice } from '../../utils/formatPrice'
@@ -109,10 +110,21 @@ export default function OrderManager({ api, title, description, showShop = false
       render: (status) => <OrderStatusTag status={status} />,
     },
     {
+      title: 'Payment',
+      dataIndex: 'paymentStatus',
+      key: 'payment',
+      render: (paymentStatus) => <PaymentStatusTag status={paymentStatus} />,
+    },
+    {
       title: 'Actions',
       key: 'actions',
       render: (_, order) => {
-        const nextStatuses = NEXT_STATUSES[order.status]
+        // A card order waiting for payment can only be cancelled — it is
+        // packed once Stripe confirms the money (the server enforces this too).
+        const nextStatuses =
+          order.paymentStatus === 'awaiting'
+            ? NEXT_STATUSES[order.status].filter((status) => status === 'cancelled')
+            : NEXT_STATUSES[order.status]
         if (nextStatuses.length === 0) return <span className="text-xs text-faint">No actions</span>
         return (
           <Space>
@@ -184,7 +196,7 @@ export default function OrderManager({ api, title, description, showShop = false
             {address.notes && <p className="pt-1 italic">“{address.notes}”</p>}
           </address>
           <p className="mt-3 text-sm text-subtle">
-            Payment: <span className="text-ink">Cash on delivery</span>
+            Payment: <span className="text-ink">{order.paymentMethod === 'card' ? 'Card (Stripe)' : 'Cash on delivery'}</span>
           </p>
           {order.discount > 0 && (
             <p className="mt-1 text-sm text-subtle">
@@ -228,7 +240,7 @@ export default function OrderManager({ api, title, description, showShop = false
             dataSource={orders}
             loading={loading}
             pagination={false}
-            scroll={{ x: showShop ? 960 : 820 }}
+            scroll={{ x: showShop ? 1080 : 940 }}
             expandable={{ expandedRowRender: renderOrderDetails }}
             locale={{ emptyText: <Empty description={loading ? 'Loading orders...' : 'No orders yet'} /> }}
           />

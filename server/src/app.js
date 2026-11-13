@@ -21,6 +21,8 @@ import profileRoutes from './routes/profileRoutes.js'
 import shopRoutes from './routes/shopRoutes.js'
 import adminShopRoutes from './routes/adminShopRoutes.js'
 import sellerRoutes from './routes/sellerRoutes.js'
+import paymentRoutes from './routes/paymentRoutes.js'
+import { handleStripeWebhook } from './controllers/paymentController.js'
 import { LOCAL_UPLOADS_DIR } from './utils/cloudinaryUpload.js'
 import { notFound, errorHandler } from './middleware/errorHandler.js'
 
@@ -68,6 +70,11 @@ app.use(
 // credentials: true is required for the browser to send/receive the
 // httpOnly refresh-token cookie (matches axios's withCredentials: true).
 app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }))
+
+// Stripe's webhook BEFORE express.json(): checking Stripe's signature needs
+// the body exactly as it arrived (raw bytes), not parsed into an object.
+app.post('/api/payments/webhook', express.raw({ type: 'application/json', limit: '1mb' }), handleStripeWebhook)
+
 app.use(express.json())
 app.use(cookieParser())
 if (process.env.NODE_ENV !== 'test') {
@@ -88,6 +95,7 @@ app.use('/api/admin/customers', customerRoutes)
 app.use('/api/shops', shopRoutes)
 app.use('/api/admin/shops', adminShopRoutes)
 app.use('/api/seller', sellerRoutes)
+app.use('/api/payments', paymentRoutes)
 app.use('/api/admin', dashboardRoutes)
 app.use('/api/profile', profileRoutes)
 app.use('/api/messages', messageRoutes)

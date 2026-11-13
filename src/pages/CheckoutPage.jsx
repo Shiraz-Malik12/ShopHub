@@ -1,15 +1,36 @@
 import { useEffect, useState } from 'react'
-import { Alert, App as AntdApp, Button, Checkbox, Form, Input, Skeleton } from 'antd'
-import { ArrowLeftOutlined, DollarOutlined, LockOutlined } from '@ant-design/icons'
+import { Alert, App as AntdApp, Button, Checkbox, Form, Input, Radio, Skeleton } from 'antd'
+import { ArrowLeftOutlined, CreditCardOutlined, DollarOutlined, LockOutlined } from '@ant-design/icons'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import StoreLayout from '../components/layout/StoreLayout'
 import ProductImage from '../components/ProductImage'
 import CouponBox from '../components/CouponBox'
 import * as couponApi from '../api/couponApi'
 import * as orderApi from '../api/orderApi'
+import * as paymentApi from '../api/paymentApi'
 import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
 import { formatPrice } from '../utils/formatPrice'
+
+// One choice in the Payment box: a radio button wrapped in a card.
+function PaymentOption({ value, selected, icon, title, text }) {
+  return (
+    <Radio
+      value={value}
+      className={`!m-0 w-full rounded-lg border p-4 ${selected ? 'border-link/40 bg-link/10' : 'border-line'}`}
+    >
+      <span className="ml-1 flex items-center gap-4">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-link/20 text-lg text-link-hover">
+          {icon}
+        </span>
+        <span>
+          <span className="block font-semibold text-ink">{title}</span>
+          <span className="block text-sm text-subtle">{text}</span>
+        </span>
+      </span>
+    </Radio>
+  )
+}
 
 // Step between the cart and an order: the customer gives a delivery
 // address and confirms. Only the address is sent — the server builds the
@@ -26,6 +47,16 @@ export default function CheckoutPage() {
 
   // The server's answer to "Apply coupon" ({ coupon, subtotal, discount, total }), or null.
   const [appliedCoupon, setAppliedCoupon] = useState(null)
+
+  // 'cod' or 'card'. Card is only offered when the server has Stripe set up.
+  const [paymentMethod, setPaymentMethod] = useState('cod')
+  const [paymentConfig, setPaymentConfig] = useState(null)
+  useEffect(() => {
+    paymentApi
+      .fetchPaymentConfig()
+      .then(({ data }) => setPaymentConfig(data))
+      .catch(() => setPaymentConfig({ cardEnabled: false }))
+  }, [])
 
   const hasUnavailableItems = cart.items.some((item) => !item.available)
   const total = appliedCoupon ? appliedCoupon.total : cart.subtotal
@@ -55,10 +86,17 @@ export default function CheckoutPage() {
     try {
       // The checkbox isn't part of the address — split it off before sending.
       const { saveAddress, ...shippingAddress } = values
-      const { data } = await orderApi.placeOrder(shippingAddress, saveAddress, appliedCoupon?.coupon.code)
+      const { data } = await orderApi.placeOrder(shippingAddress, saveAddress, appliedCoupon?.coupon.code, paymentMethod)
       setOrderPlaced(true)
       await refresh().catch(() => {}) // the server emptied the cart — reload it
       if (saveAddress) await refreshUser().catch(() => {}) // pick up the newly saved address
+      // Card: leave the shop for Stripe's payment page. Stripe sends the
+      // customer back to the order page afterwards.
+      if (data.paymentUrl) {
+        window.location.assign(data.paymentUrl)
+        return
+      }
+      if (data.paymentError) message.warning(data.paymentError)
       navigate(`/orders/${data.order._id}`, { replace: true, state: { justPlaced: true } })
     } catch (err) {
       message.error(err?.response?.data?.message || 'Could not place your order. Please try again.')
@@ -165,15 +203,39 @@ export default function CheckoutPage() {
 
               <div className="rounded-2xl border border-line bg-surface shadow-card p-6">
                 <h2 className="text-lg font-semibold text-ink">Payment</h2>
-                <div className="mt-4 flex items-center gap-4 rounded-lg border border-link/40 bg-link/10 p-4">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-link/20 text-lg text-link-hover">
-                    <DollarOutlined />
-                  </span>
-                  <div>
-                    <p className="font-semibold text-ink">Cash on delivery</p>
-                    <p className="text-sm text-subtle">Pay in cash when your order arrives.</p>
-                  </div>
-                </div>
+                <Radio.Group
+                  value={paymentMethod}
+                  onChange={(event) => setPaymentMethod(event.target.value)}
+                  className="mt-4 flex w-full flex-col gap-3"
+                  aria-label="Payment method"
+                >
+                  <PaymentOption
+                    value="cod"
+                    selected={paymentMethod === 'cod'}
+                    icon={<DollarOutlined />}
+                    title="Cash on delivery"
+                    text="Pay in cash when your order arrives."
+                  />
+                  {/* Only offered when the shop has Stripe set up. */}
+                  {paymentConfig?.cardEnabled && (
+                    <PaymentOption
+                      value="card"
+                      selected={paymentMethod === 'card'}
+                      icon={<CreditCardOutlined />}
+                      title="Pay by card"
+                      text="You'll pay securely on Stripe's page, then come back here."
+                    />
+                  )}
+                </Radio.Group>
+                {paymentMethod === 'card' && paymentConfig?.testMode && (
+                  <Alert
+                    type="info"
+                    showIcon
+                    className="mt-4"
+                    title="Test mode — no real money"
+                    description="Use the test card 4242 4242 4242 4242, any future expiry date and any CVC."
+                  />
+                )}
               </div>
             </div>
 
@@ -244,7 +306,7 @@ export default function CheckoutPage() {
                 disabled={hasUnavailableItems}
                 className="mt-6"
               >
-                Place order
+                {paymentMethod === 'card' ? 'Place order and pay' : 'Place order'}
               </Button>
 
               <Link to="/cart" className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-link hover:text-highlight">

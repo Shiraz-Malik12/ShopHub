@@ -1,6 +1,8 @@
 import mongoose from 'mongoose'
 
 export const ORDER_STATUSES = ['pending', 'processing', 'shipped', 'delivered', 'cancelled']
+export const PAYMENT_METHODS = ['cod', 'card']
+export const PAYMENT_STATUSES = ['cod', 'awaiting', 'paid', 'unpaid', 'refunded', 'refund_failed']
 
 // Which status an order may move to next. An order only moves forward;
 // 'delivered' and 'cancelled' are final. Once shipped it can no longer be
@@ -71,8 +73,29 @@ const orderSchema = new mongoose.Schema(
       validate: { validator: (items) => items.length > 0, message: 'An order needs at least one item' },
     },
     shippingAddress: { type: shippingAddressSchema, required: true },
-    // Only cash on delivery for now; online payment will add more options.
-    paymentMethod: { type: String, enum: ['cod'], default: 'cod' },
+    // cod = cash on delivery; card = paid online through Stripe.
+    paymentMethod: { type: String, enum: PAYMENT_METHODS, default: 'cod' },
+    // Where the money stands (separate from `status`, which is delivery):
+    //   cod           cash on delivery — nothing to pay online
+    //   awaiting      card order placed, customer hasn't paid yet
+    //   paid          Stripe confirmed the payment
+    //   unpaid        cancelled (or the payment page expired) before paying
+    //   refunded      was paid, then cancelled — the money went back
+    //   refund_failed was paid and cancelled, but Stripe refused the refund:
+    //                 the admin has to look at it in the Stripe dashboard
+    paymentStatus: { type: String, enum: PAYMENT_STATUSES, default: 'cod', index: true },
+    // Stripe's ids, to look the payment up or refund it later. One Checkout
+    // Session pays for every order of the checkout (all shops together).
+    stripe: {
+      checkoutSessionId: { type: String, default: undefined, index: true },
+      paymentIntentId: { type: String, default: undefined },
+      refundId: { type: String, default: undefined },
+      // Set when WE closed the payment page on purpose (a part was cancelled,
+      // or the customer opened a fresh one), so Stripe's "expired" message
+      // for it doesn't cancel the orders still waiting to be paid.
+      closedSessionId: { type: String, default: undefined },
+    },
+    paidAt: { type: Date, default: undefined },
     status: { type: String, enum: ORDER_STATUSES, default: 'pending', index: true },
     itemCount: { type: Number, required: true, min: 1 },
     subtotal: { type: Number, required: true, min: 0 },
