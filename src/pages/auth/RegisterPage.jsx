@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Form, Input, Button, App as AntdApp } from 'antd'
+import { Form, Input, Button, Segmented, App as AntdApp } from 'antd'
 import { UserAddOutlined } from '@ant-design/icons'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import AuthLayout from '../../components/auth/AuthLayout'
@@ -7,6 +7,9 @@ import { useAuth } from '../../context/AuthContext'
 
 export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
+  // 'shop' or 'sell'. Only decides where to go after sign-up; it isn't sent
+  // to the server (a seller is a normal account whose shop got approved).
+  const [goal, setGoal] = useState('shop')
   const { register } = useAuth()
   const navigate = useNavigate()
   // Where the visitor was going before signing up (e.g. /checkout) — handed
@@ -25,7 +28,10 @@ export default function RegisterPage() {
         password: values.password,
       })
       message.success('OTP sent to your email')
-      navigate('/verify-otp', { state: { email: data?.email ?? values.email, from: state?.from } })
+      // "Shop and sell": once the email is verified, go straight to the
+      // shop application. Everyone gets the same kind of account either way.
+      const from = goal === 'sell' ? { pathname: '/open-shop' } : state?.from
+      navigate('/verify-otp', { state: { email: data?.email ?? values.email, from } })
     } catch (err) {
       message.error(err?.response?.data?.message || 'Registration failed. Please try again.')
     } finally {
@@ -36,6 +42,19 @@ export default function RegisterPage() {
   return (
     <AuthLayout title="Create your account" subtitle="Start shopping with ShopHub">
       <Form layout="vertical" onFinish={onFinish} requiredMark={false}>
+        <Form.Item label="I want to">
+          <Segmented
+            block
+            size="large"
+            value={goal}
+            onChange={setGoal}
+            options={[
+              { value: 'shop', label: 'Just shop' },
+              { value: 'sell', label: 'Shop and sell' },
+            ]}
+          />
+        </Form.Item>
+
         <Form.Item
           name="name"
           label="Full name"

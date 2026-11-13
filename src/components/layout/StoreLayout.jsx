@@ -85,6 +85,12 @@ export default function StoreLayout({ children }) {
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-sm text-subtle sm:flex-row sm:px-6 lg:px-8">
           <span>© {new Date().getFullYear()} ShopHub. All rights reserved.</span>
           <Link to="/products" className="hover:text-highlight">Shop all products</Link>
+          {/* Guests are sent to sign in first, then come back here. */}
+          {user?.role !== 'admin' && (
+            <Link to="/open-shop" className="hover:text-highlight">
+              {user?.role === 'seller' ? 'My shop' : 'Sell on ShopHub'}
+            </Link>
+          )}
           <Link to="/contact" className="hover:text-highlight">Contact us</Link>
         </div>
       </footer>

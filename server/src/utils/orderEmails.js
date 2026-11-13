@@ -30,7 +30,7 @@ const formatPrice = (value) => priceFormatter.format(value)
 
 // Names and addresses are typed by customers. Escaping them stops someone
 // from putting HTML (fake links, hidden text...) inside an email we send.
-function escapeHtml(value = '') {
+export function escapeHtml(value = '') {
   return String(value)
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')

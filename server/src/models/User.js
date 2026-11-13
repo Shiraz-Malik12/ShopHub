@@ -1,5 +1,10 @@
 import mongoose from 'mongoose'
 
+export const USER_ROLES = ['customer', 'seller', 'admin']
+// People who buy things. A seller is still a shopper, so anything that
+// means "customers" (the admin's Customers page, dashboard counts) uses this.
+export const SHOPPER_ROLES = ['customer', 'seller']
+
 // Embedded, not a separate collection: an OTP only ever belongs to one
 // user and has no lifecycle of its own, so there's nothing a join buys us.
 const otpSchema = new mongoose.Schema(
@@ -39,7 +44,10 @@ const userSchema = new mongoose.Schema(
     // select: false — never returned by a plain find()/findOne(); callers
     // that need it ask explicitly via .select('+passwordHash').
     passwordHash: { type: String, required: true, select: false },
-    role: { type: String, enum: ['customer', 'admin'], default: 'customer' },
+    // customer: shops.  seller: has an APPROVED shop (and can still shop).
+    // admin: runs the whole marketplace. Nobody signs up as a seller
+    // directly — the role is set when the admin approves their shop.
+    role: { type: String, enum: USER_ROLES, default: 'customer' },
     isVerified: { type: Boolean, default: false },
     otp: { type: otpSchema, default: undefined },
     refreshTokenHash: { type: String, select: false },

@@ -1,5 +1,8 @@
-import User from '../models/User.js'
+import User, { SHOPPER_ROLES } from '../models/User.js'
 import Order from '../models/Order.js'
+
+// Sellers are shoppers too, so they're listed (and can be blocked) here.
+const SHOPPER_FILTER = { $in: SHOPPER_ROLES }
 
 export const DEFAULT_CUSTOMER_PAGE_SIZE = 10
 const CUSTOMER_ORDERS_LIMIT = 50
@@ -61,7 +64,7 @@ export async function listCustomers(req, res, next) {
     const page = req.query.page || 1
     const limit = req.query.limit || DEFAULT_CUSTOMER_PAGE_SIZE
 
-    const filter = { role: 'customer' }
+    const filter = { role: SHOPPER_FILTER }
     if (search) {
       const pattern = new RegExp(escapeRegex(search), 'i')
       filter.$or = [{ name: pattern }, { email: pattern }]
@@ -94,7 +97,7 @@ export async function listCustomers(req, res, next) {
 // GET /api/admin/customers/:id — one customer, their saved address and orders.
 export async function getCustomer(req, res, next) {
   try {
-    const user = await User.findOne({ _id: req.params.id, role: 'customer' })
+    const user = await User.findOne({ _id: req.params.id, role: SHOPPER_FILTER })
     if (!user) throw fail(404, 'Customer not found.')
 
     const [orders, [stats]] = await Promise.all([
@@ -123,9 +126,9 @@ export async function setCustomerBlocked(req, res, next) {
       ? { $set: { isBlocked: true, blockedAt: new Date() }, $unset: { refreshTokenHash: 1 } }
       : { $set: { isBlocked: false }, $unset: { blockedAt: 1 } }
 
-    // role: 'customer' in the filter means an admin can never block another
+    // Only shoppers match the filter, so an admin can never block another
     // admin (or themselves) — such an id simply isn't found.
-    const user = await User.findOneAndUpdate({ _id: req.params.id, role: 'customer' }, update, { new: true })
+    const user = await User.findOneAndUpdate({ _id: req.params.id, role: SHOPPER_FILTER }, update, { new: true })
     if (!user) throw fail(404, 'Customer not found.')
 
     res.status(200).json({

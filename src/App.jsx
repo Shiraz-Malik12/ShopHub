@@ -25,6 +25,8 @@ import ProtectedRoute from './routes/ProtectedRoute'
 import PublicRoute from './routes/PublicRoute'
 import AdminRoute from './routes/AdminRoute'
 import ContactPage from './pages/ContactPage'
+import OpenShopPage from './pages/OpenShopPage'
+import ShopsPage from './pages/admin/ShopsPage'
 
 function App() {
   return (
@@ -62,11 +64,14 @@ function App() {
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/orders" element={<OrdersPage />} />
         <Route path="/orders/:id" element={<OrderDetailPage />} />
+        {/* Apply to sell, then see the application's status. */}
+        <Route path="/open-shop" element={<OpenShopPage />} />
       </Route>
 
       <Route element={<AdminRoute />}>
         <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
         <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+        <Route path="/admin/shops" element={<ShopsPage />} />
         <Route path="/admin/categories" element={<CategoriesPage />} />
         <Route path="/admin/products" element={<ProductsPage />} />
         <Route path="/admin/orders" element={<AdminOrdersPage />} />

@@ -1,6 +1,6 @@
 import Order, { ORDER_STATUSES } from '../models/Order.js'
 import Product from '../models/Product.js'
-import User from '../models/User.js'
+import User, { SHOPPER_ROLES } from '../models/User.js'
 
 // A product with this many (or fewer) left is listed as "low stock".
 export const LOW_STOCK_THRESHOLD = 5
@@ -16,7 +16,7 @@ export async function getDashboard(req, res, next) {
       // One row per status: how many orders, and how much money.
       Order.aggregate([{ $group: { _id: '$status', count: { $sum: 1 }, total: { $sum: '$total' } } }]),
       Product.countDocuments({ isActive: true }),
-      User.countDocuments({ role: 'customer' }),
+      User.countDocuments({ role: { $in: SHOPPER_ROLES } }),
       Order.find({})
         .populate('user', 'name email')
         .sort({ createdAt: -1 })
