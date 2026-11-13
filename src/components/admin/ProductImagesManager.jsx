@@ -1,12 +1,12 @@
 import { useRef, useState } from 'react'
 import { App as AntdApp, Button, Empty, Popconfirm, Tag } from 'antd'
-import * as productApi from '../../api/productApi'
 import { ALLOWED_TYPES, MAX_FILE_SIZE_MB, MAX_IMAGES, validateImageFiles } from './productImageRules'
 
 // Manages the images of an *existing* product. Every action (add, replace,
 // remove) calls the API immediately — it is not tied to the form's Save
 // button — and hands the updated product back through onProductUpdated.
-export default function ProductImagesManager({ product, onProductUpdated }) {
+// `api` is adminProductApi or sellerProductApi (see api/productApi.js).
+export default function ProductImagesManager({ api, product, onProductUpdated }) {
   const [busy, setBusy] = useState(false)
   const addInputRef = useRef(null)
   const replaceInputRef = useRef(null)
@@ -37,7 +37,7 @@ export default function ProductImagesManager({ product, onProductUpdated }) {
     if (files.length > remaining) return message.error(`You can add ${remaining} more image(s).`)
     const error = validateImageFiles(files)
     if (error) return message.error(error)
-    runAction(() => productApi.uploadProductImages(product._id, files), 'Images uploaded')
+    runAction(() => api.uploadImages(product._id, files), 'Images uploaded')
   }
 
   function openReplacePicker(imageId) {
@@ -52,7 +52,7 @@ export default function ProductImagesManager({ product, onProductUpdated }) {
     const error = validateImageFiles([file])
     if (error) return message.error(error)
     runAction(
-      () => productApi.replaceProductImage(product._id, replacingImageIdRef.current, file),
+      () => api.replaceImage(product._id, replacingImageIdRef.current, file),
       'Image replaced',
     )
   }
@@ -75,7 +75,7 @@ export default function ProductImagesManager({ product, onProductUpdated }) {
                 <Popconfirm
                   title="Remove this image?"
                   okText="Remove"
-                  onConfirm={() => runAction(() => productApi.removeProductImage(product._id, image._id), 'Image removed')}
+                  onConfirm={() => runAction(() => api.removeImage(product._id, image._id), 'Image removed')}
                 >
                   <Button size="small" danger disabled={busy}>Remove</Button>
                 </Popconfirm>

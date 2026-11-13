@@ -20,6 +20,7 @@ import adminMessageRoutes from './routes/adminMessageRoutes.js'
 import profileRoutes from './routes/profileRoutes.js'
 import shopRoutes from './routes/shopRoutes.js'
 import adminShopRoutes from './routes/adminShopRoutes.js'
+import sellerRoutes from './routes/sellerRoutes.js'
 import { LOCAL_UPLOADS_DIR } from './utils/cloudinaryUpload.js'
 import { notFound, errorHandler } from './middleware/errorHandler.js'
 
@@ -86,6 +87,7 @@ app.use('/api/coupons', couponRoutes)
 app.use('/api/admin/customers', customerRoutes)
 app.use('/api/shops', shopRoutes)
 app.use('/api/admin/shops', adminShopRoutes)
+app.use('/api/seller', sellerRoutes)
 app.use('/api/admin', dashboardRoutes)
 app.use('/api/profile', profileRoutes)
 app.use('/api/messages', messageRoutes)

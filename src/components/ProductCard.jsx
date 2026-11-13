@@ -28,7 +28,18 @@ export default function ProductCard({ product }) {
         <Link to={productUrl} className="line-clamp-2 text-lg font-semibold leading-snug tracking-tight text-ink hover:text-highlight">
           {product.name}
         </Link>
-        <p className="mt-0.5 text-sm text-faint">{product.category?.name || 'Uncategorized'}</p>
+        <p className="mt-0.5 truncate text-sm text-faint">
+          {product.category?.name || 'Uncategorized'}
+          {/* Which shop sells it — links to that shop's page. */}
+          {product.shop?.slug && (
+            <>
+              {' · by '}
+              <Link to={`/shops/${product.shop.slug}`} className="font-medium text-subtle hover:text-highlight">
+                {product.shop.name}
+              </Link>
+            </>
+          )}
+        </p>
 
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-subtle">
           <span className="inline-flex items-center gap-1.5">

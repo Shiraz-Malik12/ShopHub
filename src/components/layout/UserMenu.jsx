@@ -34,6 +34,9 @@ export default function UserMenu() {
     ...(user.role === 'admin'
       ? [{ key: 'admin', icon: <SettingOutlined />, label: <Link to="/admin/dashboard">Admin dashboard</Link> }]
       : [
+          ...(user.role === 'seller'
+            ? [{ key: 'seller', icon: <SettingOutlined />, label: <Link to="/seller/products">Seller panel</Link> }]
+            : []),
           {
             key: 'my-shop',
             icon: <ShopOutlined />,

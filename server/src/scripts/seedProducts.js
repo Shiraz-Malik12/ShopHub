@@ -4,8 +4,9 @@
 //   npm run seed:products            → only shows what WOULD happen
 //   npm run seed:products -- --yes   → actually does it
 //
-// It REPLACES the whole catalog: every existing product is deleted and the
-// demo products below are created. Past orders are left alone — they keep
+// It REPLACES the ShopHub Official shop's catalog: that shop's products are
+// deleted and the demo products below are created in it. Other sellers'
+// products are never touched. Past orders are left alone — they keep
 // their own copy (snapshot) of each product — and any image a past order
 // still shows is kept on disk; all other images of deleted products are
 // removed.
@@ -18,6 +19,7 @@ import Cart from '../models/Cart.js'
 import Order from '../models/Order.js'
 import { slugify } from '../utils/slugify.js'
 import { deleteImage, EXTERNAL_PREFIX } from '../utils/cloudinaryUpload.js'
+import { getOfficialShop } from '../utils/officialShop.js'
 
 // `aliases`: older names this category may already exist under (e.g. a
 // typo), so it is renamed instead of duplicated.
@@ -80,8 +82,15 @@ async function seedProducts() {
   const confirmed = process.argv.includes('--yes')
   await connectDB()
 
-  const existingProducts = await Product.find({})
-  console.log(`\nThis will DELETE ${existingProducts.length} existing product(s):`)
+  const official = await getOfficialShop()
+  if (!official) {
+    console.error('\nThere is no admin account yet, so no ShopHub Official shop. Run: npm run seed:admin')
+    await mongoose.disconnect()
+    return
+  }
+
+  const existingProducts = await Product.find({ shop: official._id })
+  console.log(`\nThis will DELETE ${existingProducts.length} existing ${official.name} product(s):`)
   for (const product of existingProducts) console.log(`  - ${product.name}`)
   console.log(`and create ${PRODUCTS.length} demo products in ${CATEGORIES.length} categories.`)
 
@@ -131,6 +140,7 @@ async function seedProducts() {
       stock: product.stock,
       category: categoryByName[product.category]._id,
       images: unsplashImage(product.photo),
+      shop: official._id,
     })),
   )
 

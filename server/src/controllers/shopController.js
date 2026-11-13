@@ -1,6 +1,8 @@
 import Shop, { NEXT_SHOP_STATUSES, RESERVED_SHOP_SLUGS, SHOP_STATUSES } from '../models/Shop.js'
 import User, { SHOPPER_ROLES } from '../models/User.js'
+import Product from '../models/Product.js'
 import { slugify } from '../utils/slugify.js'
+import { customerVisibleFilter, sellingShopIds } from '../utils/customerVisibleFilter.js'
 import { sendShopDecisionEmail } from '../utils/shopEmails.js'
 
 export const DEFAULT_SHOP_PAGE_SIZE = 10
@@ -120,6 +122,38 @@ export async function updateMyShop(req, res, next) {
     })
   } catch (err) {
     next(duplicateShopError(err))
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Public: /api/shops/:slug — the shop page customers see
+// ---------------------------------------------------------------------------
+
+// GET /api/shops/ali-electronics
+// Only shops that are selling right now (approved, owner not blocked) can be
+// opened; anything else is "not found", so a suspended shop's page is gone
+// too. The phone number is NOT included — it's for ShopHub, not the public.
+export async function getPublicShop(req, res, next) {
+  try {
+    const shop = await Shop.findOne({ slug: req.params.slug, _id: { $in: await sellingShopIds() } })
+    if (!shop) throw fail(404, 'Shop not found.')
+
+    const productCount = await Product.countDocuments({ ...(await customerVisibleFilter()), shop: shop._id })
+    res.status(200).json({
+      shop: {
+        id: shop._id,
+        name: shop.name,
+        slug: shop.slug,
+        description: shop.description,
+        city: shop.city,
+        logo: shop.logo?.url || null,
+        isOfficial: shop.isOfficial,
+        joinedAt: shop.createdAt,
+        productCount,
+      },
+    })
+  } catch (err) {
+    next(err)
   }
 }
 

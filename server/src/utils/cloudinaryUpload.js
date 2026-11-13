@@ -3,7 +3,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import { getCloudinary, isCloudinaryConfigured } from '../config/cloudinary.js'
 
-const PRODUCT_IMAGE_FOLDER = 'shophub/products'
+// Images are grouped by what they belong to: 'products' or 'shops' (logos).
 
 // Dev fallback storage (see useLocalStorage below). Served by app.js at
 // /api/uploads so the Vite dev proxy forwards image requests too.
@@ -33,21 +33,21 @@ function looksLikeImage(buffer, mimetype) {
   return false
 }
 
-async function saveLocally(buffer, mimetype) {
+async function saveLocally(buffer, mimetype, folder) {
   const fileName = `${crypto.randomUUID()}.${EXTENSIONS[mimetype]}`
-  await fs.mkdir(path.join(LOCAL_UPLOADS_DIR, 'products'), { recursive: true })
-  await fs.writeFile(path.join(LOCAL_UPLOADS_DIR, 'products', fileName), buffer)
+  await fs.mkdir(path.join(LOCAL_UPLOADS_DIR, folder), { recursive: true })
+  await fs.writeFile(path.join(LOCAL_UPLOADS_DIR, folder, fileName), buffer)
   console.warn(`[images:dev-fallback] Saved ${fileName} to server/uploads (Cloudinary not configured)`)
-  return { url: `/api/uploads/products/${fileName}`, publicId: `${LOCAL_PREFIX}products/${fileName}` }
+  return { url: `/api/uploads/${folder}/${fileName}`, publicId: `${LOCAL_PREFIX}${folder}/${fileName}` }
 }
 
 // Multer (memory storage) hands us the file as a Buffer, not a path on
 // disk, so we stream the bytes to Cloudinary instead of using upload(path).
-function uploadToCloudinary(buffer) {
+function uploadToCloudinary(buffer, folder) {
   const cloudinary = getCloudinary()
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
-      { folder: PRODUCT_IMAGE_FOLDER, resource_type: 'image' },
+      { folder: `shophub/${folder}`, resource_type: 'image' },
       (error, result) => {
         if (error) {
           // Cloudinary answers 4xx when the bytes aren't a real image (e.g.
@@ -69,13 +69,14 @@ function uploadToCloudinary(buffer) {
 }
 
 // Takes one Multer file ({ buffer, mimetype, ... }) and returns { url, publicId }.
-export async function uploadImageBuffer(file) {
+// folder: 'products' (default) or 'shops' for shop logos.
+export async function uploadImageBuffer(file, folder = 'products') {
   if (!looksLikeImage(file.buffer, file.mimetype)) {
     const error = new Error('The uploaded file is not a valid image.')
     error.status = 400
     throw error
   }
-  return useLocalStorage() ? saveLocally(file.buffer, file.mimetype) : uploadToCloudinary(file.buffer)
+  return useLocalStorage() ? saveLocally(file.buffer, file.mimetype, folder) : uploadToCloudinary(file.buffer, folder)
 }
 
 // Cleanup only — never throws. Called *after* the database is already

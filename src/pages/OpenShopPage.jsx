@@ -277,7 +277,7 @@ export default function OpenShopPage() {
         <StatusHeading
           icon={<CheckCircleOutlined />}
           title="Your shop is approved"
-          text="You're a ShopHub seller now. Seller tools for adding products and managing orders are coming soon."
+          text="You're a ShopHub seller now. Add your products from the seller panel."
         />
       ),
       suspended: (
@@ -306,6 +306,15 @@ export default function OpenShopPage() {
           <Button className="mt-4" onClick={() => setEditing(true)}>
             Edit application
           </Button>
+        )}
+        {/* Shown once the role in the browser has caught up (see the
+            refreshUser effect above), so the link never bounces back here. */}
+        {shop.status === 'approved' && isSeller && (
+          <Link to="/seller/products">
+            <Button type="primary" className="mt-4">
+              Go to seller panel
+            </Button>
+          </Link>
         )}
       </div>
     )

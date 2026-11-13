@@ -1,6 +1,16 @@
 import Product from '../models/Product.js'
 import Category from '../models/Category.js'
 import { customerVisibleFilter } from '../utils/customerVisibleFilter.js'
+import { productScopeOf } from '../middleware/productScope.js'
+import { getOfficialShop } from '../utils/officialShop.js'
+
+// What the create form may set. `shop`, ratings and images are not here:
+// the server sets those itself.
+const CREATE_FIELDS = ['name', 'description', 'price', 'stock', 'category', 'isActive']
+
+// What shoppers see about the shop selling a product ("Sold by ..."). Not the
+// phone number or status, and only the logo's address, not its storage id.
+const PUBLIC_SHOP_FIELDS = 'name slug isOfficial logo.url'
 
 async function findActiveCategory(categoryId) {
   return Category.findOne({ _id: categoryId, isActive: true })
@@ -32,10 +42,16 @@ function escapeRegex(text) {
 // All optional; with none, this returns the first page of visible products.
 export async function listActiveProducts(req, res, next) {
   try {
-    const { search, category, sort, inStock } = req.query
+    const { search, category, sort, inStock, shop } = req.query
     const page = req.query.page || 1
     const limit = req.query.limit || DEFAULT_PAGE_SIZE
     const filter = await customerVisibleFilter(category)
+
+    // The shop page: narrow "every selling shop" down to this one. A shop
+    // that isn't selling drops out of the list, so it matches nothing.
+    if (shop) {
+      filter.shop.$in = filter.shop.$in.filter((id) => id.equals(shop))
+    }
 
     if (search) {
       // 'i' = case-insensitive, so "iphone" finds "iPhone 16".
@@ -53,6 +69,7 @@ export async function listActiveProducts(req, res, next) {
     const [products, total] = await Promise.all([
       Product.find(filter)
         .populate('category', 'name slug')
+        .populate('shop', PUBLIC_SHOP_FIELDS)
         .sort(PRODUCT_SORTS[sort] || PRODUCT_SORTS.newest)
         .skip((page - 1) * limit) // page 3 with 8 per page → skip the first 16
         .limit(limit),
@@ -68,10 +85,13 @@ export async function listActiveProducts(req, res, next) {
   }
 }
 
+// The admin sees every shop's products; a seller only their own (see
+// middleware/productScope.js — every query below adds productScopeOf(req)).
 export async function listAllProducts(req, res, next) {
   try {
-    const products = await Product.find({})
+    const products = await Product.find(productScopeOf(req))
       .populate('category', 'name slug isActive')
+      .populate('shop', 'name slug status isOfficial')
       .sort({ createdAt: -1 })
     res.status(200).json({ products })
   } catch (err) {
@@ -81,10 +101,9 @@ export async function listAllProducts(req, res, next) {
 
 export async function getProduct(req, res, next) {
   try {
-    const product = await Product.findOne({ _id: req.params.id, ...(await customerVisibleFilter()) }).populate(
-      'category',
-      'name slug',
-    )
+    const product = await Product.findOne({ _id: req.params.id, ...(await customerVisibleFilter()) })
+      .populate('category', 'name slug')
+      .populate('shop', PUBLIC_SHOP_FIELDS)
     if (!product) {
       return res.status(404).json({ message: 'Product not found.' })
     }
@@ -97,7 +116,10 @@ export async function getProduct(req, res, next) {
 
 export async function getProductAdmin(req, res, next) {
   try {
-    const product = await Product.findById(req.params.id).populate('category', 'name slug isActive')
+    const product = await Product.findOne({ _id: req.params.id, ...productScopeOf(req) }).populate(
+      'category',
+      'name slug isActive',
+    )
     if (!product) {
       return res.status(404).json({ message: 'Product not found.' })
     }
@@ -114,8 +136,20 @@ export async function createProduct(req, res, next) {
       return res.status(400).json({ message: 'Category not found or inactive.' })
     }
 
-    const product = await Product.create(req.body)
-    await product.populate('category', 'name slug')
+    // A seller's product goes into their own shop; the admin's into
+    // ShopHub Official. Never from the request body.
+    const shop = req.shop || (await getOfficialShop())
+    if (!shop) {
+      return res.status(409).json({ message: 'There is no shop to add this product to.' })
+    }
+
+    // Only these fields are taken from the request. Copying the whole body
+    // would let a seller set things like `shop` or `ratingAverage` themselves.
+    const fields = Object.fromEntries(
+      CREATE_FIELDS.filter((field) => req.body[field] !== undefined).map((field) => [field, req.body[field]]),
+    )
+    const product = await Product.create({ ...fields, shop: shop._id })
+    await product.populate([{ path: 'category', select: 'name slug' }, { path: 'shop', select: 'name slug status isOfficial' }])
     res.status(201).json({ message: 'Product created', product })
   } catch (err) {
     next(err)
@@ -124,7 +158,7 @@ export async function createProduct(req, res, next) {
 
 export async function updateProduct(req, res, next) {
   try {
-    const product = await Product.findById(req.params.id)
+    const product = await Product.findOne({ _id: req.params.id, ...productScopeOf(req) })
     if (!product) {
       return res.status(404).json({ message: 'Product not found.' })
     }
@@ -144,7 +178,7 @@ export async function updateProduct(req, res, next) {
     }
 
     await product.save()
-    await product.populate('category', 'name slug isActive')
+    await product.populate([{ path: 'category', select: 'name slug isActive' }, { path: 'shop', select: 'name slug status isOfficial' }])
     res.status(200).json({ message: 'Product updated', product })
   } catch (err) {
     next(err)
@@ -153,14 +187,14 @@ export async function updateProduct(req, res, next) {
 
 export async function deactivateProduct(req, res, next) {
   try {
-    const product = await Product.findById(req.params.id)
+    const product = await Product.findOne({ _id: req.params.id, ...productScopeOf(req) })
     if (!product) {
       return res.status(404).json({ message: 'Product not found.' })
     }
 
     product.isActive = false
     await product.save()
-    await product.populate('category', 'name slug isActive')
+    await product.populate([{ path: 'category', select: 'name slug isActive' }, { path: 'shop', select: 'name slug status isOfficial' }])
     res.status(200).json({ message: 'Product deactivated', product })
   } catch (err) {
     next(err)

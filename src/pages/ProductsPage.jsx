@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Button, Checkbox, Empty, Input, Pagination, Select, Skeleton } from 'antd'
+import { Button, Checkbox, Empty, Input, Pagination, Select, Skeleton, Tag } from 'antd'
 import { ReloadOutlined, SearchOutlined, WarningOutlined } from '@ant-design/icons'
 import { useSearchParams } from 'react-router-dom'
 import StoreLayout from '../components/layout/StoreLayout'
 import BrandMark from '../components/BrandMark'
 import ProductCard from '../components/ProductCard'
+import ShopLogo from '../components/ShopLogo'
+import { formatDate } from '../utils/formatDate'
 import * as productApi from '../api/productApi'
 import * as categoryApi from '../api/categoryApi'
 
@@ -24,7 +26,10 @@ const SORT_OPTIONS = [
 // Customer storefront listing. The backend (GET /api/products) decides what
 // is visible and does the searching/filtering/sorting — this page only
 // sends the customer's choices and shows what comes back.
-export default function ProductsPage() {
+//
+// `shop` (optional): show only that shop's products, with the shop's name
+// and logo in the banner. Used by ShopPage (/shops/:slug).
+export default function ProductsPage({ shop = null }) {
   // The filters live in the URL (/products?search=phone&sort=price-asc), so
   // a filtered page can be refreshed, shared, or reached with Back/Forward.
   const [searchParams, setSearchParams] = useSearchParams()
@@ -116,6 +121,7 @@ export default function ProductsPage() {
       setLoadError(null)
       try {
         const params = {}
+        if (shop) params.shop = shop.id
         if (search) params.search = search
         if (category) params.category = category
         if (inStock) params.inStock = 'true'
@@ -139,7 +145,7 @@ export default function ProductsPage() {
     return () => {
       ignore = true
     }
-  }, [search, category, sort, inStock, page, reloadKey])
+  }, [shop, search, category, sort, inStock, page, reloadKey])
 
   // The count is ALL matching products (from the server), not just this page.
   const total = pagination?.total ?? products.length
@@ -157,19 +163,38 @@ export default function ProductsPage() {
           <div className="glow pointer-events-none absolute -bottom-40 left-1/4 h-96 w-96" style={{ '--glow': 'color-mix(in srgb, var(--coral) 18%, transparent)' }} aria-hidden="true" />
 
           <div className="relative">
-            <span className="inline-flex items-center gap-2 rounded-full bg-coral/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-highlight">
-              <BrandMark size={14} />
-              ShopHub Store
-            </span>
-            <h1 className="mt-4 text-3xl font-bold tracking-tight text-ink sm:text-4xl">All products</h1>
-            <p className="mt-2 text-subtle">{!hasLoadedOnce || loadError ? 'Browse our full catalog.' : countLabel}</p>
+            {shop ? (
+              <div className="flex items-start gap-4">
+                <ShopLogo shop={shop} size={64} />
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h1 className="text-3xl font-bold tracking-tight text-ink sm:text-4xl">{shop.name}</h1>
+                    {shop.isOfficial && <Tag color="blue">Official</Tag>}
+                  </div>
+                  <p className="mt-1 text-sm text-subtle">
+                    {shop.city} · On ShopHub since {formatDate(shop.joinedAt)}
+                    {hasLoadedOnce && !loadError && ` · ${countLabel}`}
+                  </p>
+                  {shop.description && <p className="mt-3 max-w-2xl text-subtle">{shop.description}</p>}
+                </div>
+              </div>
+            ) : (
+              <>
+                <span className="inline-flex items-center gap-2 rounded-full bg-coral/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-highlight">
+                  <BrandMark size={14} />
+                  ShopHub Store
+                </span>
+                <h1 className="mt-4 text-3xl font-bold tracking-tight text-ink sm:text-4xl">All products</h1>
+                <p className="mt-2 text-subtle">{!hasLoadedOnce || loadError ? 'Browse our full catalog.' : countLabel}</p>
+              </>
+            )}
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <Input
                 size="large"
                 allowClear
                 prefix={<SearchOutlined className="text-faint" />}
-                placeholder="Search products..."
+                placeholder={shop ? `Search ${shop.name}...` : 'Search products...'}
                 aria-label="Search products"
                 value={searchText}
                 onChange={(event) => setSearchText(event.target.value)}
@@ -241,7 +266,11 @@ export default function ProductsPage() {
           </div>
         ) : products.length === 0 ? (
           <div className="rounded-2xl border border-line bg-surface shadow-card py-16">
-            <Empty description={hasFilters ? 'No products match your search.' : 'No products available.'}>
+            <Empty
+              description={
+                hasFilters ? 'No products match your search.' : shop ? 'This shop has no products yet.' : 'No products available.'
+              }
+            >
               {hasFilters && <Button onClick={clearFilters}>Clear filters</Button>}
             </Empty>
           </div>

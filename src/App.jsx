@@ -26,7 +26,11 @@ import PublicRoute from './routes/PublicRoute'
 import AdminRoute from './routes/AdminRoute'
 import ContactPage from './pages/ContactPage'
 import OpenShopPage from './pages/OpenShopPage'
+import ShopPage from './pages/ShopPage'
 import ShopsPage from './pages/admin/ShopsPage'
+import SellerProductsPage from './pages/seller/ProductsPage'
+import ShopProfilePage from './pages/seller/ShopProfilePage'
+import SellerRoute from './routes/SellerRoute'
 
 function App() {
   return (
@@ -54,6 +58,8 @@ function App() {
       <Route path="/products" element={<StorefrontProductsPage />} />
       <Route path="/products/:id" element={<ProductDetailPage />} />
       <Route path="/contact" element={<ContactPage />} />
+      {/* One seller's shop and its products. */}
+      <Route path="/shops/:slug" element={<ShopPage />} />
       {/* Guests have a cart and a wishlist too (kept in the browser); they
           only need to sign in at checkout. */}
       <Route path="/cart" element={<CartPage />} />
@@ -66,6 +72,13 @@ function App() {
         <Route path="/orders/:id" element={<OrderDetailPage />} />
         {/* Apply to sell, then see the application's status. */}
         <Route path="/open-shop" element={<OpenShopPage />} />
+      </Route>
+
+      {/* Seller panel: only for sellers with an approved shop. */}
+      <Route element={<SellerRoute />}>
+        <Route path="/seller" element={<Navigate to="/seller/products" replace />} />
+        <Route path="/seller/products" element={<SellerProductsPage />} />
+        <Route path="/seller/shop" element={<ShopProfilePage />} />
       </Route>
 
       <Route element={<AdminRoute />}>

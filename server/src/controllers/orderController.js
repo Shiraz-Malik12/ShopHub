@@ -5,6 +5,7 @@ import Product from '../models/Product.js'
 import User from '../models/User.js'
 import { sendInBackground, sendOrderPlacedEmail, sendOrderStatusEmail } from '../utils/orderEmails.js'
 import { checkCoupon, claimCouponUse, releaseCouponUse } from '../utils/coupons.js'
+import { isFromSellingShop, sellingShopIds } from '../utils/customerVisibleFilter.js'
 
 const ORDER_NUMBER_ATTEMPTS = 3
 
@@ -56,9 +57,10 @@ export async function placeOrder(req, res, next) {
   try {
     const cart = await Cart.findOne({ user: req.user._id }).populate({
       path: 'items.product',
-      select: 'name price stock images isActive category',
+      select: 'name price stock images isActive category shop',
       populate: { path: 'category', select: 'isActive' },
     })
+    const shopIds = await sellingShopIds()
 
     if (!cart || cart.items.length === 0) {
       throw fail(400, 'Your cart is empty.')
@@ -68,7 +70,9 @@ export async function placeOrder(req, res, next) {
     //    anything is changed.
     for (const item of cart.items) {
       const product = item.product
-      if (!product || !product.isActive || product.category?.isActive !== true) {
+      // Also refused if its shop was suspended (or its owner blocked) after
+      // it went into the cart.
+      if (!product || !product.isActive || product.category?.isActive !== true || !isFromSellingShop(product, shopIds)) {
         throw fail(400, `${product?.name || 'A product'} is no longer available. Please remove it from your cart.`)
       }
       if (product.stock < item.quantity) {

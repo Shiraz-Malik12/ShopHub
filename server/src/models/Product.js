@@ -18,6 +18,10 @@ const productSchema = new mongoose.Schema(
     price: { type: Number, required: true, min: 0 },
     stock: { type: Number, required: true, min: 0, validate: Number.isInteger },
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
+    // Which shop sells this. Set by the server when the product is created
+    // (the seller's own shop, or ShopHub Official for the admin) and never
+    // changed afterwards — a seller can't move a product to another shop.
+    shop: { type: mongoose.Schema.Types.ObjectId, ref: 'Shop', required: true, index: true },
     isActive: { type: Boolean, default: true },
     // images[0] is the main image shown on the storefront list.
     images: {

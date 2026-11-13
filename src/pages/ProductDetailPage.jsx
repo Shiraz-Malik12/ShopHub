@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Breadcrumb, Button, Skeleton } from 'antd'
+import { Breadcrumb, Button, Skeleton, Tag } from 'antd'
 import { ArrowLeftOutlined } from '@ant-design/icons'
 import { Link, useParams } from 'react-router-dom'
 import StoreLayout from '../components/layout/StoreLayout'
@@ -8,6 +8,7 @@ import WishlistButton from '../components/WishlistButton'
 import ProductImage from '../components/ProductImage'
 import QuantityStepper from '../components/QuantityStepper'
 import StockBadge from '../components/StockBadge'
+import ShopLogo from '../components/ShopLogo'
 import ProductReviews from '../components/reviews/ProductReviews'
 import RatingStars from '../components/reviews/RatingStars'
 import * as productApi from '../api/productApi'
@@ -122,6 +123,22 @@ export default function ProductDetailPage() {
                   <AddToCartButton product={product} quantity={quantity} size="large" />
                   <WishlistButton product={product} size="large" />
                 </div>
+
+                {/* Who sells it, with a link to the rest of their shop. */}
+                {product.shop?.slug && (
+                  <Link
+                    to={`/shops/${product.shop.slug}`}
+                    className="mt-6 flex items-center gap-3 rounded-2xl border border-line bg-surface p-3 shadow-card hover:border-coral/30"
+                  >
+                    <ShopLogo shop={product.shop} size={40} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-xs text-subtle">Sold by</span>
+                      <span className="block truncate font-semibold text-ink">{product.shop.name}</span>
+                    </span>
+                    {product.shop.isOfficial && <Tag color="blue">Official</Tag>}
+                    <span className="text-sm font-medium text-link">Visit shop</span>
+                  </Link>
+                )}
 
                 <div className="mt-8 border-t border-line pt-8">
                   <h2 className="text-sm font-semibold text-ink">Description</h2>

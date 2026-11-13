@@ -43,6 +43,18 @@ function shopFieldRules({ requireAll }) {
 
 export const applyShopRules = shopFieldRules({ requireAll: true })
 export const updateMyShopRules = shopFieldRules({ requireAll: false })
+// An approved shop's profile: same checks, but the name can't be changed
+// here (see sellerShopController.js), so it's simply not checked or used.
+export const updateSellerShopRules = shopFieldRules({ requireAll: false }).slice(1)
+
+// GET /api/shops/:slug — the public shop page.
+export const shopSlugRules = [
+  param('slug')
+    .isString()
+    .isLength({ min: 1, max: 80 })
+    .matches(/^[a-z0-9-]+$/)
+    .withMessage('Invalid shop address'),
+]
 
 // Admin Shops page filters (all optional): ?status=&search=&page=&limit=
 export const listShopsRules = [

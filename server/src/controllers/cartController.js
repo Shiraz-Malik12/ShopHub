@@ -1,6 +1,6 @@
 import Cart, { MAX_ITEM_QUANTITY } from '../models/Cart.js'
 import Product from '../models/Product.js'
-import { customerVisibleFilter } from '../utils/customerVisibleFilter.js'
+import { customerVisibleFilter, isFromSellingShop, sellingShopIds } from '../utils/customerVisibleFilter.js'
 
 // Every user has at most one cart; it is created the first time it's needed.
 // "Find it, or create it if missing" is done as ONE database operation
@@ -25,9 +25,14 @@ async function findVisibleProduct(productId) {
 export async function buildCartResponse(cart) {
   await cart.populate({
     path: 'items.product',
-    select: 'name price stock images isActive category',
-    populate: { path: 'category', select: 'name slug isActive' },
+    select: 'name price stock images isActive category shop',
+    populate: [
+      { path: 'category', select: 'name slug isActive' },
+      // For the cart page's "grouped by shop" headings.
+      { path: 'shop', select: 'name slug' },
+    ],
   })
+  const shopIds = await sellingShopIds()
 
   const items = cart.items
     // A product that was hard-removed from the database leaves a null here.
@@ -35,8 +40,12 @@ export async function buildCartResponse(cart) {
     .map((item) => {
       const { product, quantity } = item
       // Still in the cart, but hidden from the store since it was added
-      // (product or its category deactivated) or sold out.
-      const available = product.isActive && product.category?.isActive === true && product.stock > 0
+      // (product, its category or its shop taken off the store) or sold out.
+      const available =
+        product.isActive &&
+        product.category?.isActive === true &&
+        isFromSellingShop(product, shopIds) &&
+        product.stock > 0
       return {
         product: {
           _id: product._id,
@@ -45,6 +54,7 @@ export async function buildCartResponse(cart) {
           stock: product.stock,
           image: product.images[0]?.url || null,
           category: product.category ? { name: product.category.name, slug: product.category.slug } : null,
+          shop: product.shop ? { _id: product.shop._id, name: product.shop.name, slug: product.shop.slug } : null,
         },
         quantity,
         lineTotal: product.price * quantity,

@@ -1,12 +1,25 @@
 import { useState } from 'react'
 import { App as AntdApp, Button, Empty, Popconfirm, Skeleton, Tag, Tooltip } from 'antd'
-import { ArrowLeftOutlined, ArrowRightOutlined, DeleteOutlined, LockOutlined } from '@ant-design/icons'
+import { ArrowLeftOutlined, ArrowRightOutlined, DeleteOutlined, LockOutlined, ShopOutlined } from '@ant-design/icons'
 import { Link, useNavigate } from 'react-router-dom'
 import StoreLayout from '../components/layout/StoreLayout'
 import ProductImage from '../components/ProductImage'
 import QuantityStepper from '../components/QuantityStepper'
 import { useCart } from '../context/CartContext'
 import { formatPrice } from '../utils/formatPrice'
+
+// Splits cart lines into one group per shop, keeping the cart's order:
+// [{ key, shop: { _id, name, slug } | null, items: [...] }]
+function groupByShop(items) {
+  const groups = new Map()
+  for (const item of items) {
+    const shop = item.product.shop
+    const key = shop?._id || 'no-shop'
+    if (!groups.has(key)) groups.set(key, { key, shop, items: [] })
+    groups.get(key).items.push(item)
+  }
+  return [...groups.values()]
+}
 
 // The shopping cart — for guests (browser cart) and signed-in customers alike.
 // All data and actions come from CartContext — this page only displays the
@@ -72,67 +85,87 @@ export default function CartPage() {
           </div>
         ) : (
           <div className="grid gap-8 lg:grid-cols-3">
-            <ul className="divide-y divide-line rounded-2xl border border-line bg-surface shadow-card lg:col-span-2">
-              {cart.items.map((item) => {
-                const { product } = item
-                const busy = busyProductId === product._id
-                return (
-                  <li key={product._id} className="flex gap-3 p-4 sm:gap-4 sm:p-5">
-                    <Link
-                      to={`/products/${product._id}`}
-                      className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-line sm:h-24 sm:w-24"
-                    >
-                      <ProductImage src={product.image} alt={product.name} className="h-full w-full" compact />
-                    </Link>
+            {/* One card per shop: each shop packs and sends its own parcel. */}
+            <div className="space-y-4 lg:col-span-2">
+              {groupByShop(cart.items).map((group) => (
+                <section
+                  key={group.key}
+                  aria-label={group.shop ? `Items from ${group.shop.name}` : 'Items'}
+                  className="rounded-2xl border border-line bg-surface shadow-card"
+                >
+                  {group.shop && (
+                    <header className="flex items-center gap-2 border-b border-line px-4 py-3 text-sm sm:px-5">
+                      <ShopOutlined className="text-subtle" />
+                      <span className="text-subtle">Sold by</span>
+                      <Link to={`/shops/${group.shop.slug}`} className="font-semibold text-ink hover:text-highlight">
+                        {group.shop.name}
+                      </Link>
+                    </header>
+                  )}
+                  <ul className="divide-y divide-line">
+                    {group.items.map((item) => {
+                      const { product } = item
+                      const busy = busyProductId === product._id
+                      return (
+                        <li key={product._id} className="flex gap-3 p-4 sm:gap-4 sm:p-5">
+                          <Link
+                            to={`/products/${product._id}`}
+                            className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-line sm:h-24 sm:w-24"
+                          >
+                            <ProductImage src={product.image} alt={product.name} className="h-full w-full" compact />
+                          </Link>
 
-                    <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="min-w-0">
-                        <Link
-                          to={`/products/${product._id}`}
-                          className="line-clamp-2 font-semibold text-ink hover:text-highlight"
-                        >
-                          {product.name}
-                        </Link>
-                        <p className="mt-1 text-sm text-subtle">
-                          {product.category?.name || 'Uncategorized'} · {formatPrice(product.price)} each
-                        </p>
-                        {!item.available && (
-                          <Tag color="error" className="mt-2">
-                            {product.stock === 0 ? 'Out of stock' : 'No longer available'}
-                          </Tag>
-                        )}
-                      </div>
+                          <div className="flex min-w-0 flex-1 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="min-w-0">
+                              <Link
+                                to={`/products/${product._id}`}
+                                className="line-clamp-2 font-semibold text-ink hover:text-highlight"
+                              >
+                                {product.name}
+                              </Link>
+                              <p className="mt-1 text-sm text-subtle">
+                                {product.category?.name || 'Uncategorized'} · {formatPrice(product.price)} each
+                              </p>
+                              {!item.available && (
+                                <Tag color="error" className="mt-2">
+                                  {product.stock === 0 ? 'Out of stock' : 'No longer available'}
+                                </Tag>
+                              )}
+                            </div>
 
-                      {/* On phones this row may wrap instead of pushing the page
-                          wider than the screen; from sm up it stays on one line. */}
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 sm:shrink-0 sm:flex-nowrap sm:gap-x-4">
-                        {item.available && (
-                          <QuantityStepper
-                            value={item.quantity}
-                            max={Math.min(product.stock, 99)}
-                            disabled={busy}
-                            onChange={(quantity) => runItemAction(product._id, () => updateQuantity(product._id, quantity))}
-                          />
-                        )}
-                        <span className={`font-semibold sm:w-24 sm:text-right ${item.available ? 'text-ink' : 'text-faint line-through'}`}>
-                          {formatPrice(item.lineTotal)}
-                        </span>
-                        <Tooltip title="Remove">
-                          <Button
-                            type="text"
-                            danger
-                            icon={<DeleteOutlined />}
-                            aria-label={`Remove ${product.name}`}
-                            loading={busy}
-                            onClick={() => runItemAction(product._id, () => removeItem(product._id))}
-                          />
-                        </Tooltip>
-                      </div>
-                    </div>
-                  </li>
-                )
-              })}
-            </ul>
+                            {/* On phones this row may wrap instead of pushing the page
+                                wider than the screen; from sm up it stays on one line. */}
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 sm:shrink-0 sm:flex-nowrap sm:gap-x-4">
+                              {item.available && (
+                                <QuantityStepper
+                                  value={item.quantity}
+                                  max={Math.min(product.stock, 99)}
+                                  disabled={busy}
+                                  onChange={(quantity) => runItemAction(product._id, () => updateQuantity(product._id, quantity))}
+                                />
+                              )}
+                              <span className={`font-semibold sm:w-24 sm:text-right ${item.available ? 'text-ink' : 'text-faint line-through'}`}>
+                                {formatPrice(item.lineTotal)}
+                              </span>
+                              <Tooltip title="Remove">
+                                <Button
+                                  type="text"
+                                  danger
+                                  icon={<DeleteOutlined />}
+                                  aria-label={`Remove ${product.name}`}
+                                  loading={busy}
+                                  onClick={() => runItemAction(product._id, () => removeItem(product._id))}
+                                />
+                              </Tooltip>
+                            </div>
+                          </div>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </section>
+              ))}
+            </div>
 
             <aside className="h-fit rounded-2xl border border-line bg-surface shadow-card p-6">
               <h2 className="text-lg font-semibold text-ink">Order summary</h2>

@@ -62,6 +62,8 @@ export const productImageIdRules = [
 export const listProductsRules = [
   query('search').optional().trim().isLength({ max: 100 }).withMessage('Search text is too long'),
   query('category').optional().isMongoId().withMessage('Invalid category'),
+  // One shop's products only (the shop page).
+  query('shop').optional().isMongoId().withMessage('Invalid shop'),
   query('sort')
     .optional()
     .isIn(['newest', 'price-asc', 'price-desc', 'name', 'rating'])
