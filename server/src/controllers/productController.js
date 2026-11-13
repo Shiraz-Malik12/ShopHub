@@ -1,7 +1,7 @@
 import Product from '../models/Product.js'
 import Category from '../models/Category.js'
 import { customerVisibleFilter } from '../utils/customerVisibleFilter.js'
-import { productScopeOf } from '../middleware/productScope.js'
+import { shopScopeOf } from '../middleware/shopScope.js'
 import { getOfficialShop } from '../utils/officialShop.js'
 
 // What the create form may set. `shop`, ratings and images are not here:
@@ -86,10 +86,10 @@ export async function listActiveProducts(req, res, next) {
 }
 
 // The admin sees every shop's products; a seller only their own (see
-// middleware/productScope.js — every query below adds productScopeOf(req)).
+// middleware/shopScope.js — every query below adds shopScopeOf(req)).
 export async function listAllProducts(req, res, next) {
   try {
-    const products = await Product.find(productScopeOf(req))
+    const products = await Product.find(shopScopeOf(req))
       .populate('category', 'name slug isActive')
       .populate('shop', 'name slug status isOfficial')
       .sort({ createdAt: -1 })
@@ -116,7 +116,7 @@ export async function getProduct(req, res, next) {
 
 export async function getProductAdmin(req, res, next) {
   try {
-    const product = await Product.findOne({ _id: req.params.id, ...productScopeOf(req) }).populate(
+    const product = await Product.findOne({ _id: req.params.id, ...shopScopeOf(req) }).populate(
       'category',
       'name slug isActive',
     )
@@ -158,7 +158,7 @@ export async function createProduct(req, res, next) {
 
 export async function updateProduct(req, res, next) {
   try {
-    const product = await Product.findOne({ _id: req.params.id, ...productScopeOf(req) })
+    const product = await Product.findOne({ _id: req.params.id, ...shopScopeOf(req) })
     if (!product) {
       return res.status(404).json({ message: 'Product not found.' })
     }
@@ -187,7 +187,7 @@ export async function updateProduct(req, res, next) {
 
 export async function deactivateProduct(req, res, next) {
   try {
-    const product = await Product.findOne({ _id: req.params.id, ...productScopeOf(req) })
+    const product = await Product.findOne({ _id: req.params.id, ...shopScopeOf(req) })
     if (!product) {
       return res.status(404).json({ message: 'Product not found.' })
     }

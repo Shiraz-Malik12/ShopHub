@@ -19,6 +19,8 @@ export default function OrderDetailPage() {
   const { user } = useAuth()
   const { message } = AntdApp.useApp()
   const [order, setOrder] = useState(null)
+  // The other orders (other shops' parcels) from the same checkout.
+  const [siblings, setSiblings] = useState([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
   const [cancelling, setCancelling] = useState(false)
@@ -32,6 +34,7 @@ export default function OrderDetailPage() {
       try {
         const { data } = await orderApi.fetchOrder(id)
         setOrder(data.order)
+        setSiblings(data.siblings || [])
       } catch (err) {
         setLoadError(err?.response?.data?.message || 'Could not load this order.')
       } finally {
@@ -86,14 +89,26 @@ export default function OrderDetailPage() {
                 showIcon
                 className="mt-6"
                 title="Thank you! Your order has been placed."
-                description="You will pay in cash when it is delivered. You can follow its progress on this page."
+                description={
+                  siblings.length > 0
+                    ? `Your items come from ${siblings.length + 1} shops, so they arrive in ${siblings.length + 1} parcels. You pay in cash for each one when it is delivered.`
+                    : 'You will pay in cash when it is delivered. You can follow its progress on this page.'
+                }
               />
             )}
 
             <div className="mt-6 flex flex-wrap items-start justify-between gap-4">
               <div>
                 <h1 className="text-2xl font-bold tracking-tight text-ink">Order {order.orderNumber}</h1>
-                <p className="mt-1 text-sm text-subtle">Placed on {formatDate(order.createdAt)}</p>
+                <p className="mt-1 text-sm text-subtle">
+                  Placed on {formatDate(order.createdAt)}
+                  {order.shopName && (
+                    <>
+                      {' · Sold by '}
+                      <span className="font-medium text-ink">{order.shopName}</span>
+                    </>
+                  )}
+                </p>
               </div>
               <div className="flex items-center gap-3">
                 <OrderStatusTag status={order.status} />
@@ -111,6 +126,35 @@ export default function OrderDetailPage() {
                 )}
               </div>
             </div>
+
+            {/* The rest of the same purchase: other shops' parcels. */}
+            {siblings.length > 0 && (
+              <div className="mt-6 rounded-2xl border border-line bg-surface p-5 shadow-card">
+                <p className="text-sm text-subtle">
+                  This purchase ({order.checkoutId}) arrives in {siblings.length + 1} parcels. The other{' '}
+                  {siblings.length === 1 ? 'parcel' : 'parcels'}:
+                </p>
+                <ul className="mt-3 divide-y divide-line">
+                  {siblings.map((sibling) => (
+                    <li key={sibling._id}>
+                      <Link
+                        to={`/orders/${sibling._id}`}
+                        className="flex flex-wrap items-center justify-between gap-3 py-2 hover:text-highlight"
+                      >
+                        <span className="text-sm">
+                          <span className="font-medium text-ink">{sibling.orderNumber}</span>
+                          <span className="text-subtle"> · {sibling.shopName}</span>
+                        </span>
+                        <span className="flex items-center gap-3">
+                          <span className="text-sm font-medium text-ink">{formatPrice(sibling.total)}</span>
+                          <OrderStatusTag status={sibling.status} />
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             <div className="mt-6 rounded-2xl border border-line bg-surface shadow-card p-6">
               {order.status === 'cancelled' ? (

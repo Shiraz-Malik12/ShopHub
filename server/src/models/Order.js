@@ -57,6 +57,15 @@ const orderSchema = new mongoose.Schema(
     // confirmation page) — easier to read out than a MongoDB id.
     orderNumber: { type: String, required: true, unique: true },
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    // Marketplace: one checkout becomes ONE ORDER PER SHOP, because each shop
+    // packs and ships its own parcel (and moves its own status). All orders
+    // from the same checkout share a checkoutId, so the customer still sees
+    // them as one purchase.
+    shop: { type: mongoose.Schema.Types.ObjectId, ref: 'Shop', required: true, index: true },
+    // Snapshot of the shop's name, like the items: the order keeps showing
+    // who sold it even if the shop is later removed.
+    shopName: { type: String, required: true },
+    checkoutId: { type: String, required: true, index: true },
     items: {
       type: [orderItemSchema],
       validate: { validator: (items) => items.length > 0, message: 'An order needs at least one item' },
@@ -72,6 +81,11 @@ const orderSchema = new mongoose.Schema(
     // A snapshot of the coupon, like the items: if the admin later edits or
     // deletes the coupon, this order still shows what was applied.
     coupon: { type: couponSnapshotSchema, default: undefined },
+    // A coupon is used ONCE per checkout, even if the checkout was split into
+    // several orders. When every order of the checkout is cancelled, the use
+    // is given back — and this flag (on the checkout's first order) makes
+    // sure that happens only once. See coupons.js releaseCouponForCheckout.
+    couponReleased: { type: Boolean, default: false },
     total: { type: Number, required: true, min: 0 },
   },
   { timestamps: true },

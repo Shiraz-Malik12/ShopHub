@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
-import { AppstoreOutlined, ShopOutlined } from '@ant-design/icons'
+import { AppstoreOutlined, DashboardOutlined, PercentageOutlined, ShopOutlined, ShoppingOutlined } from '@ant-design/icons'
 import PanelLayout from './PanelLayout'
 import { fetchSellerShop } from '../../api/shopApi'
 
-// Orders, coupons and a dashboard join this list in the next phases.
 const NAV_ITEMS = [
+  { to: '/seller/dashboard', label: 'Dashboard', icon: <DashboardOutlined /> },
+  { to: '/seller/orders', label: 'Orders', icon: <ShoppingOutlined /> },
   { to: '/seller/products', label: 'Products', icon: <AppstoreOutlined /> },
+  { to: '/seller/coupons', label: 'Coupons', icon: <PercentageOutlined /> },
   { to: '/seller/shop', label: 'Shop profile', icon: <ShopOutlined /> },
 ]
 
@@ -28,7 +30,7 @@ export default function SellerLayout({ children }) {
     <PanelLayout
       navItems={NAV_ITEMS}
       badge="Seller"
-      homeTo="/seller/products"
+      homeTo="/seller/dashboard"
       sectionLabel={shopName || 'My shop'}
       topLabel={shopName ? `Managing ${shopName}` : 'Seller panel'}
     >

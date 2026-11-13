@@ -29,6 +29,9 @@ import OpenShopPage from './pages/OpenShopPage'
 import ShopPage from './pages/ShopPage'
 import ShopsPage from './pages/admin/ShopsPage'
 import SellerProductsPage from './pages/seller/ProductsPage'
+import SellerOrdersPage from './pages/seller/OrdersPage'
+import SellerDashboardPage from './pages/seller/DashboardPage'
+import SellerCouponsPage from './pages/seller/CouponsPage'
 import ShopProfilePage from './pages/seller/ShopProfilePage'
 import SellerRoute from './routes/SellerRoute'
 
@@ -76,7 +79,10 @@ function App() {
 
       {/* Seller panel: only for sellers with an approved shop. */}
       <Route element={<SellerRoute />}>
-        <Route path="/seller" element={<Navigate to="/seller/products" replace />} />
+        <Route path="/seller" element={<Navigate to="/seller/dashboard" replace />} />
+        <Route path="/seller/dashboard" element={<SellerDashboardPage />} />
+        <Route path="/seller/coupons" element={<SellerCouponsPage />} />
+        <Route path="/seller/orders" element={<SellerOrdersPage />} />
         <Route path="/seller/products" element={<SellerProductsPage />} />
         <Route path="/seller/shop" element={<ShopProfilePage />} />
       </Route>

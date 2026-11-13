@@ -1,4 +1,7 @@
 import api from './axiosInstance'
 
-// Admin only — store-wide numbers for the dashboard, in one request.
-export const fetchDashboard = () => api.get('/admin/dashboard')
+// Each dashboard's numbers, in one request.
+// Admin: the whole marketplace.
+export const fetchAdminDashboard = () => api.get('/admin/dashboard')
+// Seller: only their own shop (the server enforces this).
+export const fetchSellerDashboard = () => api.get('/seller/dashboard')

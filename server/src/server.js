@@ -10,10 +10,11 @@ const { default: app } = await import('./app.js')
 const PORT = process.env.PORT || 5000
 
 connectDB()
-  // Before taking requests: make sure every product belongs to a shop.
+  // Before taking requests: make sure every product and order belongs to a shop.
   .then(async () => {
-    const { assignShoplessProducts } = await import('./utils/officialShop.js')
+    const { assignShoplessProducts, assignShoplessOrders } = await import('./utils/officialShop.js')
     await assignShoplessProducts()
+    await assignShoplessOrders()
   })
   .then(() => {
     app.listen(PORT, () => console.log(`ShopHub API running on http://localhost:${PORT} (${process.env.NODE_ENV || 'development'})`))

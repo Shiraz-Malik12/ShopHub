@@ -11,7 +11,25 @@ import { formatPrice } from '../utils/formatPrice'
 
 const MAX_THUMBNAILS = 4
 
-// "My orders": every order the signed-in customer has placed, newest first.
+// One checkout can be several orders (one per shop). Put them back together
+// so the customer sees each purchase once, newest first:
+// [{ checkoutId, createdAt, total, orders: [...] }]
+function groupByCheckout(orders) {
+  const checkouts = new Map()
+  for (const order of orders) {
+    const key = order.checkoutId || order.orderNumber
+    if (!checkouts.has(key)) checkouts.set(key, { checkoutId: key, createdAt: order.createdAt, total: 0, orders: [] })
+    const checkout = checkouts.get(key)
+    checkout.orders.push(order)
+    checkout.total = Math.round((checkout.total + order.total) * 100) / 100
+  }
+  for (const checkout of checkouts.values()) {
+    checkout.orders.sort((a, b) => a.orderNumber.localeCompare(b.orderNumber))
+  }
+  return [...checkouts.values()]
+}
+
+// "My orders": every purchase the signed-in customer has made, newest first.
 export default function OrdersPage() {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
@@ -71,42 +89,62 @@ export default function OrdersPage() {
           </div>
         ) : (
           <ul className="space-y-4">
-            {orders.map((order) => (
-              <li key={order._id}>
-                <Link
-                  to={`/orders/${order._id}`}
-                  className="group block rounded-2xl border border-line bg-surface shadow-card p-5 transition hover:border-coral/40 hover:shadow-card-hover"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-ink">{order.orderNumber}</p>
-                      <p className="text-sm text-subtle">Placed on {formatDate(order.createdAt)}</p>
-                    </div>
-                    <OrderStatusTag status={order.status} />
+            {groupByCheckout(orders).map((checkout) => (
+              <li key={checkout.checkoutId} className="rounded-2xl border border-line bg-surface shadow-card">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-4">
+                  <div>
+                    <p className="font-semibold text-ink">{checkout.checkoutId}</p>
+                    <p className="text-sm text-subtle">
+                      Placed on {formatDate(checkout.createdAt)}
+                      {checkout.orders.length > 1 && ` · ${checkout.orders.length} parcels from ${checkout.orders.length} shops`}
+                    </p>
                   </div>
+                  {checkout.orders.length > 1 && (
+                    <p className="font-bold text-ink">{formatPrice(checkout.total)}</p>
+                  )}
+                </div>
 
-                  <div className="mt-4 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-2">
-                      {order.items.slice(0, MAX_THUMBNAILS).map((item) => (
-                        <div key={item.product} className="h-12 w-12 overflow-hidden rounded-lg border border-line">
-                          <ProductImage src={item.image} alt={item.name} className="h-full w-full" compact />
+                {/* One row per shop: each parcel has its own status. */}
+                <ul className="divide-y divide-line">
+                  {checkout.orders.map((order) => (
+                    <li key={order._id}>
+                      <Link
+                        to={`/orders/${order._id}`}
+                        className="group block p-5 transition hover:bg-muted/40"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <p className="text-sm text-subtle">
+                            Sold by <span className="font-medium text-ink">{order.shopName}</span>
+                            {checkout.orders.length > 1 && <span className="text-faint"> · {order.orderNumber}</span>}
+                          </p>
+                          <OrderStatusTag status={order.status} />
                         </div>
-                      ))}
-                      {order.items.length > MAX_THUMBNAILS && (
-                        <span className="text-sm text-subtle">+{order.items.length - MAX_THUMBNAILS} more</span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3 text-right">
-                      <div>
-                        <p className="font-bold text-ink">{formatPrice(order.total)}</p>
-                        <p className="text-xs text-subtle">
-                          {order.itemCount} {order.itemCount === 1 ? 'item' : 'items'}
-                        </p>
-                      </div>
-                      <RightOutlined className="text-faint transition group-hover:translate-x-0.5 group-hover:text-highlight" />
-                    </div>
-                  </div>
-                </Link>
+
+                        <div className="mt-3 flex items-center justify-between gap-4">
+                          <div className="flex items-center gap-2">
+                            {order.items.slice(0, MAX_THUMBNAILS).map((item) => (
+                              <div key={item.product} className="h-12 w-12 overflow-hidden rounded-lg border border-line">
+                                <ProductImage src={item.image} alt={item.name} className="h-full w-full" compact />
+                              </div>
+                            ))}
+                            {order.items.length > MAX_THUMBNAILS && (
+                              <span className="text-sm text-subtle">+{order.items.length - MAX_THUMBNAILS} more</span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-3 text-right">
+                            <div>
+                              <p className="font-bold text-ink">{formatPrice(order.total)}</p>
+                              <p className="text-xs text-subtle">
+                                {order.itemCount} {order.itemCount === 1 ? 'item' : 'items'}
+                              </p>
+                            </div>
+                            <RightOutlined className="text-faint transition group-hover:translate-x-0.5 group-hover:text-highlight" />
+                          </div>
+                        </div>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
               </li>
             ))}
           </ul>

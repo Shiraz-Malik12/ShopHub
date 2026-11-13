@@ -1,28 +1,38 @@
 import Order, { ORDER_STATUSES } from '../models/Order.js'
 import Product from '../models/Product.js'
 import User, { SHOPPER_ROLES } from '../models/User.js'
+import { shopScopeOf } from '../middleware/shopScope.js'
 
 // A product with this many (or fewer) left is listed as "low stock".
 export const LOW_STOCK_THRESHOLD = 5
 const RECENT_ORDERS_LIMIT = 5
 const LOW_STOCK_LIMIT = 8
 
-// GET /api/admin/dashboard — admin-only. Everything the dashboard shows,
-// in one request. All numbers are counted by the database, not by loading
-// every order into memory.
+// How many different people bought something. The admin counts every
+// shopper account; a seller counts the customers who ordered from them.
+function countCustomers(scope) {
+  if (!scope.shop) return User.countDocuments({ role: { $in: SHOPPER_ROLES } })
+  return Order.distinct('user', scope).then((ids) => ids.length)
+}
+
+// GET /api/admin/dashboard — admin: the whole marketplace.
+// GET /api/seller/dashboard — seller: only their own shop (shopScopeOf).
+// Everything the dashboard shows, in one request. All numbers are counted
+// by the database, not by loading every order into memory.
 export async function getDashboard(req, res, next) {
   try {
+    const scope = shopScopeOf(req)
     const [statusGroups, activeProducts, customers, recentOrders, lowStockProducts] = await Promise.all([
       // One row per status: how many orders, and how much money.
-      Order.aggregate([{ $group: { _id: '$status', count: { $sum: 1 }, total: { $sum: '$total' } } }]),
-      Product.countDocuments({ isActive: true }),
-      User.countDocuments({ role: { $in: SHOPPER_ROLES } }),
-      Order.find({})
+      Order.aggregate([{ $match: scope }, { $group: { _id: '$status', count: { $sum: 1 }, total: { $sum: '$total' } } }]),
+      Product.countDocuments({ isActive: true, ...scope }),
+      countCustomers(scope),
+      Order.find(scope)
         .populate('user', 'name email')
         .sort({ createdAt: -1 })
         .limit(RECENT_ORDERS_LIMIT)
-        .select('orderNumber user total itemCount status createdAt'),
-      Product.find({ isActive: true, stock: { $lte: LOW_STOCK_THRESHOLD } })
+        .select('orderNumber user total itemCount status createdAt shopName'),
+      Product.find({ isActive: true, stock: { $lte: LOW_STOCK_THRESHOLD }, ...scope })
         .populate('category', 'name')
         .sort({ stock: 1, name: 1 })
         .limit(LOW_STOCK_LIMIT)

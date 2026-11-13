@@ -103,7 +103,12 @@ function plainText({ headline, intro, order }) {
 export function buildOrderPlacedEmail(order, customer) {
   const content = {
     headline: 'Thank you! Your order is confirmed',
-    intro: `Hi ${customer.name}, we have received your order and will start preparing it soon.`,
+    // A checkout with several shops arrives as several parcels — say so,
+    // so the customer isn't surprised when only one turns up first.
+    intro:
+      order.parcelCount > 1
+        ? `Hi ${customer.name}, we have received your order. It comes from ${order.parcelCount} shops, so it will arrive in ${order.parcelCount} separate parcels.`
+        : `Hi ${customer.name}, we have received your order and will start preparing it soon.`,
     order,
   }
   return {

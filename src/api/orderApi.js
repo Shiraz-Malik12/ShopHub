@@ -10,6 +10,15 @@ export const fetchMyOrders = () => api.get('/orders/mine')
 export const fetchOrder = (id) => api.get(`/orders/${id}`)
 export const cancelOrder = (id) => api.patch(`/orders/${id}/cancel`)
 
-// Admin only. params (optional): { status }
-export const fetchAllOrdersAdmin = (params) => api.get('/orders/admin', { params })
-export const updateOrderStatus = (id, status) => api.patch(`/orders/${id}/status`, { status })
+// The calls behind the order-management page, one set per panel — same idea
+// as adminProductApi / sellerProductApi. params (optional): { status }
+// Admin: every shop's orders.
+export const adminOrderApi = {
+  fetchAll: (params) => api.get('/orders/admin', { params }),
+  updateStatus: (id, status) => api.patch(`/orders/${id}/status`, { status }),
+}
+// Seller: only their own shop's orders (the server enforces this).
+export const sellerOrderApi = {
+  fetchAll: (params) => api.get('/seller/orders', { params }),
+  updateStatus: (id, status) => api.patch(`/seller/orders/${id}/status`, { status }),
+}

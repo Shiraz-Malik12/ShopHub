@@ -1,6 +1,6 @@
 import Product, { MAX_PRODUCT_IMAGES } from '../models/Product.js'
 import { uploadImageBuffer, deleteImage, deleteImages } from '../utils/cloudinaryUpload.js'
-import { productScopeOf } from '../middleware/productScope.js'
+import { shopScopeOf } from '../middleware/shopScope.js'
 
 // Uploads every buffer to Cloudinary. If any one fails, the ones that did
 // succeed are deleted again so a half-finished batch never leaves orphans.
@@ -21,7 +21,7 @@ export async function addProductImages(req, res, next) {
       return res.status(400).json({ message: 'Please select at least one image.' })
     }
 
-    const product = await Product.findOne({ _id: req.params.id, ...productScopeOf(req) })
+    const product = await Product.findOne({ _id: req.params.id, ...shopScopeOf(req) })
     if (!product) {
       return res.status(404).json({ message: 'Product not found.' })
     }
@@ -60,7 +60,7 @@ export async function replaceProductImage(req, res, next) {
       return res.status(400).json({ message: 'Please select an image.' })
     }
 
-    const product = await Product.findOne({ _id: req.params.id, ...productScopeOf(req) })
+    const product = await Product.findOne({ _id: req.params.id, ...shopScopeOf(req) })
     if (!product) {
       return res.status(404).json({ message: 'Product not found.' })
     }
@@ -96,7 +96,7 @@ export async function replaceProductImage(req, res, next) {
 
 export async function removeProductImage(req, res, next) {
   try {
-    const product = await Product.findOne({ _id: req.params.id, ...productScopeOf(req) })
+    const product = await Product.findOne({ _id: req.params.id, ...shopScopeOf(req) })
     if (!product) {
       return res.status(404).json({ message: 'Product not found.' })
     }

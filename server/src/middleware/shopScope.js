@@ -1,11 +1,12 @@
 import Shop from '../models/Shop.js'
 
-// Product management is shared by two panels that see different things:
-//   admin  → every product of every shop (to moderate the marketplace)
-//   seller → ONLY the products of their own shop
-// These middlewares set `req.productScope`, a filter the product
-// controllers add to EVERY query. A seller asking for another shop's
-// product by id just gets "not found" — the query can't reach it.
+// Products, orders, coupons and the dashboard are each shared by two panels
+// that must see different things:
+//   admin  → every shop's (to run the marketplace)
+//   seller → ONLY their own shop's
+// These middlewares set `req.shopScope`, a filter the controllers add to
+// EVERY query (via shopScopeOf). A seller asking for another shop's product,
+// order or coupon by id just gets "not found" — the query can't reach it.
 // Both must run after `protect`.
 
 // Seller routes: you must be a seller with an APPROVED shop. A suspended
@@ -21,7 +22,7 @@ export async function requireSeller(req, res, next) {
       return res.status(403).json({ message: 'Your shop is not approved, so it cannot sell right now.' })
     }
     req.shop = shop
-    req.productScope = { shop: shop._id }
+    req.shopScope = { shop: shop._id }
     next()
   } catch (err) {
     next(err)
@@ -29,15 +30,16 @@ export async function requireSeller(req, res, next) {
 }
 
 // Admin routes: no limit. (requireAdmin has already checked the role.)
-// New products the admin creates go to ShopHub Official — see createProduct.
-export function adminProductScope(req, res, next) {
-  req.productScope = {}
+// Things the admin creates go to ShopHub Official (products) or the whole
+// site (coupons) — see the controllers.
+export function adminScope(req, res, next) {
+  req.shopScope = {}
   next()
 }
 
 // Used by the controllers. Refuses to run without a scope, so a route that
 // forgot the middleware fails loudly instead of quietly showing everything.
-export function productScopeOf(req) {
-  if (!req.productScope) throw new Error('Product route is missing requireSeller or adminProductScope')
-  return req.productScope
+export function shopScopeOf(req) {
+  if (!req.shopScope) throw new Error('This route is missing requireSeller or adminScope')
+  return req.shopScope
 }

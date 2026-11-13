@@ -3,7 +3,8 @@ import mongoose from 'mongoose'
 export const COUPON_TYPES = ['percent', 'fixed']
 export const COUPON_CODE_PATTERN = /^[A-Z0-9-]{3,20}$/
 
-// A discount code the admin creates, e.g. SAVE10 = 10% off.
+// A discount code created by the admin (whole site) or a seller (their
+// shop only), e.g. SAVE10 = 10% off.
 const couponSchema = new mongoose.Schema(
   {
     // Always stored in CAPITALS, so "save10" and "SAVE10" are the same code.
@@ -20,6 +21,11 @@ const couponSchema = new mongoose.Schema(
     // null = never expires.
     expiresAt: { type: Date, default: null },
     isActive: { type: Boolean, default: true },
+    // Whose coupon this is:
+    //   null → the admin's, for the whole site (every shop's products)
+    //   a shop → that seller's, and it ONLY discounts that shop's products
+    // Codes are still unique across the site, so a code never means two coupons.
+    shop: { type: mongoose.Schema.Types.ObjectId, ref: 'Shop', default: null, index: true },
   },
   { timestamps: true },
 )

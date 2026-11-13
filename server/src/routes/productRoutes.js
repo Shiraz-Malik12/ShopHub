@@ -3,7 +3,7 @@ import * as productController from '../controllers/productController.js'
 import * as productImageController from '../controllers/productImageController.js'
 import { protect } from '../middleware/protect.js'
 import { requireAdmin } from '../middleware/authorize.js'
-import { adminProductScope } from '../middleware/productScope.js'
+import { adminScope } from '../middleware/shopScope.js'
 import { uploadProductImages, uploadSingleProductImage } from '../middleware/uploadImages.js'
 import {
   createProductRules,
@@ -16,17 +16,17 @@ import {
 
 const router = Router()
 
-router.get('/admin', protect, requireAdmin, adminProductScope, productController.listAllProducts)
-router.get('/admin/:id', protect, requireAdmin, adminProductScope, productIdRules, handleValidation, productController.getProductAdmin)
+router.get('/admin', protect, requireAdmin, adminScope, productController.listAllProducts)
+router.get('/admin/:id', protect, requireAdmin, adminScope, productIdRules, handleValidation, productController.getProductAdmin)
 router.get('/', listProductsRules, handleValidation, productController.listActiveProducts)
 router.get('/:id', productIdRules, handleValidation, productController.getProduct)
 
-router.post('/', protect, requireAdmin, adminProductScope, createProductRules, handleValidation, productController.createProduct)
+router.post('/', protect, requireAdmin, adminScope, createProductRules, handleValidation, productController.createProduct)
 router.patch(
   '/:id',
   protect,
   requireAdmin,
-  adminProductScope,
+  adminScope,
   updateProductRules,
   handleValidation,
   productController.updateProduct,
@@ -35,7 +35,7 @@ router.delete(
   '/:id',
   protect,
   requireAdmin,
-  adminProductScope,
+  adminScope,
   productIdRules,
   handleValidation,
   productController.deactivateProduct,
@@ -47,7 +47,7 @@ router.post(
   '/:id/images',
   protect,
   requireAdmin,
-  adminProductScope,
+  adminScope,
   productIdRules,
   handleValidation,
   uploadProductImages,
@@ -57,7 +57,7 @@ router.put(
   '/:id/images/:imageId',
   protect,
   requireAdmin,
-  adminProductScope,
+  adminScope,
   productImageIdRules,
   handleValidation,
   uploadSingleProductImage,
@@ -67,7 +67,7 @@ router.delete(
   '/:id/images/:imageId',
   protect,
   requireAdmin,
-  adminProductScope,
+  adminScope,
   productImageIdRules,
   handleValidation,
   productImageController.removeProductImage,

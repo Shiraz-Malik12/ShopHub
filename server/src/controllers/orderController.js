@@ -1,10 +1,13 @@
 import crypto from 'node:crypto'
+import mongoose from 'mongoose'
 import Order, { NEXT_STATUSES } from '../models/Order.js'
+import Shop from '../models/Shop.js'
 import Cart from '../models/Cart.js'
 import Product from '../models/Product.js'
 import User from '../models/User.js'
 import { sendInBackground, sendOrderPlacedEmail, sendOrderStatusEmail } from '../utils/orderEmails.js'
-import { checkCoupon, claimCouponUse, releaseCouponUse } from '../utils/coupons.js'
+import { checkCoupon, claimCouponUse, releaseCouponForCheckout, releaseCouponUse, subtotalsByShop } from '../utils/coupons.js'
+import { shopScopeOf } from '../middleware/shopScope.js'
 import { isFromSellingShop, sellingShopIds } from '../utils/customerVisibleFilter.js'
 
 const ORDER_NUMBER_ATTEMPTS = 3
@@ -19,17 +22,72 @@ function generateOrderNumber() {
   return `SH-${date}-${random}`
 }
 
-// The order number is random, so two orders could (very rarely) get the
-// same one. The unique index rejects the duplicate (error code 11000) and
-// we simply try again with a new number.
-async function createOrderWithNumber(data) {
+// Saves all the orders of one checkout (one per shop) under a shared number:
+//   one shop  → "SH-261113-K7QX2"
+//   two shops → "SH-261113-K7QX2-A" and "SH-261113-K7QX2-B"
+// The number is random, so it could (very rarely) be taken already. Then
+// every order saved in this attempt is removed again and we retry with a
+// new number — a checkout is saved completely or not at all.
+async function createCheckoutOrders(parts) {
   for (let attempt = 1; ; attempt += 1) {
+    const checkoutId = generateOrderNumber()
+    if (await Order.exists({ checkoutId })) continue
+    const docs = parts.map((part, index) => ({
+      ...part,
+      _id: new mongoose.Types.ObjectId(), // known up front, so a failed attempt can be undone exactly
+      checkoutId,
+      orderNumber: parts.length === 1 ? checkoutId : `${checkoutId}-${String.fromCharCode(65 + index)}`,
+    }))
     try {
-      return await Order.create({ ...data, orderNumber: generateOrderNumber() })
+      return await Order.insertMany(docs, { ordered: true })
     } catch (err) {
-      const duplicateNumber = err.code === 11000 && err.keyPattern?.orderNumber
+      await Order.deleteMany({ _id: { $in: docs.map((doc) => doc._id) } })
+      const duplicateNumber = err.code === 11000 || err.writeErrors?.some((writeError) => writeError.code === 11000)
       if (!duplicateNumber || attempt >= ORDER_NUMBER_ATTEMPTS) throw err
     }
+  }
+}
+
+// Splits one discount between several orders in proportion to their
+// subtotals, in cents, so the parts always add up to exactly the discount.
+// e.g. $10 off a $60 + $40 cart → $6 and $4. The last part takes whatever
+// cents rounding left over.
+export function splitDiscount(discount, subtotals) {
+  const total = subtotals.reduce((sum, value) => sum + value, 0)
+  let given = 0
+  return subtotals.map((subtotal, index) => {
+    if (index === subtotals.length - 1) return Math.round((discount - given) * 100) / 100
+    const share = total > 0 ? Math.round(((discount * subtotal) / total) * 100) / 100 : 0
+    given += share
+    return share
+  })
+}
+
+// Cart lines → one group per shop, in the order the shops first appear.
+function groupCartByShop(items) {
+  const groups = new Map()
+  for (const item of items) {
+    const shopId = String(item.product.shop)
+    if (!groups.has(shopId)) groups.set(shopId, [])
+    groups.get(shopId).push(item)
+  }
+  return groups
+}
+
+// The "order confirmed" email covers the whole checkout. With several
+// shops it lists every item together and says how many parcels to expect.
+function checkoutForEmail(orders) {
+  if (orders.length === 1) return orders[0]
+  const sum = (field) => Math.round(orders.reduce((total, order) => total + order[field], 0) * 100) / 100
+  return {
+    _id: orders[0]._id,
+    orderNumber: orders[0].checkoutId,
+    items: orders.flatMap((order) => order.items),
+    shippingAddress: orders[0].shippingAddress,
+    coupon: orders.find((order) => order.coupon)?.coupon,
+    discount: sum('discount'),
+    total: sum('total'),
+    parcelCount: orders.length,
   }
 }
 
@@ -87,13 +145,18 @@ export async function placeOrder(req, res, next) {
 
     // A coupon code was entered: check it now, against the REAL subtotal
     // from the database. The discount is calculated here, never in the browser.
-    const subtotal = cart.items.reduce((sum, item) => sum + item.product.price * item.quantity, 0)
+    // couponShopId: set when it's a SHOP's coupon — then only that shop's
+    // part of the order gets the discount.
     let coupon = null
     let discount = 0
+    let couponShopId = null
     if (req.body.couponCode) {
-      const checked = await checkCoupon(req.body.couponCode, { subtotal, userId: req.user._id })
+      const shopTotals = subtotalsByShop(
+        cart.items.map((item) => ({ shopId: item.product.shop, lineTotal: item.product.price * item.quantity })),
+      )
+      const checked = await checkCoupon(req.body.couponCode, { shopTotals, userId: req.user._id })
       if (checked.error) throw fail(400, checked.error)
-      ;({ coupon, discount } = checked)
+      ;({ coupon, discount, shopId: couponShopId } = checked)
     }
 
     // 2. Take the stock. Each update only succeeds if enough stock is STILL
@@ -102,7 +165,7 @@ export async function placeOrder(req, res, next) {
     //    stock already taken for this order is put back.
     const reserved = []
     let couponClaimed = false
-    let order
+    let orders
     try {
       for (const item of cart.items) {
         const result = await Product.updateOne(
@@ -121,28 +184,48 @@ export async function placeOrder(req, res, next) {
         if (!couponClaimed) throw fail(409, 'This coupon was just used up. Please remove it and try again.')
       }
 
-      // 3. Save the order with a snapshot of each product as it is right now.
-      const items = cart.items.map((item) => ({
-        product: item.product._id,
-        name: item.product.name,
-        price: item.product.price,
-        quantity: item.quantity,
-        image: item.product.images[0]?.url || null,
-        lineTotal: item.product.price * item.quantity,
-      }))
+      // 3. Save ONE ORDER PER SHOP, each with a snapshot of its products as
+      //    they are right now. The coupon's discount is shared between them.
+      const groups = groupCartByShop(cart.items)
+      const shops = await Shop.find({ _id: { $in: [...groups.keys()] } }).select('name')
+      const shopNameById = new Map(shops.map((shop) => [String(shop._id), shop.name]))
 
-      order = await createOrderWithNumber({
-        user: req.user._id,
-        items,
-        shippingAddress: req.body.shippingAddress,
-        paymentMethod: 'cod',
-        itemCount: items.reduce((sum, item) => sum + item.quantity, 0),
-        subtotal,
-        discount,
-        coupon: coupon ? { code: coupon.code, type: coupon.type, value: coupon.value } : undefined,
-        // Shipping is free for now. Rounded to cents (e.g. 10% of $18.99).
-        total: Math.round((subtotal - discount) * 100) / 100,
+      const parts = [...groups].map(([shopId, shopItems]) => {
+        const items = shopItems.map((item) => ({
+          product: item.product._id,
+          name: item.product.name,
+          price: item.product.price,
+          quantity: item.quantity,
+          image: item.product.images[0]?.url || null,
+          lineTotal: item.product.price * item.quantity,
+        }))
+        return { shopId, items, subtotal: items.reduce((sum, item) => sum + item.lineTotal, 0) }
       })
+      // A site-wide coupon is shared fairly between the shops; a shop's
+      // coupon goes entirely to that shop's order (the others get nothing).
+      const discounts = couponShopId
+        ? parts.map((part) => (part.shopId === couponShopId ? discount : 0))
+        : splitDiscount(discount, parts.map((part) => part.subtotal))
+      // The coupon is recorded only on the orders it took money off.
+      const couponSnapshot = coupon ? { code: coupon.code, type: coupon.type, value: coupon.value } : undefined
+      const couponFor = (part) => (couponSnapshot && (!couponShopId || part.shopId === couponShopId) ? couponSnapshot : undefined)
+
+      orders = await createCheckoutOrders(
+        parts.map((part, index) => ({
+          user: req.user._id,
+          shop: part.shopId,
+          shopName: shopNameById.get(part.shopId) || 'Unknown shop',
+          items: part.items,
+          shippingAddress: req.body.shippingAddress,
+          paymentMethod: 'cod',
+          itemCount: part.items.reduce((sum, item) => sum + item.quantity, 0),
+          subtotal: part.subtotal,
+          discount: discounts[index],
+          coupon: couponFor(part),
+          // Shipping is free for now. Rounded to cents (e.g. 10% of $18.99).
+          total: Math.round((part.subtotal - discounts[index]) * 100) / 100,
+        })),
+      )
     } catch (err) {
       await restock(reserved)
       if (couponClaimed) await releaseCouponUse(coupon.code)
@@ -156,14 +239,16 @@ export async function placeOrder(req, res, next) {
     // 5. "Save this address for next time" was ticked: remember it on the
     //    account so checkout is filled in for them next time.
     if (req.body.saveAddress === true) {
-      const { fullName, phone, addressLine, city, postalCode = '' } = order.shippingAddress
+      const { fullName, phone, addressLine, city, postalCode = '' } = orders[0].shippingAddress
       await User.updateOne({ _id: req.user._id }, { savedAddress: { fullName, phone, addressLine, city, postalCode } })
     }
 
-    // 6. "Order confirmed" email (in the background — never delays or breaks the order).
-    sendInBackground(sendOrderPlacedEmail(order, req.user))
+    // 6. One "order confirmed" email for the whole checkout (in the
+    //    background — never delays or breaks the order).
+    sendInBackground(sendOrderPlacedEmail(checkoutForEmail(orders), req.user))
 
-    res.status(201).json({ message: 'Order placed', order })
+    // `order` (the first one) is kept so older screens still find an order.
+    res.status(201).json({ message: 'Order placed', checkoutId: orders[0].checkoutId, order: orders[0], orders })
   } catch (err) {
     next(err)
   }
@@ -179,10 +264,12 @@ export async function listMyOrders(req, res, next) {
   }
 }
 
-// GET /api/orders/admin?status=pending — admin-only, every customer's orders.
+// GET /api/orders/admin?status=pending — admin: every shop's orders.
+// GET /api/seller/orders?status=pending — seller: only their own shop's.
+// (The scope comes from middleware/shopScope.js.)
 export async function listAllOrders(req, res, next) {
   try {
-    const filter = {}
+    const filter = { ...shopScopeOf(req) }
     if (req.query.status) filter.status = req.query.status
 
     const orders = await Order.find(filter).populate('user', 'name email').sort({ createdAt: -1 })
@@ -202,7 +289,12 @@ export async function getOrder(req, res, next) {
     if (!order || (!isOwner && req.user.role !== 'admin')) {
       throw fail(404, 'Order not found.')
     }
-    res.status(200).json({ order })
+    // The other parcels of the same checkout (other shops), so the page can
+    // say "this purchase came in 2 parcels" and link to the rest.
+    const siblings = await Order.find({ checkoutId: order.checkoutId, _id: { $ne: order._id } })
+      .sort({ orderNumber: 1 })
+      .select('orderNumber shopName status total itemCount')
+    res.status(200).json({ order, siblings })
   } catch (err) {
     next(err)
   }
@@ -228,7 +320,7 @@ export async function cancelMyOrder(req, res, next) {
     }
 
     await restock(order.items)
-    await releaseCouponUse(order.coupon?.code) // the coupon can be used again
+    await releaseCouponForCheckout(order) // the coupon comes back once the whole checkout is cancelled
     sendInBackground(sendOrderStatusEmail(order, req.user))
     res.status(200).json({ message: 'Order cancelled', order })
   } catch (err) {
@@ -236,13 +328,15 @@ export async function cancelMyOrder(req, res, next) {
   }
 }
 
-// PATCH /api/orders/:id/status  { status } — admin moves an order forward
-// (or cancels it). Only the moves listed in NEXT_STATUSES are allowed.
+// PATCH /api/orders/:id/status  { status } — admin, any shop's order.
+// PATCH /api/seller/orders/:id/status — seller, only their own shop's order
+// (another shop's order is simply "not found").
+// Moves an order forward (or cancels it); only the moves in NEXT_STATUSES.
 export async function updateOrderStatus(req, res, next) {
   try {
     const { status } = req.body
 
-    const current = await Order.findById(req.params.id)
+    const current = await Order.findOne({ _id: req.params.id, ...shopScopeOf(req) })
     if (!current) {
       throw fail(404, 'Order not found.')
     }
@@ -264,7 +358,7 @@ export async function updateOrderStatus(req, res, next) {
 
     if (status === 'cancelled') {
       await restock(order.items)
-      await releaseCouponUse(order.coupon?.code)
+      await releaseCouponForCheckout(order)
     }
 
     // Tell the customer (skipped if their account no longer exists).

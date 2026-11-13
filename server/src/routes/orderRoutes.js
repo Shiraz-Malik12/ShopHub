@@ -2,6 +2,7 @@ import { Router } from 'express'
 import * as orderController from '../controllers/orderController.js'
 import { protect } from '../middleware/protect.js'
 import { requireAdmin } from '../middleware/authorize.js'
+import { adminScope } from '../middleware/shopScope.js'
 import {
   placeOrderRules,
   orderIdRules,
@@ -18,7 +19,7 @@ router.use(protect)
 // "/mine" and "/admin" are registered before "/:id" on purpose — otherwise
 // Express would treat the words "mine"/"admin" as an order id.
 router.get('/mine', orderController.listMyOrders)
-router.get('/admin', requireAdmin, listOrdersRules, handleValidation, orderController.listAllOrders)
+router.get('/admin', requireAdmin, adminScope, listOrdersRules, handleValidation, orderController.listAllOrders)
 
 router.post('/', placeOrderRules, handleValidation, orderController.placeOrder)
 router.get('/:id', orderIdRules, handleValidation, orderController.getOrder)
@@ -26,6 +27,7 @@ router.patch('/:id/cancel', orderIdRules, handleValidation, orderController.canc
 router.patch(
   '/:id/status',
   requireAdmin,
+  adminScope,
   updateOrderStatusRules,
   handleValidation,
   orderController.updateOrderStatus,

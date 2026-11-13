@@ -1,6 +1,7 @@
 import Shop from '../models/Shop.js'
 import User from '../models/User.js'
 import Product from '../models/Product.js'
+import Order from '../models/Order.js'
 
 const OFFICIAL_SHOP = {
   name: 'ShopHub Official',
@@ -40,4 +41,25 @@ export async function assignShoplessProducts() {
   }
   const { modifiedCount } = await Product.updateMany(shopless, { $set: { shop: official._id } })
   console.log(`[shops] Moved ${modifiedCount} existing product(s) into "${official.name}".`)
+}
+
+// Same one-time move for orders: everything ordered before the marketplace
+// was bought from the one original shop, so it belongs to ShopHub Official.
+// Each old order was its own checkout, so its checkoutId is its own number.
+export async function assignShoplessOrders() {
+  const shopless = { $or: [{ shop: { $exists: false } }, { shop: null }] }
+  const count = await Order.countDocuments(shopless)
+  if (count === 0) return
+
+  const official = await getOfficialShop()
+  if (!official) {
+    console.warn(`[shops] ${count} order(s) have no shop yet. Run "npm run seed:admin", then restart the server.`)
+    return
+  }
+  // The [ ] form ("update pipeline") lets checkoutId copy each order's OWN
+  // orderNumber ('$orderNumber') instead of one fixed value for all.
+  const { modifiedCount } = await Order.updateMany(shopless, [
+    { $set: { shop: official._id, shopName: official.name, checkoutId: '$orderNumber' } },
+  ])
+  console.log(`[shops] Moved ${modifiedCount} existing order(s) into "${official.name}".`)
 }
