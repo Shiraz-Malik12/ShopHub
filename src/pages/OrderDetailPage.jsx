@@ -13,6 +13,19 @@ import { formatDate } from '../utils/formatDate'
 import { formatPrice } from '../utils/formatPrice'
 import { ORDER_STATUS, ORDER_STEPS } from '../utils/orderStatus'
 
+// What a cancelled order says about the money. A card order that was paid
+// was charged, so "nothing charged" would be wrong — say it's refunded.
+// (Same rules as the cancellation email, server/src/utils/orderEmails.js.)
+function cancelledMessage(order) {
+  if (order.paymentStatus === 'refunded') {
+    return `This order was cancelled. Your payment of ${formatPrice(order.total)} has been refunded to your card — it can take 5–10 business days to show on your statement.`
+  }
+  if (order.paymentStatus === 'refund_failed') {
+    return `This order was cancelled. Your payment of ${formatPrice(order.total)} will be refunded — our team is processing it.`
+  }
+  return 'This order was cancelled. Nothing will be delivered or charged.'
+}
+
 // One order: its progress, items, delivery address and totals. Also the
 // confirmation page right after checkout (location.state.justPlaced).
 export default function OrderDetailPage() {
@@ -229,7 +242,7 @@ export default function OrderDetailPage() {
 
             <div className="mt-6 rounded-2xl border border-line bg-surface shadow-card p-6">
               {order.status === 'cancelled' ? (
-                <p className="text-sm text-subtle">This order was cancelled. Nothing will be delivered or charged.</p>
+                <p className="text-sm text-subtle">{cancelledMessage(order)}</p>
               ) : (
                 <Steps
                   size="small"

@@ -139,12 +139,36 @@ export function buildOrderPlacedEmail(order, customer) {
 }
 
 // Sent whenever the order moves on (processing / shipped / delivered / cancelled).
-export function buildOrderStatusEmail(order, customer) {
+// The wording depends on the money, not just the status. Cash on delivery
+// keeps STATUS_COPY as it is. A card order:
+//   • on its way → it's already paid, so no "keep cash ready"
+//   • cancelled after paying → it WAS charged, so say the refund is coming
+//     (not "you will not be charged")
+//   • cancelled before paying → nothing was charged, the default is right
+function copyFor(order) {
   const copy = STATUS_COPY[order.status]
+  if (!copy || order.paymentMethod !== 'card') return copy
+  const amount = formatPrice(order.total)
+  if (order.status === 'cancelled' && order.paymentStatus === 'refunded') {
+    return {
+      subject: 'was cancelled and refunded',
+      headline: 'Your order was cancelled — refund on its way',
+      message: `your order has been cancelled and your payment of ${amount} has been refunded to your card. It can take 5–10 business days to show on your statement.`,
+    }
+  }
+  if (order.status === 'cancelled' && order.paymentStatus === 'refund_failed') {
+    return {
+      ...copy,
+      message: `your order has been cancelled. Your payment of ${amount} will be refunded — our team is processing it and will contact you if anything is needed.`,
+    }
+  }
+  return { ...copy, message: copy.message.replace(' Please keep cash ready for delivery.', '') }
+}
+
+export function buildOrderStatusEmail(order, customer) {
+  const copy = copyFor(order)
   if (!copy) return null
-  // A card order is already paid — don't ask them to have cash ready.
-  const message = order.paymentMethod === 'card' ? copy.message.replace(' Please keep cash ready for delivery.', '') : copy.message
-  const content = { headline: copy.headline, intro: `Hi ${customer.name}, ${message}`, order }
+  const content = { headline: copy.headline, intro: `Hi ${customer.name}, ${copy.message}`, order }
   return {
     to: customer.email,
     subject: `Your order ${order.orderNumber} ${copy.subject}`,
