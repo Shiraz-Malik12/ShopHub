@@ -1,9 +1,58 @@
 import { useState } from 'react'
-import { Form, Input, Button, Segmented, App as AntdApp } from 'antd'
-import { UserAddOutlined } from '@ant-design/icons'
+import { Form, Input, Button, App as AntdApp } from 'antd'
+import { CheckCircleFilled, ShopOutlined, ShoppingOutlined, UserAddOutlined } from '@ant-design/icons'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import AuthLayout from '../../components/auth/AuthLayout'
 import { useAuth } from '../../context/AuthContext'
+
+const GOALS = [
+  { value: 'shop', icon: <ShoppingOutlined />, title: 'Just shop', text: 'Browse and buy' },
+  { value: 'sell', icon: <ShopOutlined />, title: 'Shop and sell', text: 'Open a shop too' },
+]
+
+// "I want to" choice as two option cards. Each card is a real radio button
+// (hidden, with the card as its label), so the keyboard — Tab, then the
+// arrow keys — and screen readers work like with any radio group.
+function GoalPicker({ value, onChange }) {
+  return (
+    <div role="radiogroup" aria-label="I want to" className="grid grid-cols-2 gap-3">
+      {GOALS.map((goal) => {
+        const selected = value === goal.value
+        return (
+          <label
+            key={goal.value}
+            // Phones: icon above the text (the cards are narrow). Wider: side by side.
+            className={`relative flex cursor-pointer flex-col items-start gap-2 rounded-xl border p-3 transition has-focus-visible:ring-2 has-focus-visible:ring-accent/40 sm:flex-row sm:gap-3 ${
+              selected ? 'border-accent bg-accent/5 ring-1 ring-accent' : 'border-line bg-surface hover:border-line-strong'
+            }`}
+          >
+            <input
+              type="radio"
+              name="goal"
+              value={goal.value}
+              checked={selected}
+              onChange={() => onChange(goal.value)}
+              className="sr-only"
+            />
+            <span
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-lg transition-colors ${
+                selected ? 'bg-accent text-white' : 'bg-muted text-subtle'
+              }`}
+              aria-hidden="true"
+            >
+              {goal.icon}
+            </span>
+            <span className="min-w-0 pr-4">
+              <span className="block text-sm font-semibold text-ink">{goal.title}</span>
+              <span className="block text-xs leading-snug text-subtle">{goal.text}</span>
+            </span>
+            {selected && <CheckCircleFilled className="absolute right-2.5 top-2.5 text-accent" aria-hidden="true" />}
+          </label>
+        )
+      })}
+    </div>
+  )
+}
 
 export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
@@ -40,19 +89,16 @@ export default function RegisterPage() {
   }
 
   return (
-    <AuthLayout title="Create your account" subtitle="Start shopping with ShopHub">
+    <AuthLayout
+      title="Create your account"
+      subtitle={goal === 'sell' ? 'Shop on ShopHub — and sell your own products' : 'Start shopping with ShopHub'}
+    >
       <Form layout="vertical" onFinish={onFinish} requiredMark={false}>
-        <Form.Item label="I want to">
-          <Segmented
-            block
-            size="large"
-            value={goal}
-            onChange={setGoal}
-            options={[
-              { value: 'shop', label: 'Just shop' },
-              { value: 'sell', label: 'Shop and sell' },
-            ]}
-          />
+        <Form.Item
+          label="I want to"
+          extra={goal === 'sell' ? "After verifying your email, you'll add your shop details. ShopHub reviews every new shop." : null}
+        >
+          <GoalPicker value={goal} onChange={setGoal} />
         </Form.Item>
 
         <Form.Item

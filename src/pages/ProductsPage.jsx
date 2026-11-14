@@ -10,7 +10,10 @@ import { formatDate } from '../utils/formatDate'
 import * as productApi from '../api/productApi'
 import * as categoryApi from '../api/categoryApi'
 
-const SKELETON_CARDS = 8
+// 12 products per page: it fills complete rows of 2, 3, 4 and 6 columns
+// (the grid grows to 6 columns on extra-large screens).
+const PAGE_SIZE = 12
+const SKELETON_CARDS = PAGE_SIZE
 const SEARCH_DELAY_MS = 400
 const DEFAULT_SORT = 'newest'
 
@@ -120,7 +123,7 @@ export default function ProductsPage({ shop = null }) {
       setLoading(true)
       setLoadError(null)
       try {
-        const params = {}
+        const params = { limit: PAGE_SIZE }
         if (shop) params.shop = shop.id
         if (search) params.search = search
         if (category) params.category = category
@@ -157,7 +160,7 @@ export default function ProductsPage({ shop = null }) {
     <StoreLayout>
       {/* Page banner: a rounded card with soft brand glows behind the title
           and the search/filter row. */}
-      <section className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
+      <section className="page-container pt-8">
         <div className="relative overflow-hidden rounded-[28px] border border-line bg-surface p-6 shadow-card sm:p-10">
           <div className="glow pointer-events-none absolute -right-28 -top-36 h-96 w-96" style={{ '--glow': 'color-mix(in srgb, var(--accent) 18%, transparent)' }} aria-hidden="true" />
           <div className="glow pointer-events-none absolute -bottom-40 left-1/4 h-96 w-96" style={{ '--glow': 'color-mix(in srgb, var(--coral) 18%, transparent)' }} aria-hidden="true" />
@@ -231,9 +234,9 @@ export default function ProductsPage({ shop = null }) {
         </div>
       </section>
 
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div className="page-container py-8">
         {loading && !hasLoadedOnce ? (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" aria-label="Loading products...">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6" aria-label="Loading products...">
             {Array.from({ length: SKELETON_CARDS }, (_, index) => (
               <div key={index} className="overflow-hidden rounded-2xl border border-line bg-surface shadow-card">
                 <div className="aspect-square animate-pulse bg-muted" />
@@ -278,7 +281,7 @@ export default function ProductsPage({ shop = null }) {
           // While new results load, the old ones stay visible but dimmed —
           // less jumpy than swapping to placeholders on every keystroke.
           <div
-            className={`grid gap-6 transition-opacity sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 ${loading ? 'opacity-50' : ''}`}
+            className={`grid gap-6 transition-opacity sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6 ${loading ? 'opacity-50' : ''}`}
           >
             {products.map((product) => (
               <ProductCard key={product._id} product={product} />

@@ -7,9 +7,15 @@ import MobileIconDrop from './MobileIconDrop'
 // ForgotPassword/ResetPassword) so they stay visually consistent without
 // repeating markup. Left (large screens only): the navy brand panel with the
 // animated logo in the middle; right: the page's form.
+//
+// Scrolling on large screens: the page is exactly one screen tall
+// (lg:h-dvh + overflow-hidden) and ONLY the form side scrolls (its own
+// overflow-y-auto), so the brand panel stays in place when a long form —
+// like Create account — doesn't fit. Phones and tablets have no brand panel
+// and simply scroll the whole page, as before.
 export default function AuthLayout({ title, subtitle, children }) {
   return (
-    <div className="min-h-visible relative flex bg-page">
+    <div className="min-h-visible relative flex bg-page lg:h-dvh lg:overflow-hidden">
       <div className="absolute right-4 top-4 z-10 sm:right-6 sm:top-6">
         <ThemeToggle />
       </div>
@@ -34,8 +40,11 @@ export default function AuthLayout({ title, subtitle, children }) {
       {/* Phones & tablets: shop icons drop in and bounce once on page load. */}
       <MobileIconDrop />
 
-      <div className="relative flex w-full items-center justify-center p-6 sm:p-10 lg:w-1/2">
-        <div className="w-full max-w-sm">
+      {/* my-auto (not items-center) centers the form vertically: when the
+          form is taller than the screen it starts at the top and scrolls,
+          instead of its top being cut off. */}
+      <div className="relative flex w-full justify-center p-6 sm:p-10 lg:w-1/2 lg:overflow-y-auto">
+        <div className="my-auto w-full max-w-sm">
           {/* On small screens the brand panel is hidden, so show the logo here. */}
           <div className="mb-10 lg:hidden">
             <Logo />

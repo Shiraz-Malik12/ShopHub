@@ -62,7 +62,7 @@ export default function CartPage() {
   return (
     <StoreLayout>
       <section className="border-b border-line bg-surface">
-        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="page-container py-10">
           <h1 className="text-3xl font-bold tracking-tight text-ink">Shopping cart</h1>
           <p className="mt-2 text-subtle">
             {isEmpty ? 'Your cart is empty.' : `${cart.itemCount} ${cart.itemCount === 1 ? 'item' : 'items'} in your cart`}
@@ -70,7 +70,7 @@ export default function CartPage() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <div className="page-container py-10">
         {loading && isEmpty ? (
           <div className="rounded-2xl border border-line bg-surface shadow-card p-6">
             <Skeleton active avatar paragraph={{ rows: 2 }} />

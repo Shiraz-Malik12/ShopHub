@@ -114,13 +114,13 @@ export default function CheckoutPage() {
   return (
     <StoreLayout>
       <section className="border-b border-line bg-surface">
-        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="page-container py-10">
           <h1 className="text-3xl font-bold tracking-tight text-ink">Checkout</h1>
           <p className="mt-2 text-subtle">Tell us where to deliver your order.</p>
         </div>
       </section>
 
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <div className="page-container py-10">
         {loading ? (
           <div className="rounded-2xl border border-line bg-surface shadow-card p-6">
             <Skeleton active paragraph={{ rows: 6 }} />

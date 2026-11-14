@@ -40,7 +40,7 @@ export default function WishlistPage() {
   return (
     <StoreLayout>
       <section className="border-b border-line bg-surface">
-        <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="page-container py-10">
           <h1 className="text-3xl font-bold tracking-tight text-ink">My wishlist</h1>
           <p className="mt-2 text-subtle">
             Products you saved for later.
@@ -49,9 +49,9 @@ export default function WishlistPage() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <div className="page-container py-10">
         {loading ? (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6">
             {[1, 2, 3, 4].map((key) => (
               <div key={key} className="rounded-2xl border border-line bg-surface shadow-card p-4">
                 <Skeleton.Image active className="!h-48 !w-full" />
@@ -77,7 +77,7 @@ export default function WishlistPage() {
             </Empty>
           </div>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6">
             {visibleProducts.map((product) => (
               <ProductCard key={product._id} product={product} />
             ))}

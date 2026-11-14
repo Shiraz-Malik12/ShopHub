@@ -35,7 +35,7 @@ export default function ShopPage() {
 
   return (
     <StoreLayout>
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <div className="page-container py-10">
         {shop === undefined && !loadError ? (
           <div className="rounded-[28px] border border-line bg-surface p-10 shadow-card">
             <Skeleton active avatar paragraph={{ rows: 2 }} />

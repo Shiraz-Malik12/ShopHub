@@ -104,6 +104,11 @@
   --shadow-card: var(--card-shadow);
   --shadow-card-hover: var(--card-shadow-hover);
 
+  /* One more screen size after Tailwind's 2xl (1536px): 3xl = 1900px, for
+     full-HD monitors (the product grid shows 6 columns there). In rem like
+     the built-in ones, so Tailwind orders the rules correctly. */
+  --breakpoint-3xl: 118.75rem;
+
   /* The logo's wordmark font (loaded in index.html). */
   --font-brand: 'Poppins', 'Inter', system-ui, sans-serif;
 }
@@ -115,6 +120,30 @@ body {
   color: var(--ink);
   background-color: var(--page); /* no flash before React mounts */
   transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* The store's page width, in ONE place. The page uses the full screen
+   width (no empty bands left and right on big monitors), with side padding
+   that grows with the screen: 16px on phones → 48px on extra-large screens.
+   Capped at 2560px so super-ultrawide monitors don't stretch it absurdly.
+   (Reading pages — orders, forms — stay narrow on purpose: long lines are
+   hard to read.) */
+@layer components {
+  .page-container {
+    width: 100%;
+    max-width: 2560px;
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+  @media (width >= 40rem) {
+    .page-container { padding-inline: 1.5rem; }
+  }
+  @media (width >= 64rem) {
+    .page-container { padding-inline: 2rem; }
+  }
+  @media (width >= 96rem) {
+    .page-container { padding-inline: 3rem; }
+  }
 }
 
 /* Text you select gets a soft coral highlight — a small brand touch. */

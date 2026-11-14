@@ -72,7 +72,7 @@ export default function PanelLayout({ navItems, badge, homeTo, sectionLabel, top
       </header>
 
       <main className="px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl">{children}</div>
+        <div className="mx-auto w-full max-w-[2560px]">{children}</div>
       </main>
     </div>
   )

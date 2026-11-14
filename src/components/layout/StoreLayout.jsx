@@ -22,7 +22,7 @@ export default function StoreLayout({ children }) {
   return (
     <div className="flex min-h-screen flex-col bg-page">
       <header className="sticky top-0 z-20 border-b border-line bg-surface/85 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <div className="page-container flex h-16 items-center justify-between gap-4">
           <div className="flex items-center gap-8">
             <Logo />
             <nav className="hidden items-center gap-1 text-sm font-medium sm:flex">
@@ -82,7 +82,7 @@ export default function StoreLayout({ children }) {
       <main className="flex-1">{children}</main>
 
       <footer className="border-t border-line bg-surface">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-sm text-subtle sm:flex-row sm:px-6 lg:px-8">
+        <div className="page-container flex flex-col items-center justify-between gap-2 py-6 text-sm text-subtle sm:flex-row">
           <span>© {new Date().getFullYear()} ShopHub. All rights reserved.</span>
           <Link to="/products" className="hover:text-highlight">Shop all products</Link>
           {/* Guests are sent to sign in first, then come back here. */}
